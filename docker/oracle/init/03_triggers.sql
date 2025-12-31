@@ -1,0 +1,78 @@
+-- EDUX Triggers
+
+-- Trigger: ENROLL_CONTROL - Controls enrollment limits
+CREATE OR REPLACE TRIGGER EDUX.ENROLL_CONTROL
+BEFORE INSERT ON EDUX.ENROLLS
+FOR EACH ROW
+DECLARE
+  L_SEAT NUMBER;
+  L_COUNT NUMBER;
+BEGIN
+  SELECT seat, student_count INTO L_SEAT, L_COUNT FROM EDUX.COURSES WHERE c_id = :NEW.c_id;
+  IF L_SEAT IS NOT NULL AND L_COUNT >= L_SEAT THEN
+    RAISE_APPLICATION_ERROR(-20001, 'Course is full');
+  END IF;
+END;
+/
+
+-- Trigger: INCREASE_ENROLL - Updates student count when enrolled
+CREATE OR REPLACE TRIGGER EDUX.INCREASE_ENROLL
+AFTER INSERT ON EDUX.ENROLLS
+FOR EACH ROW
+BEGIN
+  UPDATE EDUX.COURSES SET student_count = student_count + 1 WHERE c_id = :NEW.c_id;
+  UPDATE EDUX.STUDENTS SET course_count = course_count + 1 WHERE s_id = :NEW.s_id;
+END;
+/
+
+-- Trigger: CHECK_FEEDBACK - Updates course rating after feedback
+CREATE OR REPLACE TRIGGER EDUX.CHECK_FEEDBACK
+AFTER INSERT OR UPDATE ON EDUX.FEEDBACKS
+FOR EACH ROW
+BEGIN
+  EDUX.RATING_CHANGE(:NEW.c_id);
+END;
+/
+
+-- Trigger: EXAM_PROGRESS - Updates progress after exam completion
+CREATE OR REPLACE TRIGGER EDUX.EXAM_PROGRESS
+AFTER UPDATE ON EDUX.TAKES
+FOR EACH ROW
+DECLARE
+  L_COURSE_ID NUMBER;
+  L_TOPIC_WEIGHT NUMBER;
+  L_EXAM_WEIGHT NUMBER;
+BEGIN
+  IF :NEW.status = 'completed' AND (:OLD.status IS NULL OR :OLD.status != 'completed') THEN
+    SELECT t.c_id, t.weight, e.weight INTO L_COURSE_ID, L_TOPIC_WEIGHT, L_EXAM_WEIGHT
+    FROM EDUX.TOPICS t
+    JOIN EDUX.EXAMS e ON t.t_id = e.t_id
+    WHERE e.e_id = :NEW.e_id;
+    
+    UPDATE EDUX.ENROLLS 
+    SET progress = progress + NVL(L_EXAM_WEIGHT, 0)
+    WHERE s_id = :NEW.s_id AND c_id = L_COURSE_ID;
+  END IF;
+END;
+/
+
+-- Trigger: LECTURE_PROGRESS - Updates progress after watching lecture
+CREATE OR REPLACE TRIGGER EDUX.LECTURE_PROGRESS
+AFTER INSERT ON EDUX.WATCHES
+FOR EACH ROW
+DECLARE
+  L_COURSE_ID NUMBER;
+  L_LECTURE_WEIGHT NUMBER;
+BEGIN
+  SELECT t.c_id, l.weight INTO L_COURSE_ID, L_LECTURE_WEIGHT
+  FROM EDUX.TOPICS t
+  JOIN EDUX.LECTURES l ON t.t_id = l.t_id
+  WHERE l.l_id = :NEW.l_id;
+  
+  UPDATE EDUX.ENROLLS 
+  SET progress = progress + NVL(L_LECTURE_WEIGHT, 0)
+  WHERE s_id = :NEW.s_id AND c_id = L_COURSE_ID;
+END;
+/
+
+COMMIT;

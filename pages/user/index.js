@@ -9,10 +9,12 @@ import { HiArrowNarrowRight } from 'react-icons/hi';
 import { Progress } from '@material-tailwind/react';
 import RateCourse from '@/components/RateCourse';
 import { apiPost } from '../../lib/api';
+import { AIChat, AIRecommendations, LearningAnalytics } from '../../components/ai';
 
 const user = () => {
   const inProgessRef = useRef();
   const completedRef = useRef();
+  const analyticsRef = useRef();
 
   const [nameValue, setNameValue] = useState("");
   const [emailValue, setEmailValue] = useState("");
@@ -23,42 +25,65 @@ const user = () => {
   const u_id = secureLocalStorage.getItem('u_id');
   const [inProgressCourses, setInProgressCourses] = useState([]);
   const [completedCourses, setCompletedCourses] = useState([]);
+  const [showChat, setShowChat] = useState(false);
+  const [activeTab, setActiveTab] = useState('inProgress');
 
   const inProgressTab = () => {
+    setActiveTab('inProgress');
     if (inProgessRef.current.classList.contains('hidden')) {
       inProgessRef.current.classList.remove('hidden');
       inProgessRef.current.classList.add('flex');
       completedRef.current.classList.add('hidden');
+      analyticsRef.current.classList.add('hidden');
     }
   };
 
   const completedTab = () => {
+    setActiveTab('completed');
     if (completedRef.current.classList.contains('hidden')) {
       completedRef.current.classList.remove('hidden');
       completedRef.current.classList.add('flex');
       inProgessRef.current.classList.add('hidden');
+      analyticsRef.current.classList.add('hidden');
+    }
+  };
+
+  const analyticsTab = () => {
+    setActiveTab('analytics');
+    if (analyticsRef.current.classList.contains('hidden')) {
+      analyticsRef.current.classList.remove('hidden');
+      inProgessRef.current.classList.add('hidden');
+      completedRef.current.classList.add('hidden');
     }
   };
   useEffect(() => {
+    if (!u_id) return;
+    
     apiPost('/api/user_info', { u_id })
       .then((res) => res.json())
       .then((json_res) => {
-        const userInfo = json_res[0];
-
-        setNameValue(userInfo.name);
-        setEmailValue(userInfo.email);
-        setDate_of_birthValue(userInfo.date_of_birth);
-        setGenderValue(userInfo.gender === "M" ? "Male" : "Female");
-        setCourse_countValue(userInfo.course_count);
-        setReg_dateValue(userInfo.reg_date);
-      });
+        if (json_res && json_res[0]) {
+          const userInfo = json_res[0];
+          setNameValue(userInfo.name || '');
+          setEmailValue(userInfo.email || '');
+          setDate_of_birthValue(userInfo.date_of_birth || '');
+          setGenderValue(userInfo.gender === "M" ? "Male" : "Female");
+          setCourse_countValue(userInfo.course_count || 0);
+          setReg_dateValue(userInfo.reg_date || '');
+        }
+      })
+      .catch(err => console.error('Error fetching user info:', err));
+      
     apiPost('/api/user_courses', { u_id })
       .then((res) => res.json())
       .then((json_res) => {
-        setInProgressCourses(json_res[0]);
-        setCompletedCourses(json_res[1]);
-      });
-  }, []);
+        if (Array.isArray(json_res)) {
+          setInProgressCourses(json_res[0] || []);
+          setCompletedCourses(json_res[1] || []);
+        }
+      })
+      .catch(err => console.error('Error fetching courses:', err));
+  }, [u_id]);
 
   return (
     <div className='h-full w-full'>
@@ -114,8 +139,9 @@ const user = () => {
       <nav className="bg-gradient-to-r from-slate-200 to-slate-400 shadow-2xl z-20">
         <div className="max-w-screen-xl px-4 py-3 mx-auto">
           <div className="flex items-center space-x-5">
-            <button onClick={inProgressTab}><h1 className='text-2xl hover:underline hover:text-blue-500'>In progress</h1></button>
-            <button onClick={completedTab}><h1 className='text-2xl hover:underline hover:text-blue-500'>Completed</h1></button>
+            <button onClick={inProgressTab} className={activeTab === 'inProgress' ? 'text-blue-600 underline' : ''}><h1 className='text-2xl hover:underline hover:text-blue-500'>In progress</h1></button>
+            <button onClick={completedTab} className={activeTab === 'completed' ? 'text-blue-600 underline' : ''}><h1 className='text-2xl hover:underline hover:text-blue-500'>Completed</h1></button>
+            <button onClick={analyticsTab} className={activeTab === 'analytics' ? 'text-blue-600 underline' : ''}><h1 className='text-2xl hover:underline hover:text-blue-500'>📊 Analytics</h1></button>
           </div>
         </div>
       </nav>
@@ -187,6 +213,31 @@ const user = () => {
           </div>;
         })}
       </div>
+
+      {/* Analytics Tab */}
+      <div ref={analyticsRef} className="mx-28 my-4 hidden">
+        <LearningAnalytics />
+      </div>
+
+      {/* AI Recommendations Section */}
+      <div className="mx-28 my-8">
+        <AIRecommendations limit={4} />
+      </div>
+
+      {/* AI Chat Widget */}
+      {showChat && <AIChat onClose={() => setShowChat(false)} />}
+      
+      {/* Chat Toggle Button */}
+      {!showChat && (
+        <button
+          onClick={() => setShowChat(true)}
+          className="fixed bottom-4 right-4 bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 transition-all z-40"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 };

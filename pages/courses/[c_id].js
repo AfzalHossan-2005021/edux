@@ -3,6 +3,7 @@ import Review from "@/components/Review";
 import { useEffect, useState } from "react";
 import secureLocalStorage from "react-secure-storage";
 import { apiPost } from "../../lib/api";
+import { CourseSummary } from "../../components/ai";
 
 export default function course_page({ c_id }) {
   const router = useRouter();
@@ -136,6 +137,12 @@ export default function course_page({ c_id }) {
                 </span>
               </div>
               <p className="leading-relaxed text-xl">{Course.description}</p>
+              
+              {/* AI Course Summary */}
+              <div className="mt-6">
+                <CourseSummary courseId={c_id} type="course" />
+              </div>
+              
               <div className="flex mt-6 items-center pb-5 border-b-2 border-gray-100 mb-5"></div>
 
               {isLoggedIn && inEnrolled && (

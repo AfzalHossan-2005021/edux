@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import secureLocalStorage from 'react-secure-storage';
 import VideoPlayer from '../../../../../components/VideoPlayer';
 import { apiPost } from '../../../../../lib/api';
+import { AIQuizGenerator, AIChat } from '../../../../../components/ai';
 
 export default function LecturePage({ l_id }) {
   const router = useRouter();
@@ -10,6 +11,8 @@ export default function LecturePage({ l_id }) {
   const { c_id, t_id } = router.query;
   const [description, setDescription] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [showChat, setShowChat] = useState(false);
 
   useEffect(() => {
     apiPost('/api/lecture_content', { s_id, c_id, t_id, l_id })
@@ -21,11 +24,49 @@ export default function LecturePage({ l_id }) {
   }, []);
 
   return (
-    <div>
+    <div className="min-h-screen pb-20">
       <div className="flex flex-wrap w-full flex-col items-center text-center">
         <h1 className="sm:text-3xl text-2xl font-medium underline title-font mt-10 text-gray-900">{description}</h1>
       </div>
       {videoUrl && <VideoPlayer videoUrl={videoUrl} />}
+      
+      {/* AI Features Section */}
+      <div className="max-w-4xl mx-auto mt-8 px-4">
+        <div className="flex gap-4 justify-center mb-6">
+          <button
+            onClick={() => setShowQuiz(!showQuiz)}
+            className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all flex items-center gap-2"
+          >
+            <span>🧠</span>
+            {showQuiz ? 'Hide Quiz' : 'Practice Quiz'}
+          </button>
+          <button
+            onClick={() => setShowChat(!showChat)}
+            className="px-6 py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 transition-all flex items-center gap-2"
+          >
+            <span>💬</span>
+            Ask AI Tutor
+          </button>
+        </div>
+
+        {/* AI Quiz Generator */}
+        {showQuiz && (
+          <div className="mb-8">
+            <AIQuizGenerator 
+              topic={description || 'this lecture content'} 
+              lectureId={l_id}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* AI Chat Widget */}
+      {showChat && (
+        <AIChat 
+          courseId={c_id} 
+          onClose={() => setShowChat(false)} 
+        />
+      )}
     </div>
   );
 };

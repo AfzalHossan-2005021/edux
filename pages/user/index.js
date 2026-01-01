@@ -6,23 +6,35 @@ import secureLocalStorage from 'react-secure-storage';
 import CourseWall_1 from '../../public/course_wall-1.jpg';
 import CourseWall_2 from '../../public/course_wall-2.jpg';
 import { HiArrowNarrowRight } from 'react-icons/hi';
-import { Progress } from '@material-tailwind/react';
 import RateCourse from '@/components/RateCourse';
 import { apiPost } from '../../lib/api';
 import { AIChat, AIRecommendations, LearningAnalytics } from '../../components/ai';
 
-const user = () => {
+// Simple progress bar component to avoid material-tailwind recursion issues
+const ProgressBar = ({ value = 0 }) => {
+  const safeValue = Math.min(100, Math.max(0, Number(value) || 0));
+  return (
+    <div className="w-full bg-gray-200 rounded-full h-2.5">
+      <div 
+        className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+        style={{ width: `${safeValue}%` }}
+      />
+    </div>
+  );
+};
+
+const User = () => {
   const inProgessRef = useRef();
   const completedRef = useRef();
   const analyticsRef = useRef();
 
+  const [u_id, setUserId] = useState(null);
   const [nameValue, setNameValue] = useState("");
   const [emailValue, setEmailValue] = useState("");
   const [date_of_birthValue, setDate_of_birthValue] = useState("");
   const [genderValue, setGenderValue] = useState("");
   const [course_countValue, setCourse_countValue] = useState("");
   const [reg_dateValue, setReg_dateValue] = useState("");
-  const u_id = secureLocalStorage.getItem('u_id');
   const [inProgressCourses, setInProgressCourses] = useState([]);
   const [completedCourses, setCompletedCourses] = useState([]);
   const [showChat, setShowChat] = useState(false);
@@ -56,6 +68,11 @@ const user = () => {
       completedRef.current.classList.add('hidden');
     }
   };
+
+  useEffect(() => {
+    setUserId(secureLocalStorage.getItem('u_id'));
+  }, []);
+
   useEffect(() => {
     if (!u_id) return;
     
@@ -157,7 +174,7 @@ const user = () => {
                 <div className='flex space-x-5'>
                   <div><h1>Progress</h1></div>
                   <div className='w-full h-full pt-2'>
-                    <Progress value={course.progress} />
+                    <ProgressBar value={course.progress} />
                   </div>
                 </div>
               </div>
@@ -215,14 +232,18 @@ const user = () => {
       </div>
 
       {/* Analytics Tab */}
-      <div ref={analyticsRef} className="mx-28 my-4 hidden">
-        <LearningAnalytics />
-      </div>
+      {u_id && (
+        <div ref={analyticsRef} className="mx-28 my-4 hidden">
+          <LearningAnalytics />
+        </div>
+      )}
 
       {/* AI Recommendations Section */}
-      <div className="mx-28 my-8">
-        <AIRecommendations limit={4} />
-      </div>
+      {u_id && (
+        <div className="mx-28 my-8">
+          <AIRecommendations limit={4} />
+        </div>
+      )}
 
       {/* AI Chat Widget */}
       {showChat && <AIChat onClose={() => setShowChat(false)} />}
@@ -242,4 +263,4 @@ const user = () => {
   );
 };
 
-export default user;
+export default User;

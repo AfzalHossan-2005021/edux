@@ -6,13 +6,20 @@ import { apiPost } from "../../../../../../lib/api";
 const ViewResult = ({ e_id }) => {
   const [data, setData] = useState([]);
   useEffect(() => {
+    if (!e_id) return;
+    
     const s_id = secureLocalStorage.getItem("u_id");
+    if (!s_id) return;
+    
     apiPost("/api/exam_result", { s_id, e_id })
       .then((res) => res.json())
       .then((json_res) => {
-        setData(json_res[0]);
+        setData(json_res[0] || {});
+      })
+      .catch((error) => {
+        console.error('Error fetching exam result:', error);
       });
-  }, []);
+  }, [e_id]);
 
   return (
     <div className="space-y-10">

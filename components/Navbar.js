@@ -27,7 +27,7 @@ const Navbar = () => {
     if (secureLocalStorage.getItem("u_id")) {
       setisLoggedIn(true);
     }
-  }, [isLoggedIn]);
+  }, []);
 
   const toggleWishList = () => {
     if (WishListRef.current.classList.contains("hidden")) {
@@ -64,15 +64,17 @@ const Navbar = () => {
       })
         .then((Response) => Response.json())
         .then((json) => {
-          setWishlistCourses(json);
-        });
+          setWishlistCourses(json || []);
+        })
+        .catch((error) => console.error('Error fetching wishlist:', error));
     }
 
     apiGet('/api/all_courses')
       .then((Response) => Response.json())
       .then((json) => {
-        setAllCourses(json);
-      });
+        setAllCourses(json || []);
+      })
+      .catch((error) => console.error('Error fetching courses:', error));
   }, []);
 
   return (

@@ -15,13 +15,20 @@ export default function LecturePage({ l_id }) {
   const [showChat, setShowChat] = useState(false);
 
   useEffect(() => {
+    if (!s_id || !c_id || !t_id || !l_id) return;
+    
     apiPost('/api/lecture_content', { s_id, c_id, t_id, l_id })
       .then((res) => res.json())
       .then((json_res) => {
-        setDescription(json_res.description);
-        setVideoUrl(json_res.video_link);
+        if (json_res && !json_res.message) {
+          setDescription(json_res.description || '');
+          setVideoUrl(json_res.video_link || '');
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching lecture content:', error);
       });
-  }, []);
+  }, [s_id, c_id, t_id, l_id]);
 
   return (
     <div className="min-h-screen pb-20">

@@ -1,34 +1,46 @@
 import Image from 'next/image';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import ProfilePic from '../../public/profile_pic.jpg';
 import secureLocalStorage from 'react-secure-storage';
 import CourseWall_1 from '../../public/course_wall-1.jpg';
 import CourseWall_2 from '../../public/course_wall-2.jpg';
 import { HiArrowNarrowRight } from 'react-icons/hi';
-import { Progress } from '@material-tailwind/react';
 import { apiPost } from '../../lib/api';
 
 const Instructor = () => {
   let userInfo;
-  const u_id = secureLocalStorage.getItem('u_id');
+  const u_id = useMemo(() => secureLocalStorage.getItem('u_id'), []);
   const [myCourses, setMyCourses] = useState([]);
   useEffect(() => {
+    if (!u_id) return;
+    
     apiPost('/api/instructor_info', { u_id })
       .then((res) => res.json())
       .then((json_res) => {
         userInfo = json_res[0];
-        document.getElementById('name').innerHTML = userInfo.name;
-        document.getElementById('email').innerHTML = userInfo.email;
-        document.getElementById('subject').innerHTML = userInfo.subject;
-        document.getElementById('course_count').innerHTML = userInfo.course_count;
-        document.getElementById('reg_date').innerHTML = userInfo.reg_date;
-      });
+        if (userInfo) {
+          const nameEl = document.getElementById('name');
+          const emailEl = document.getElementById('email');
+          const subjectEl = document.getElementById('subject');
+          const courseCountEl = document.getElementById('course_count');
+          const regDateEl = document.getElementById('reg_date');
+          
+          if (nameEl) nameEl.innerHTML = userInfo.name || '';
+          if (emailEl) emailEl.innerHTML = userInfo.email || '';
+          if (subjectEl) subjectEl.innerHTML = userInfo.subject || '';
+          if (courseCountEl) courseCountEl.innerHTML = userInfo.course_count || '';
+          if (regDateEl) regDateEl.innerHTML = userInfo.reg_date || '';
+        }
+      })
+      .catch((error) => console.error('Error fetching instructor info:', error));
+      
     apiPost('/api/instructor_courses', { u_id })
       .then((res) => res.json())
       .then((parsed) => {
-        setMyCourses(parsed);
-      });
-  }, []);
+        setMyCourses(parsed || []);
+      })
+      .catch((error) => console.error('Error fetching instructor courses:', error));
+  }, [u_id]);
 
   return (
     <div className='h-full w-full'>

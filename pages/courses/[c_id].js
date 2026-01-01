@@ -13,17 +13,21 @@ export default function course_page({ c_id }) {
   const [inEnrolled, setInEnrolled] = useState(false);
 
   useEffect(() => {
+    if (!c_id) return;
+    
     apiPost("/api/selected_course", { c_id })
       .then((a) => a.json())
       .then((parsed) => {
         setCourse(parsed[0]);
-      });
+      })
+      .catch((err) => console.error('Error fetching course:', err));
 
     apiPost("/api/reviews", { c_id })
       .then((a) => a.json())
       .then((parsed) => {
         setReviews(parsed);
-      });
+      })
+      .catch((err) => console.error('Error fetching reviews:', err));
 
     if (secureLocalStorage.getItem("u_id")) {
       setIsLoggedIn(true);
@@ -36,9 +40,10 @@ export default function course_page({ c_id }) {
           if (parsed.is_enrolled == 1) {
             setInEnrolled(true);
           }
-        });
+        })
+        .catch((err) => console.error('Error checking enrollment:', err));
     }
-  }, []);
+  }, [c_id]);
 
   const handleClick = async (event) => {
     event.preventDefault();

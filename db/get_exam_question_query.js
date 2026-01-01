@@ -1,12 +1,13 @@
 export default function get_exam_question_query(EXAM_ID){
     return(
-        `SELECT "Questions"."q_id", "Questions"."q_description",
-        "Questions"."opt1", "Questions"."opt2", "Questions"."opt3", "Questions"."opt4",
-        "Questions"."marks", "Questions"."right_ans", "Questions"."serial"
-        FROM "Topics" 
-        JOIN "Exams" ON "Topics"."t_id" = "Exams"."t_id"
-        JOIN "Questions" ON "Exams"."e_id" = "Questions"."e_id"
-        WHERE "Exams"."e_id" = '${EXAM_ID}'
-        ORDER BY "Questions"."serial" ASC`
+        `SELECT q."q_id", q."q_description",
+        q."option_a" AS "opt1", q."option_b" AS "opt2", 
+        q."option_c" AS "opt3", q."option_d" AS "opt4",
+        q."marks", q."right_ans", q."serial"
+        FROM EDUX."Topics" t
+        JOIN EDUX."Exams" e ON t."t_id" = e."t_id"
+        JOIN EDUX."Questions" q ON e."e_id" = q."e_id"
+        WHERE e."e_id" = '${EXAM_ID}'
+        ORDER BY q."serial" ASC`
     );
 }

@@ -1,0 +1,1337 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "EduX Learning Platform API",
+    "description": "REST API for the EduX online learning platform. Provides endpoints for user authentication, course management, enrollment, exams, and more.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "EduX Support",
+      "email": "support@edux.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Development server"
+    },
+    {
+      "url": "https://edux.example.com/api",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User authentication and registration"
+    },
+    {
+      "name": "Courses",
+      "description": "Course browsing and management"
+    },
+    {
+      "name": "Enrollment",
+      "description": "Course enrollment operations"
+    },
+    {
+      "name": "Content",
+      "description": "Course content and lectures"
+    },
+    {
+      "name": "Exams",
+      "description": "Exam and quiz operations"
+    },
+    {
+      "name": "Wishlist",
+      "description": "Wishlist management"
+    },
+    {
+      "name": "Instructor",
+      "description": "Instructor-specific operations"
+    },
+    {
+      "name": "AI",
+      "description": "AI-powered features"
+    }
+  ],
+  "paths": {
+    "/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "User login",
+        "description": "Authenticate a user with email and password",
+        "operationId": "loginUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/signup": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Student registration",
+        "description": "Register a new student account",
+        "operationId": "signupUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registration successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or email already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/instructor_signup": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Instructor registration",
+        "description": "Register a new instructor account",
+        "operationId": "signupInstructor",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstructorSignupRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registration successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/all_courses": {
+      "post": {
+        "tags": ["Courses"],
+        "summary": "Get all courses",
+        "description": "Retrieve all available courses",
+        "operationId": "getAllCourses",
+        "responses": {
+          "200": {
+            "description": "List of courses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Course"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/popular_courses": {
+      "post": {
+        "tags": ["Courses"],
+        "summary": "Get popular courses",
+        "description": "Retrieve courses sorted by enrollment count",
+        "operationId": "getPopularCourses",
+        "responses": {
+          "200": {
+            "description": "List of popular courses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Course"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/top_rated_courses": {
+      "post": {
+        "tags": ["Courses"],
+        "summary": "Get top rated courses",
+        "description": "Retrieve courses sorted by rating",
+        "operationId": "getTopRatedCourses",
+        "responses": {
+          "200": {
+            "description": "List of top rated courses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Course"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/selected_course": {
+      "post": {
+        "tags": ["Courses"],
+        "summary": "Get course details",
+        "description": "Retrieve detailed information about a specific course",
+        "operationId": "getCourseDetails",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["c_id"],
+                "properties": {
+                  "c_id": {
+                    "type": "integer",
+                    "description": "Course ID"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Course details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Course not found"
+          }
+        }
+      }
+    },
+    "/course_suggestion": {
+      "post": {
+        "tags": ["Courses"],
+        "summary": "Search courses",
+        "description": "Search for courses by keyword",
+        "operationId": "searchCourses",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["search"],
+                "properties": {
+                  "search": {
+                    "type": "string",
+                    "description": "Search query"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Course"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/enroll": {
+      "post": {
+        "tags": ["Enrollment"],
+        "summary": "Enroll in course",
+        "description": "Enroll a student in a course",
+        "operationId": "enrollInCourse",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrollRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Enrollment successful"
+          },
+          "400": {
+            "description": "Already enrolled or course full"
+          }
+        }
+      }
+    },
+    "/is_enrolled": {
+      "post": {
+        "tags": ["Enrollment"],
+        "summary": "Check enrollment status",
+        "description": "Check if a student is enrolled in a course",
+        "operationId": "checkEnrollment",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrollRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Enrollment status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "enrolled": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user_courses": {
+      "post": {
+        "tags": ["Enrollment"],
+        "summary": "Get user's courses",
+        "description": "Get all courses a user is enrolled in",
+        "operationId": "getUserCourses",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["u_id"],
+                "properties": {
+                  "u_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of enrolled courses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EnrolledCourse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lecture_content": {
+      "post": {
+        "tags": ["Content"],
+        "summary": "Get lecture content",
+        "description": "Retrieve lecture video and description",
+        "operationId": "getLectureContent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LectureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lecture content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LectureContent"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lecture not found"
+          }
+        }
+      }
+    },
+    "/user_course_content": {
+      "post": {
+        "tags": ["Content"],
+        "summary": "Get course content for user",
+        "description": "Get all topics, lectures, and exams for an enrolled course",
+        "operationId": "getUserCourseContent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["s_id", "c_id"],
+                "properties": {
+                  "s_id": {
+                    "type": "integer"
+                  },
+                  "c_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Course content structure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/exam_questions": {
+      "post": {
+        "tags": ["Exams"],
+        "summary": "Get exam questions",
+        "description": "Retrieve questions for a specific exam",
+        "operationId": "getExamQuestions",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["e_id"],
+                "properties": {
+                  "e_id": {
+                    "type": "integer",
+                    "description": "Exam ID"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of exam questions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Question"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/exam_result": {
+      "post": {
+        "tags": ["Exams"],
+        "summary": "Get exam result",
+        "description": "Get a student's result for an exam",
+        "operationId": "getExamResult",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["s_id", "e_id"],
+                "properties": {
+                  "s_id": {
+                    "type": "integer"
+                  },
+                  "e_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exam result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/update_mark": {
+      "post": {
+        "tags": ["Exams"],
+        "summary": "Submit exam answers",
+        "description": "Submit exam answers and calculate score",
+        "operationId": "submitExam",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["s_id", "e_id", "score"],
+                "properties": {
+                  "s_id": {
+                    "type": "integer"
+                  },
+                  "e_id": {
+                    "type": "integer"
+                  },
+                  "score": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Score updated successfully"
+          }
+        }
+      }
+    },
+    "/wishlist": {
+      "post": {
+        "tags": ["Wishlist"],
+        "summary": "Get wishlist",
+        "description": "Get user's wishlist",
+        "operationId": "getWishlist",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["u_id"],
+                "properties": {
+                  "u_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Wishlist items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Course"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/add_to_wishlist": {
+      "post": {
+        "tags": ["Wishlist"],
+        "summary": "Add to wishlist",
+        "description": "Add a course to user's wishlist",
+        "operationId": "addToWishlist",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["u_id", "c_id"],
+                "properties": {
+                  "u_id": {
+                    "type": "integer"
+                  },
+                  "c_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Added to wishlist"
+          }
+        }
+      }
+    },
+    "/remove_from_wishlist": {
+      "post": {
+        "tags": ["Wishlist"],
+        "summary": "Remove from wishlist",
+        "description": "Remove a course from user's wishlist",
+        "operationId": "removeFromWishlist",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["u_id", "c_id"],
+                "properties": {
+                  "u_id": {
+                    "type": "integer"
+                  },
+                  "c_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Removed from wishlist"
+          }
+        }
+      }
+    },
+    "/reviews": {
+      "post": {
+        "tags": ["Courses"],
+        "summary": "Get course reviews",
+        "description": "Get all reviews for a course",
+        "operationId": "getCourseReviews",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["c_id"],
+                "properties": {
+                  "c_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of reviews",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Review"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rate_course": {
+      "post": {
+        "tags": ["Courses"],
+        "summary": "Rate a course",
+        "description": "Submit a rating and review for a course",
+        "operationId": "rateCourse",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RatingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rating submitted"
+          }
+        }
+      }
+    },
+    "/instructor_courses": {
+      "post": {
+        "tags": ["Instructor"],
+        "summary": "Get instructor's courses",
+        "description": "Get all courses created by an instructor",
+        "operationId": "getInstructorCourses",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["i_id"],
+                "properties": {
+                  "i_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of instructor's courses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Course"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/instructor_info": {
+      "post": {
+        "tags": ["Instructor"],
+        "summary": "Get instructor info",
+        "description": "Get instructor's profile information",
+        "operationId": "getInstructorInfo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["i_id"],
+                "properties": {
+                  "i_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Instructor information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstructorInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user_info": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Get user info",
+        "description": "Get user's profile information",
+        "operationId": "getUserInfo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["u_id"],
+                "properties": {
+                  "u_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "minLength": 6,
+            "example": "password123"
+          }
+        }
+      },
+      "SignupRequest": {
+        "type": "object",
+        "required": ["name", "email", "password"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100,
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "john@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "minLength": 8,
+            "example": "SecurePass123!"
+          }
+        }
+      },
+      "InstructorSignupRequest": {
+        "type": "object",
+        "required": ["name", "email", "password", "subject"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Jane Smith"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "jane@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "example": "SecurePass123!"
+          },
+          "subject": {
+            "type": "string",
+            "example": "Web Development"
+          }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "u_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "john@example.com"
+          },
+          "s_id": {
+            "type": "integer",
+            "nullable": true,
+            "example": 1
+          },
+          "i_id": {
+            "type": "integer",
+            "nullable": true,
+            "example": null
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Invalid credentials"
+          }
+        }
+      },
+      "Course": {
+        "type": "object",
+        "properties": {
+          "c_id": {
+            "type": "integer",
+            "example": 100
+          },
+          "title": {
+            "type": "string",
+            "example": "Complete React Course"
+          },
+          "description": {
+            "type": "string",
+            "example": "Learn React from scratch"
+          },
+          "i_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "rating": {
+            "type": "number",
+            "format": "float",
+            "example": 4.5
+          },
+          "student_count": {
+            "type": "integer",
+            "example": 150
+          },
+          "wall": {
+            "type": "string",
+            "example": "/images/react.jpg"
+          },
+          "field": {
+            "type": "string",
+            "example": "Web Development"
+          },
+          "seat": {
+            "type": "integer",
+            "example": 200
+          }
+        }
+      },
+      "CourseDetails": {
+        "type": "object",
+        "properties": {
+          "c_id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "instructor_name": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "number"
+          },
+          "student_count": {
+            "type": "integer"
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Topic"
+            }
+          }
+        }
+      },
+      "Topic": {
+        "type": "object",
+        "properties": {
+          "t_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "serial": {
+            "type": "integer"
+          },
+          "weight": {
+            "type": "integer"
+          }
+        }
+      },
+      "EnrollRequest": {
+        "type": "object",
+        "required": ["s_id", "c_id"],
+        "properties": {
+          "s_id": {
+            "type": "integer",
+            "description": "Student ID"
+          },
+          "c_id": {
+            "type": "integer",
+            "description": "Course ID"
+          }
+        }
+      },
+      "EnrolledCourse": {
+        "type": "object",
+        "properties": {
+          "c_id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "progress": {
+            "type": "integer",
+            "description": "Progress percentage"
+          },
+          "enroll_date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "LectureRequest": {
+        "type": "object",
+        "required": ["s_id", "c_id", "t_id", "l_id"],
+        "properties": {
+          "s_id": {
+            "type": "integer"
+          },
+          "c_id": {
+            "type": "integer"
+          },
+          "t_id": {
+            "type": "integer"
+          },
+          "l_id": {
+            "type": "integer"
+          }
+        }
+      },
+      "LectureContent": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "video_link": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "CourseContent": {
+        "type": "object",
+        "properties": {
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "t_id": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "lectures": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "l_id": {
+                        "type": "integer"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "exams": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "e_id": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Question": {
+        "type": "object",
+        "properties": {
+          "q_id": {
+            "type": "integer"
+          },
+          "q_description": {
+            "type": "string"
+          },
+          "opt1": {
+            "type": "string"
+          },
+          "opt2": {
+            "type": "string"
+          },
+          "opt3": {
+            "type": "string"
+          },
+          "opt4": {
+            "type": "string"
+          },
+          "marks": {
+            "type": "integer"
+          },
+          "right_ans": {
+            "type": "string",
+            "enum": ["A", "B", "C", "D"]
+          },
+          "serial": {
+            "type": "integer"
+          }
+        }
+      },
+      "ExamResult": {
+        "type": "object",
+        "properties": {
+          "e_id": {
+            "type": "integer"
+          },
+          "s_id": {
+            "type": "integer"
+          },
+          "score": {
+            "type": "number"
+          },
+          "total_marks": {
+            "type": "number"
+          },
+          "percentage": {
+            "type": "number"
+          }
+        }
+      },
+      "Review": {
+        "type": "object",
+        "properties": {
+          "u_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "number"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "RatingRequest": {
+        "type": "object",
+        "required": ["s_id", "c_id", "rating"],
+        "properties": {
+          "s_id": {
+            "type": "integer"
+          },
+          "c_id": {
+            "type": "integer"
+          },
+          "rating": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "InstructorInfo": {
+        "type": "object",
+        "properties": {
+          "i_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "course_count": {
+            "type": "integer"
+          }
+        }
+      },
+      "UserInfo": {
+        "type": "object",
+        "properties": {
+          "u_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "reg_date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      }
+    }
+  }
+}

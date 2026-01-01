@@ -3,10 +3,13 @@ import '@/styles/globals.css'
 import Footer from '@/components/Footer'
 import Navbar from '@/components/Navbar'
 import { useEffect, useState } from 'react'
+import { TranslationProvider } from '@/lib/i18n'
+import { registerServiceWorker, setupInstallPrompt } from '@/lib/pwa'
 
 export default function App({ Component, pageProps }) {
 
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [canInstall, setCanInstall] = useState(false)
 
 
   const [cart, setCart] = useState({})
@@ -14,12 +17,12 @@ export default function App({ Component, pageProps }) {
 
   const saveCart = (myCart) => {
     let subt = 0
-    let keys = Object.keys(cart)
-    for (let i = 0; keys.length; i++) {
+    let keys = Object.keys(myCart)
+    for (let i = 0; i < keys.length; i++) {
       subt += myCart[keys[i]].price * myCart[keys[i]].qty;
     }
     setSubTotal(subt)
-    localStorage.setItem("cart", myCart)
+    localStorage.setItem("cart", JSON.stringify(myCart))
   }
 
   const addToCart = (itemCode, qty, price, title) => {
@@ -59,17 +62,31 @@ export default function App({ Component, pageProps }) {
     } catch {
       localStorage.clear()
     }
+
+    // Register service worker for PWA
+    if (typeof window !== 'undefined') {
+      registerServiceWorker();
+      setupInstallPrompt(setCanInstall);
+    }
   }, [])
 
   return <>
     <Head>
       <title>EduX</title>
-    </Head><div className='flex-col'>
-      <Navbar isLoggedIn={isLoggedIn} cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} clearCart={clearCart} subTotal={subTotal} />
-      <div className='flex-col mt-16'>
-        <Component isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} clearCart={clearCart} subTotal={subTotal} {...pageProps} />
+      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+      <meta name="theme-color" content="#3b82f6" />
+      <meta name="description" content="EduX - Unlock your potential with online courses" />
+      <link rel="manifest" href="/manifest.json" />
+      <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    </Head>
+    <TranslationProvider>
+      <div className='flex-col'>
+        <Navbar isLoggedIn={isLoggedIn} cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} clearCart={clearCart} subTotal={subTotal} />
+        <div className='flex-col mt-16'>
+          <Component isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} clearCart={clearCart} subTotal={subTotal} {...pageProps} />
+        </div>
+        <Footer />
       </div>
-      <Footer />
-    </div>
+    </TranslationProvider>
   </>
 }

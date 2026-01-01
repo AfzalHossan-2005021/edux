@@ -6,38 +6,49 @@ export default function AIRecommendations({ limit = 4 }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchRecommendations = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/ai/recommendations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ type: 'personalized', limit }),
+        });
+
+        if (!isMounted) return;
+
+        if (response.status === 401) {
+          setRecommendations([]);
+          setIsLoading(false);
+          return;
+        }
+
+        const data = await response.json();
+
+        if (isMounted && data.success && data.recommendations) {
+          setRecommendations(data.recommendations);
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error('Error fetching recommendations:', err);
+          setError('Failed to load recommendations');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
     fetchRecommendations();
-  }, []);
 
-  const fetchRecommendations = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch('/api/ai/recommendations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Include cookies for auth
-        body: JSON.stringify({ type: 'personalized', limit }),
-      });
-
-      // Handle non-authenticated gracefully
-      if (response.status === 401) {
-        setRecommendations([]);
-        setIsLoading(false);
-        return;
-      }
-
-      const data = await response.json();
-
-      if (data.success && data.recommendations) {
-        setRecommendations(data.recommendations);
-      }
-    } catch (err) {
-      console.error('Error fetching recommendations:', err);
-      setError('Failed to load recommendations');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    return () => {
+      isMounted = false;
+    };
+  }, [limit]);
 
   if (isLoading) {
     return (
@@ -72,12 +83,6 @@ export default function AIRecommendations({ limit = 4 }) {
             AI Powered
           </span>
         </div>
-        <button
-          onClick={fetchRecommendations}
-          className="text-sm text-indigo-600 hover:text-indigo-700"
-        >
-          Refresh
-        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

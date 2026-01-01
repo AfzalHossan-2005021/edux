@@ -7,50 +7,60 @@ export default function LearningAnalytics() {
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchAnalytics = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch learning patterns analysis
+        const analysisResponse = await fetch('/api/ai/analytics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ action: 'analyze' }),
+        });
+        
+        // Handle non-authenticated gracefully
+        if (analysisResponse.status === 401) {
+          setIsLoading(false);
+          return;
+        }
+        
+        const analysisData = await analysisResponse.json();
+        
+        // Fetch progress report
+        const reportResponse = await fetch('/api/ai/analytics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ action: 'report', period: 'weekly' }),
+        });
+        const reportData = await reportResponse.json();
+
+        if (isMounted) {
+          if (analysisData.success) {
+            setAnalytics(analysisData);
+          }
+          if (reportData.success) {
+            setReport(reportData.report);
+          }
+          setIsLoading(false);
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error('Analytics error:', err);
+          setIsLoading(false);
+        }
+      }
+    };
+
     fetchAnalytics();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
-
-  const fetchAnalytics = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Fetch learning patterns analysis
-      const analysisResponse = await fetch('/api/ai/analytics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ action: 'analyze' }),
-      });
-      
-      // Handle non-authenticated gracefully
-      if (analysisResponse.status === 401) {
-        setIsLoading(false);
-        return;
-      }
-      
-      const analysisData = await analysisResponse.json();
-      
-      // Fetch progress report
-      const reportResponse = await fetch('/api/ai/analytics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ action: 'report', period: 'weekly' }),
-      });
-      const reportData = await reportResponse.json();
-
-      if (analysisData.success) {
-        setAnalytics(analysisData);
-      }
-      if (reportData.success) {
-        setReport(reportData.report);
-      }
-    } catch (err) {
-      console.error('Analytics error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -82,12 +92,6 @@ export default function LearningAnalytics() {
               {analytics?.aiGenerated ? 'AI-powered insights' : 'Your learning overview'}
             </p>
           </div>
-          <button
-            onClick={fetchAnalytics}
-            className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-sm"
-          >
-            Refresh
-          </button>
         </div>
       </div>
 

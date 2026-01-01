@@ -76,7 +76,7 @@ export default function Login() {
     };
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
-  }, [isErrorOccured]);
+  }, [router]);
 
   return (
     <div>

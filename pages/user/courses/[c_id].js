@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FaRegCheckCircle } from "react-icons/fa";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import secureLocalStorage from "react-secure-storage";
 import { BiRightArrow, BiDownArrow } from "react-icons/bi";
 import { MdOutlineTopic, MdOutlineQuiz } from "react-icons/md";
@@ -8,26 +8,36 @@ import { apiPost } from "../../../lib/api";
 
 export default function userCourseInfo({ c_id }) {
   const [content, setContent] = useState([]);
-  const u_id = secureLocalStorage.getItem("u_id");
+  const u_id = useMemo(() => secureLocalStorage.getItem("u_id"), []);
 
   useEffect(() => {
     apiPost("/api/user_course_content", { u_id, c_id })
       .then((res) => res.json())
       .then((json_res) => {
-        setContent([]);
-        for (let i = 0; i < json_res[0].length; i++) {
+        // Handle empty or invalid response
+        if (!json_res || !Array.isArray(json_res) || json_res.length === 0 || !json_res[0]) {
+          console.warn("No course content available");
+          setContent([]);
+          return;
+        }
+        
+        // Safely iterate through topics
+        const topicsCount = json_res[0].length || 0;
+        const newContent = [];
+        for (let i = 0; i < topicsCount; i++) {
           const topic_content = [
             json_res[0][i],
-            json_res[i + 1],
-            json_res[json_res[0].length + i + 1],
+            json_res[i + 1] || [],
+            json_res[topicsCount + i + 1] || [{ e_id: null, duration: 0, STATUS: 0 }],
           ];
-          setContent((content) => [...content, topic_content]);
+          newContent.push(topic_content);
         }
+        setContent(newContent);
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
       });
-  }, []);
+  }, [u_id, c_id]);
 
   const [isVisible, setIsVisible] = useState(Array(content.length).fill(false));
 
@@ -96,47 +106,57 @@ export default function userCourseInfo({ c_id }) {
                   <div>
                     <MdOutlineQuiz className="text-xl" />
                   </div>
-                  <div className="flex flex-col ml-4 flex-grow">
-                    <div className="flex flex-row items-center space-x-4 mb-2">
-                      <h2 className="text-lg text-gray-900 font-normal title-font">
-                        Quiz {element[2][0].e_id}
-                      </h2>
-                      <h2 className="text-lg text-gray-900 font-normal title-font">
-                        {element[2][0].duration} mins
-                      </h2>
-                    </div>
-                    <div className="flex flex-row space-x-4">
-                      <Link
-                        href={`/user/courses/topic/exam/${element[2][0].e_id}`}
-                      >
-                        <button className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
-                          Take Exam
-                        </button>
-                      </Link>
-                      <Link
-                        href={`/user/courses/topic/exam/result/${element[2][0].e_id}`}
-                      >
-                        <button
+                  {element[2] && element[2][0] && element[2][0].e_id ? (
+                    <>
+                      <div className="flex flex-col ml-4 flex-grow">
+                        <div className="flex flex-row items-center space-x-4 mb-2">
+                          <h2 className="text-lg text-gray-900 font-normal title-font">
+                            Quiz {element[2][0].e_id}
+                          </h2>
+                          <h2 className="text-lg text-gray-900 font-normal title-font">
+                            {element[2][0].duration} mins
+                          </h2>
+                        </div>
+                        <div className="flex flex-row space-x-4">
+                          <Link
+                            href={`/user/courses/topic/exam/${element[2][0].e_id}`}
+                          >
+                            <button className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+                              Take Exam
+                            </button>
+                          </Link>
+                          <Link
+                            href={`/user/courses/topic/exam/result/${element[2][0].e_id}`}
+                          >
+                            <button
+                              className={
+                                element[2][0].STATUS === 0
+                                  ? "hidden"
+                                  : "bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                              }
+                            >
+                              View Result
+                            </button>
+                          </Link>
+                        </div>
+                      </div>
+                      <div>
+                        <FaRegCheckCircle
                           className={
                             element[2][0].STATUS === 0
                               ? "hidden"
-                              : "bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                              : "text-green-600 text-xl"
                           }
-                        >
-                          View Result
-                        </button>
-                      </Link>
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col ml-4 flex-grow">
+                      <h2 className="text-lg text-gray-500 font-normal title-font">
+                        No quiz available for this topic
+                      </h2>
                     </div>
-                  </div>
-                  <div>
-                    <FaRegCheckCircle
-                      className={
-                        element[2][0].STATUS === 0
-                          ? "hidden"
-                          : "text-green-600 text-xl"
-                      }
-                    />
-                  </div>
+                  )}
                 </div>
               </div>
             </div>

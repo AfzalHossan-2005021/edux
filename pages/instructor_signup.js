@@ -76,9 +76,10 @@ export default function InstructorSignup({ isLoggedIn, setIsLoggedIn }) {
     };
     document.addEventListener("mousedown", handler);
     if (isLoggedIn) {
-      router.replace('/instructor')
+      router.replace('/instructor');
     }
-  });
+    return () => document.removeEventListener("mousedown", handler);
+  }, [isErrorOccured, isLoggedIn, router]);
 
   return (
     <div className='w-full min-h-screen flex justify-center items-center bg-gray-900'>

@@ -19,12 +19,21 @@ export default function userCourseInfo({ e_id }) {
   );
 
   useEffect(() => {
+    if (!e_id) return;
+    
     apiPost("/api/exam_questions", { e_id })
       .then((res) => res.json())
       .then((json_res) => {
-        setQuestions(json_res);
+        // Only set questions if we got a valid array response
+        if (Array.isArray(json_res)) {
+          setQuestions(json_res);
+          setSelectedOptions(new Array(json_res.length).fill(null));
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching exam questions:', error);
       });
-  }, []);
+  }, [e_id]);
 
   const handleOptionSelect = (questionIndex, option) => {
     const updatedOptions = [...selectedOptions];
@@ -35,8 +44,13 @@ export default function userCourseInfo({ e_id }) {
   const handleSubmit = () => {
     let newScore = 0;
     let answers = [];
+    
+    // Map option index (1-4) to letter (A-D)
+    const indexToLetter = { 1: 'A', 2: 'B', 3: 'C', 4: 'D' };
+    
     for (let i = 0; i < questions.length; i++) {
-      if (selectedOptions[i] == questions[i].right_ans) {
+      const selectedLetter = indexToLetter[selectedOptions[i]];
+      if (selectedLetter === questions[i].right_ans) {
         newScore += questions[i].marks;
       }
       answers.push({ q_id: questions[i].q_id, ans: selectedOptions[i] });

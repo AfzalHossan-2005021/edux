@@ -22,6 +22,8 @@ const Navbar = () => {
   const [allCourses, setAllCourses] = useState([]);
   const [isLoggedIn, setisLoggedIn] = useState(false);
   const [wishlistCourses, setWishlistCourses] = useState([]);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
   useEffect(() => {
     if (secureLocalStorage.getItem("u_id")) {
@@ -32,16 +34,20 @@ const Navbar = () => {
   const toggleWishList = () => {
     if (WishListRef.current.classList.contains("hidden")) {
       WishListRef.current.classList.remove("hidden");
-    } else if (!WishListRef.current.classList.contains("hidden")) {
+      setIsWishlistOpen(true);
+    } else {
       WishListRef.current.classList.add("hidden");
+      setIsWishlistOpen(false);
     }
   };
 
   const toggleDropdown = () => {
     if (userDropdownRef.current.classList.contains("hidden")) {
       userDropdownRef.current.classList.remove("hidden");
-    } else if (!userDropdownRef.current.classList.contains("hidden")) {
+      setIsUserDropdownOpen(true);
+    } else {
       userDropdownRef.current.classList.add("hidden");
+      setIsUserDropdownOpen(false);
     }
   };
 
@@ -95,16 +101,26 @@ const Navbar = () => {
             {!isLoggedIn && <LogInSignUp />}
             {isLoggedIn && (
               <div className="flex space-x-5">
-                <button>
-                  {" "}
-                  <BiHeart onClick={toggleWishList} className="text-4xl" />{" "}
+                <button
+                  type="button"
+                  aria-label="Open wishlist"
+                  aria-controls="wishlist-dropdown"
+                  aria-expanded={isWishlistOpen}
+                  onClick={toggleWishList}
+                  className="text-4xl"
+                >
+                  <BiHeart />
                 </button>
-                <button>
-                  {" "}
-                  <BsPersonCircle
-                    onClick={toggleDropdown}
-                    className="text-4xl"
-                  />
+                <button
+                  id="user-menu-button"
+                  type="button"
+                  aria-label="Open user menu"
+                  aria-controls="user-dropdown"
+                  aria-expanded={isUserDropdownOpen}
+                  onClick={toggleDropdown}
+                  className="text-4xl"
+                >
+                  <BsPersonCircle />
                 </button>
               </div>
             )}
@@ -113,12 +129,14 @@ const Navbar = () => {
             <UserDropDown
               setisLoggedIn={setisLoggedIn}
               userDropdownRef={userDropdownRef}
+              isOpen={isUserDropdownOpen}
             />
           )}
           <Wishlist
             wishlistCourses={wishlistCourses}
             onRemoveCourse={removeFromWishlist}
             WishListRef={WishListRef}
+            isOpen={isWishlistOpen}
           />
         </div>
       </div>

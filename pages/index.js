@@ -7,6 +7,7 @@ import CourseWall_1 from '../public/course_wall-1.jpg'
 import CourseWall_2 from '../public/course_wall-2.jpg'
 import CourseWall_3 from '../public/course_wall-3.jpg'
 import secureLocalStorage from 'react-secure-storage';
+import { apiGet, apiPost } from '../lib/api';
 
 
 export default function Home() {
@@ -19,27 +20,23 @@ export default function Home() {
   useEffect(() => {
     if (secureLocalStorage.getItem('u_id')) {
       setisLoggedIn(true);
-      fetch('http://localhost:3000/api/course_suggestion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ s_id })
-      }).then((res) => {
-        return res.json();
-      }).then((json_res) => {
-        setCourseSuggestion(json_res);
-      });
+      apiPost('/api/course_suggestion', { s_id })
+        .then((res) => res.json())
+        .then((json_res) => {
+          setCourseSuggestion(json_res);
+        });
     };
-    fetch('http://localhost:3000/api/top_rated_courses').then((a) => {
-      return a.json();
-    }).then((parsed) => {
-      setTopRatedCourses(parsed);
-    });
-    fetch('http://localhost:3000/api/popular_courses').then((a) => {
-      return a.json();
-    }).then((parsed) => {
-      console.log(parsed);
-      setPopularCourses(parsed);
-    });
+    apiGet('/api/top_rated_courses')
+      .then((a) => a.json())
+      .then((parsed) => {
+        setTopRatedCourses(parsed);
+      });
+    apiGet('/api/popular_courses')
+      .then((a) => a.json())
+      .then((parsed) => {
+        console.log(parsed);
+        setPopularCourses(parsed);
+      });
   }, []);
 
   return (

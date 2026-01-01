@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import secureLocalStorage from 'react-secure-storage';
+import { apiPost } from '../lib/api';
 
 
 const RateCourse = ({ c_id }) => {
@@ -14,11 +15,7 @@ const RateCourse = ({ c_id }) => {
   const submitRating = async () => {
     let u_id = secureLocalStorage.getItem('u_id');
     const data = { u_id, c_id, rating, review };
-    await fetch('http://localhost:3000/api/rate_course', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    })
+    await apiPost('/api/rate_course', data);
     setIsDivVisible(false);
   };
 

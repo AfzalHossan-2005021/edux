@@ -6,35 +6,28 @@ import CourseWall_1 from '../../public/course_wall-1.jpg';
 import CourseWall_2 from '../../public/course_wall-2.jpg';
 import { HiArrowNarrowRight } from 'react-icons/hi';
 import { Progress } from '@material-tailwind/react';
+import { apiPost } from '../../lib/api';
 
-const instructor = () => {
+const Instructor = () => {
   let userInfo;
   const u_id = secureLocalStorage.getItem('u_id');
   const [myCourses, setMyCourses] = useState([]);
   useEffect(() => {
-    fetch('http://localhost:3000/api/instructor_info', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ u_id }),
-    }).then((res) => {
-      return res.json();
-    }).then((json_res) => {
-      userInfo = json_res[0];
-      document.getElementById('name').innerHTML = userInfo.name;
-      document.getElementById('email').innerHTML = userInfo.email;
-      document.getElementById('subject').innerHTML = userInfo.subject;
-      document.getElementById('course_count').innerHTML = userInfo.course_count;
-      document.getElementById('reg_date').innerHTML = userInfo.reg_date;
-    });
-    fetch('http://localhost:3000/api/instructor_courses', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ u_id }),
-    }).then((res) => {
-      return res.json();
-    }).then((parsed) => {
-      setMyCourses(parsed);
-    });
+    apiPost('/api/instructor_info', { u_id })
+      .then((res) => res.json())
+      .then((json_res) => {
+        userInfo = json_res[0];
+        document.getElementById('name').innerHTML = userInfo.name;
+        document.getElementById('email').innerHTML = userInfo.email;
+        document.getElementById('subject').innerHTML = userInfo.subject;
+        document.getElementById('course_count').innerHTML = userInfo.course_count;
+        document.getElementById('reg_date').innerHTML = userInfo.reg_date;
+      });
+    apiPost('/api/instructor_courses', { u_id })
+      .then((res) => res.json())
+      .then((parsed) => {
+        setMyCourses(parsed);
+      });
   }, []);
 
   return (
@@ -101,4 +94,4 @@ const instructor = () => {
   );
 };
 
-export default instructor;
+export default Instructor;

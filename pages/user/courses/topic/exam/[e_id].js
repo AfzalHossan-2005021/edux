@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import QuizQuestion from "@/components/QuizQuestion";
 import secureLocalStorage from "react-secure-storage";
+import { apiPost } from "../../../../../lib/api";
 
 export const getServerSideProps = async (context) => {
   const { params } = context;
@@ -18,14 +19,8 @@ export default function userCourseInfo({ e_id }) {
   );
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/exam_questions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ e_id }),
-    })
-      .then((res) => {
-        return res.json();
-      })
+    apiPost("/api/exam_questions", { e_id })
+      .then((res) => res.json())
       .then((json_res) => {
         setQuestions(json_res);
       });
@@ -46,13 +41,10 @@ export default function userCourseInfo({ e_id }) {
       }
       answers.push({ q_id: questions[i].q_id, ans: selectedOptions[i] });
     }
-    fetch("http://localhost:3000/api/update_mark", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ s_id, e_id, score: newScore }),
-    }).then(() => {
-      router.replace(`/user/courses/topic/exam/result/${e_id}`);
-    });
+    apiPost("/api/update_mark", { s_id, e_id, score: newScore })
+      .then(() => {
+        router.replace(`/user/courses/topic/exam/result/${e_id}`);
+      });
   };
 
   return (

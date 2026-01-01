@@ -8,6 +8,7 @@ import CourseWall_2 from '../../public/course_wall-2.jpg';
 import { HiArrowNarrowRight } from 'react-icons/hi';
 import { Progress } from '@material-tailwind/react';
 import RateCourse from '@/components/RateCourse';
+import { apiPost } from '../../lib/api';
 
 const user = () => {
   const inProgessRef = useRef();
@@ -39,33 +40,24 @@ const user = () => {
     }
   };
   useEffect(() => {
-    fetch('http://localhost:3000/api/user_info', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ u_id }),
-    }).then((res) => {
-      return res.json();
-    }).then((json_res) => {
-      const userInfo = json_res[0];
+    apiPost('/api/user_info', { u_id })
+      .then((res) => res.json())
+      .then((json_res) => {
+        const userInfo = json_res[0];
 
-      setNameValue(userInfo.name);
-      setEmailValue(userInfo.email);
-      setDate_of_birthValue(userInfo.date_of_birth);
-      setGenderValue(userInfo.gender === "M" ? "Male" : "Female");
-      setCourse_countValue(userInfo.course_count);
-      setReg_dateValue(userInfo.reg_date);
-
-    });
-    fetch('http://localhost:3000/api/user_courses', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ u_id }),
-    }).then((res) => {
-      return res.json();
-    }).then((json_res) => {
-      setInProgressCourses(json_res[0]);
-      setCompletedCourses(json_res[1]);
-    });
+        setNameValue(userInfo.name);
+        setEmailValue(userInfo.email);
+        setDate_of_birthValue(userInfo.date_of_birth);
+        setGenderValue(userInfo.gender === "M" ? "Male" : "Female");
+        setCourse_countValue(userInfo.course_count);
+        setReg_dateValue(userInfo.reg_date);
+      });
+    apiPost('/api/user_courses', { u_id })
+      .then((res) => res.json())
+      .then((json_res) => {
+        setInProgressCourses(json_res[0]);
+        setCompletedCourses(json_res[1]);
+      });
   }, []);
 
   return (

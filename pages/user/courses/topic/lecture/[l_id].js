@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import secureLocalStorage from 'react-secure-storage';
 import VideoPlayer from '../../../../../components/VideoPlayer';
+import { apiPost } from '../../../../../lib/api';
 
 export default function LecturePage({ l_id }) {
   const router = useRouter();
@@ -11,16 +12,12 @@ export default function LecturePage({ l_id }) {
   const [videoUrl, setVideoUrl] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/lecture_content', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ s_id, c_id, t_id, l_id })
-    }).then((res) => {
-      return res.json();
-    }).then((json_res) => {
-      setDescription(json_res.description);
-      setVideoUrl(json_res.video_link);
-    });
+    apiPost('/api/lecture_content', { s_id, c_id, t_id, l_id })
+      .then((res) => res.json())
+      .then((json_res) => {
+        setDescription(json_res.description);
+        setVideoUrl(json_res.video_link);
+      });
   }, []);
 
   return (

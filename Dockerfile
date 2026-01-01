@@ -43,6 +43,9 @@ ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Add sharp installation to handle native modules
+RUN npm install sharp
+
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production

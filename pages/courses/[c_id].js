@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 import Review from "@/components/Review";
 import { useEffect, useState } from "react";
 import secureLocalStorage from "react-secure-storage";
+import { apiPost } from "../../lib/api";
 
 export default function course_page({ c_id }) {
   const router = useRouter();
@@ -11,49 +12,25 @@ export default function course_page({ c_id }) {
   const [inEnrolled, setInEnrolled] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/selected_course", {
-      method: "POST",
-      body: JSON.stringify({ c_id }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((a) => {
-        return a.json();
-      })
+    apiPost("/api/selected_course", { c_id })
+      .then((a) => a.json())
       .then((parsed) => {
         setCourse(parsed[0]);
       });
 
-    fetch("http://localhost:3000/api/reviews", {
-      method: "POST",
-      body: JSON.stringify({ c_id }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((a) => {
-        return a.json();
-      })
+    apiPost("/api/reviews", { c_id })
+      .then((a) => a.json())
       .then((parsed) => {
         setReviews(parsed);
       });
 
     if (secureLocalStorage.getItem("u_id")) {
       setIsLoggedIn(true);
-      fetch("http://localhost:3000/api/is_enrolled", {
-        method: "POST",
-        body: JSON.stringify({
-          u_id: secureLocalStorage.getItem("u_id"),
-          c_id,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
+      apiPost("/api/is_enrolled", {
+        u_id: secureLocalStorage.getItem("u_id"),
+        c_id,
       })
-        .then((a) => {
-          return a.json();
-        })
+        .then((a) => a.json())
         .then((parsed) => {
           if (parsed.is_enrolled == 1) {
             setInEnrolled(true);
@@ -65,12 +42,8 @@ export default function course_page({ c_id }) {
   const handleClick = async (event) => {
     event.preventDefault();
     const u_id = secureLocalStorage.getItem("u_id");
-    let req = await fetch("http://localhost:3000/api/enroll", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ u_id, c_id: Course.c_id }),
-    });
-    let res = await req.json();
+    let response = await apiPost("/api/enroll", { u_id, c_id: Course.c_id });
+    let res = await response.json();
     let { code } = res;
     if (code == 1) {
       router.push(`/user/courses/${Course.c_id}`);
@@ -80,12 +53,8 @@ export default function course_page({ c_id }) {
   const addToWishlist = async (event) => {
     event.preventDefault();
     const u_id = secureLocalStorage.getItem("u_id");
-    let req = await fetch("http://localhost:3000/api/add_to_wishlist", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ u_id, c_id }),
-    });
-    let res = await req.json();
+    let response = await apiPost("/api/add_to_wishlist", { u_id, c_id });
+    let res = await response.json();
     let { code } = res;
     if (code == 1) {
       router.replace(router.asPath);

@@ -1,30 +1,43 @@
 const oracledb = require('oracledb');
-import pool from "../../middleware/connectdb"
+import pool from "../../middleware/connectdb";
+import { rateCourseSchema, validateRequest } from '../../lib/validation/schemas';
 
 export default async function handler(req, res) {
-    if (req.method == 'POST') {
-        const connection = await pool.acquire();
-        const {u_id, c_id, rating, review} = req.body;
-        try {
-            await connection.execute(
-                `BEGIN
-                    RATING_CHANGE(:u_id, :c_id, :rating, :review);
-                END;`,
-                {
-                    u_id: u_id,
-                    c_id: c_id,
-                    rating: rating,
-                    review: review
-                }
-            );
-            res.status(200).json({ message: 'Rating submitted successfully.'});
-        } catch (error) {
-            res.status(500).json({ message: 'An error occurred.' });
-        } finally {
-            pool.release(connection);
-        }
+    if (req.method !== 'POST') {
+        return res.status(405).json({ success: false, message: 'Method not allowed' });
     }
-    else {
-        res.status(400).json({ message: 'This method is not allowed.' })
+
+    // Validate input
+    const validation = validateRequest(rateCourseSchema, req.body);
+    if (!validation.success) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Validation failed', 
+            errors: validation.errors 
+        });
+    }
+
+    const { u_id, c_id, rating, review } = validation.data;
+    let connection;
+
+    try {
+        connection = await pool.acquire();
+        await connection.execute(
+            `BEGIN
+                RATING_CHANGE(:u_id, :c_id, :rating, :review);
+            END;`,
+            {
+                u_id: u_id,
+                c_id: c_id,
+                rating: rating,
+                review: review || null
+            }
+        );
+        res.status(200).json({ success: true, message: 'Rating submitted successfully.'});
+    } catch (error) {
+        console.error('Rate course error:', error);
+        res.status(500).json({ success: false, message: 'An error occurred.' });
+    } finally {
+        if (connection) pool.release(connection);
     }
 }

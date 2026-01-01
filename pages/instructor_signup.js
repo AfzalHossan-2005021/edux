@@ -3,8 +3,9 @@ import Head from 'next/head';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import secureLocalStorage from 'react-secure-storage';
+import { apiPost } from '../lib/api';
 
-export default function instructor_signup({ isLoggedIn, setIsLoggedIn }) {
+export default function InstructorSignup({ isLoggedIn, setIsLoggedIn }) {
   let router = useRouter()
 
   const [name, setName] = useState("");
@@ -14,43 +15,56 @@ export default function instructor_signup({ isLoggedIn, setIsLoggedIn }) {
   const [conf_password, setConf_Password] = useState("");
   const [isErrorOccured, setIsErrorOccured] = useState(false);
   const [error, setError] = useState("");
+  const [errors, setErrors] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (event) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setErrors([]);
+    
     if (!name || !email || !password || !conf_password || !subject) {
       setError("All fields are necessary");
-      setIsErrorOccured(true)
+      setIsErrorOccured(true);
+      setIsLoading(false);
+      return;
     }
-    else if (password != conf_password) {
+    
+    if (password !== conf_password) {
       setError("Confirmation password doesn't match");
-      setIsErrorOccured(true)
+      setIsErrorOccured(true);
+      setIsLoading(false);
+      return;
     }
-    else {
-      event.preventDefault();
+    
+    try {
       const data = { name, email, password, subject };
-      let req = await fetch('http://localhost:3000/api/instructor_signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-      let res = await req.json()
-      let { u_id } = res
-      if (u_id != -1) {
-        setIsLoggedIn(true)
-        secureLocalStorage.setItem('u_id', u_id);
-        secureLocalStorage.setItem('u_email', email);
-        secureLocalStorage.setItem('u_name', name);
+      const response = await apiPost('/api/instructor_signup', data);
+      const res = await response.json();
+      
+      if (res.success) {
+        if (setIsLoggedIn) setIsLoggedIn(true);
+        secureLocalStorage.setItem('u_id', res.user.u_id);
+        secureLocalStorage.setItem('u_email', res.user.email);
+        secureLocalStorage.setItem('u_name', res.user.name);
         secureLocalStorage.setItem('user', 'i');
-        router.replace('/instructor')
+        secureLocalStorage.setItem('isInstructor', true);
+        if (res.accessToken) {
+          localStorage.setItem('edux_access_token', res.accessToken);
+        }
+        router.replace('/instructor');
+      } else {
+        setIsErrorOccured(true);
+        setError(res.message || 'Registration failed');
+        if (res.errors) {
+          setErrors(res.errors);
+        }
       }
-      else {
-        setIsErrorOccured(true)
-        setError('User already exists')
-        setName('')
-        setEmail('')
-        setSubject('')
-        setPassword('')
-        setConf_Password('')
-      }
+    } catch (err) {
+      setIsErrorOccured(true);
+      setError('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   }
 

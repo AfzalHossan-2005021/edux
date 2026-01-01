@@ -4,20 +4,15 @@ import React, { useEffect, useState } from "react";
 import secureLocalStorage from "react-secure-storage";
 import { BiRightArrow, BiDownArrow } from "react-icons/bi";
 import { MdOutlineTopic, MdOutlineQuiz } from "react-icons/md";
+import { apiPost } from "../../../lib/api";
 
 export default function userCourseInfo({ c_id }) {
   const [content, setContent] = useState([]);
   const u_id = secureLocalStorage.getItem("u_id");
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/user_course_content", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ u_id, c_id }),
-    })
-      .then((res) => {
-        return res.json();
-      })
+    apiPost("/api/user_course_content", { u_id, c_id })
+      .then((res) => res.json())
       .then((json_res) => {
         setContent([]);
         for (let i = 0; i < json_res[0].length; i++) {

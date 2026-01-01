@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import secureLocalStorage from "react-secure-storage";
+import { apiGet, apiPost } from "../lib/api";
 
 import Logo from "./Logo";
 import SearchBar from "./SearchBar";
@@ -46,15 +47,9 @@ const Navbar = () => {
 
   const removeFromWishlist = (courseId) => {
     const u_id = secureLocalStorage.getItem("u_id");
-    fetch(`http://localhost:3000/api/remove_from_wishlist`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        u_id: u_id,
-        c_id: courseId,
-      }),
+    apiPost('/api/remove_from_wishlist', {
+      u_id: u_id,
+      c_id: courseId,
     });
     const updatedWishlist = wishlistCourses.filter((course) => course.c_id !== courseId);
     setWishlistCourses(updatedWishlist);
@@ -64,14 +59,8 @@ const Navbar = () => {
     if (secureLocalStorage.getItem("u_id")) {
       setisLoggedIn(true);
 
-      fetch(`http://localhost:3000/api/wishlist`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          u_id: secureLocalStorage.getItem("u_id"),
-        }),
+      apiPost('/api/wishlist', {
+        u_id: secureLocalStorage.getItem("u_id"),
       })
         .then((Response) => Response.json())
         .then((json) => {
@@ -79,7 +68,7 @@ const Navbar = () => {
         });
     }
 
-    fetch("http://localhost:3000/api/all_courses")
+    apiGet('/api/all_courses')
       .then((Response) => Response.json())
       .then((json) => {
         setAllCourses(json);

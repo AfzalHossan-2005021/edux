@@ -2,42 +2,69 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import secureLocalStorage from "react-secure-storage";
+import { apiPost } from "../lib/api";
 
-export default function login() {
+export default function Login() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(" ");
+  const [errors, setErrors] = useState([]);
   const [isErrorOccured, setIsErrorOccured] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const checkUser = async (event) => {
     event.preventDefault();
+    setIsLoading(true);
+    setErrors([]);
+    
     if (!email || !password) {
       setError("All fields are necessary");
       setIsErrorOccured(true);
-    } else {
-      const data = { email, password };
-      let req = await fetch("http://localhost:3000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      let res = await req.json();
-      let { message, u_id, u_name } = res;
-      if (message == "Valid user") {
-        secureLocalStorage.setItem("u_id", u_id);
-        secureLocalStorage.setItem("u_email", email);
-        secureLocalStorage.setItem("u_name", u_name);
-        router.push("/user");
+      setIsLoading(false);
+      return;
+    }
+    
+    try {
+      const response = await apiPost("/api/login", { email, password });
+      const res = await response.json();
+      
+      if (res.success) {
+        // Store user info for backward compatibility
+        secureLocalStorage.setItem("u_id", res.user.u_id);
+        secureLocalStorage.setItem("u_email", res.user.email);
+        secureLocalStorage.setItem("u_name", res.user.name);
+        secureLocalStorage.setItem("isStudent", res.user.isStudent);
+        secureLocalStorage.setItem("isInstructor", res.user.isInstructor);
+        
+        // Store access token
+        if (res.accessToken) {
+          localStorage.setItem("edux_access_token", res.accessToken);
+        }
+        
+        // Redirect based on user type
+        if (res.user.isInstructor) {
+          router.push("/instructor");
+        } else {
+          router.push("/user");
+        }
       } else {
         setIsErrorOccured(true);
-        setError(message);
-        setEmail("");
+        setError(res.message || "Login failed");
+        if (res.errors) {
+          setErrors(res.errors);
+        }
         setPassword("");
       }
+    } catch (err) {
+      setIsErrorOccured(true);
+      setError("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
+  
   useEffect(() => {
     if (secureLocalStorage.getItem("u_id")) {
       router.push("/user");
@@ -48,6 +75,7 @@ export default function login() {
       }
     };
     document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
   }, [isErrorOccured]);
 
   return (
@@ -67,6 +95,13 @@ export default function login() {
                   role="alert"
                 >
                   <span className="block sm:inline">{error}</span>
+                  {errors.length > 0 && (
+                    <ul className="list-disc list-inside mt-2 text-sm">
+                      {errors.map((err, idx) => (
+                        <li key={idx}>{err}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               )}
               <div className="relative flex flex-col">
@@ -127,9 +162,10 @@ export default function login() {
                 <button
                   type="submit"
                   onClick={checkUser}
-                  className="border-solid border-lime-500 border-2 hover:bg-lime-500 rounded-md px-10 py-1.5 tracking-widest font-semibold text-white items-center"
+                  disabled={isLoading}
+                  className="border-solid border-lime-500 border-2 hover:bg-lime-500 rounded-md px-10 py-1.5 tracking-widest font-semibold text-white items-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Log In
+                  {isLoading ? "Logging in..." : "Log In"}
                 </button>
               </div>
               <div>

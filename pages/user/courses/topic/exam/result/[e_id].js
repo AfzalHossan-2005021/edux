@@ -1,19 +1,14 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import secureLocalStorage from "react-secure-storage";
+import { apiPost } from "../../../../../../lib/api";
 
 const ViewResult = ({ e_id }) => {
   const [data, setData] = useState([]);
   useEffect(() => {
     const s_id = secureLocalStorage.getItem("u_id");
-    fetch("http://localhost:3000/api/exam_result", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ s_id, e_id }),
-    })
-      .then((res) => {
-        return res.json();
-      })
+    apiPost("/api/exam_result", { s_id, e_id })
+      .then((res) => res.json())
       .then((json_res) => {
         setData(json_res[0]);
       });

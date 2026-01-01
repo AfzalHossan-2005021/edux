@@ -10,6 +10,7 @@ export default async function handler(req, res) {
             [],
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
+        console.log(result.rows);
         res.status(200).json(result.rows);
     } catch (error) {
         res.status(500).json({ error: 'An error occurred' });

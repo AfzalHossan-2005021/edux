@@ -55,22 +55,20 @@ describe('SearchBar Component', () => {
   it('fetches suggestions on input', async () => {
     const mockSetResults = jest.fn();
     const mockCourses = [
-      { C_ID: 1, C_NAME: 'React Course' },
-      { C_ID: 2, C_NAME: 'React Advanced' },
+      { id: 1, title: 'React Basics' },
+      { id: 2, title: 'Advanced React' },
     ];
 
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(mockCourses),
-    });
-
-    render(<SearchBar setResults={mockSetResults} />);
+    render(<SearchBar allCourses={mockCourses} setResults={mockSetResults} />);
     const input = screen.getByPlaceholderText(/search/i);
 
     fireEvent.change(input, { target: { value: 'react' } });
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalled();
+      expect(mockSetResults).toHaveBeenCalledWith([
+        { id: 1, title: 'React Basics' },
+        { id: 2, title: 'Advanced React' },
+      ]);
     });
   });
 });

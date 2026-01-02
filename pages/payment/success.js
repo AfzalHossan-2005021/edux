@@ -7,6 +7,7 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { verifyPayment } from '../../lib/payments';
+import { Button } from '../../components/ui';
 
 export default function PaymentSuccess() {
   const router = useRouter();
@@ -95,18 +96,14 @@ export default function PaymentSuccess() {
             )}
 
             <div className="space-y-3">
-              <Link
-                href={payment ? `/user/courses/${payment.courseId}` : '/user'}
-                className="block w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Start Learning
-              </Link>
-              <Link
-                href="/user"
-                className="block w-full py-3 text-blue-600 hover:text-blue-700 transition-colors"
-              >
-                View My Courses
-              </Link>
+              <div className="space-y-3">
+                <Link href={payment ? `/user/courses/${payment.courseId}` : '/user'} className="inline-flex w-full">
+                  <Button variant="primary" size="md" className="w-full">Start Learning</Button>
+                </Link>
+                <Link href="/user" className="block w-full py-3 text-blue-600 hover:text-blue-700 transition-colors">
+                  View My Courses
+                </Link>
+              </div>
             </div>
           </>
         )}
@@ -132,12 +129,7 @@ export default function PaymentSuccess() {
             <p className="text-gray-600 mb-6">
               Your payment is being processed. This usually takes a few moments.
             </p>
-            <button
-              onClick={handleVerifyPayment}
-              className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Check Status
-            </button>
+            <Button variant="primary" size="md" className="w-full" onClick={handleVerifyPayment}>Check Status</Button>
           </>
         )}
 
@@ -166,12 +158,7 @@ export default function PaymentSuccess() {
               If you were charged, please contact support with your session ID.
             </p>
             <div className="space-y-3">
-              <button
-                onClick={handleVerifyPayment}
-                className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Try Again
-              </button>
+              <Button variant="primary" size="md" className="w-full" onClick={handleVerifyPayment}>Try Again</Button>
               <Link
                 href="/courses"
                 className="block w-full py-3 text-blue-600 hover:text-blue-700 transition-colors"

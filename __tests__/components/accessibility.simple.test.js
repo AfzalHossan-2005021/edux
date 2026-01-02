@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import Navbar from '../../components/Navbar';
 import SearchBar from '../../components/SearchBar';
 import SearchResultsList from '../../components/SearchResultsList';
+import { ThemeProvider } from '../../context/ThemeContext';
 
 // Mock secure local storage
 jest.mock('react-secure-storage', () => ({
@@ -16,7 +17,11 @@ global.fetch = jest.fn(() =>
 
 describe('Basic accessibility attributes', () => {
   it('Navbar should have wishlist and user menu buttons with ARIA', () => {
-    render(<Navbar />);
+    render(
+      <ThemeProvider>
+        <Navbar />
+      </ThemeProvider>
+    );
 
     const wishlistBtn = screen.getByLabelText(/open wishlist/i);
     const userMenuBtn = screen.getByLabelText(/open user menu/i);

@@ -5,11 +5,9 @@ import LogoImage from '../public/T_logo.png';
 
 const Logo = () => {
   return (
-    <div className='absolute'>
-      <Link href='/'>
-        <Image src={LogoImage} alt='Logo' height='50' priority={true} />
-      </Link>
-    </div>
+    <Link href='/'>
+      <Image src={LogoImage} alt='Logo' height='50' priority={true} />
+    </Link>
   );
 };
 

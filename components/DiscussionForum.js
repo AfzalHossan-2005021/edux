@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { Button } from './ui';
 
 // Discussion Thread Item
 function ThreadItem({ thread, onSelect, isSelected }) {
@@ -56,12 +57,7 @@ function ReplyItem({ reply, currentUserId, onDelete }) {
               </span>
             </div>
             {isAuthor && (
-              <button
-                onClick={() => onDelete(reply.replyId)}
-                className="text-red-500 hover:text-red-700 text-sm"
-              >
-                Delete
-              </button>
+              <Button variant="danger" size="sm" onClick={() => onDelete(reply.replyId)}>Delete</Button>
             )}
           </div>
           <p className="text-gray-700 mt-1 whitespace-pre-wrap">{reply.content}</p>
@@ -96,9 +92,7 @@ function NewThreadModal({ isOpen, onClose, onSubmit }) {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4">
         <div className="p-4 border-b flex items-center justify-between">
           <h2 className="text-xl font-semibold">New Discussion</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            ✕
-          </button>
+          <Button variant="icon" size="md" onClick={onClose} className="text-gray-500 hover:text-gray-700">✕</Button>
         </div>
         <form onSubmit={handleSubmit} className="p-4">
           <div className="mb-4">
@@ -124,20 +118,8 @@ function NewThreadModal({ isOpen, onClose, onSubmit }) {
             />
           </div>
           <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              {isSubmitting ? 'Posting...' : 'Post Discussion'}
-            </button>
+            <Button type="button" variant="ghost" size="md" onClick={onClose}>Cancel</Button>
+            <Button type="submit" variant="primary" size="md" loading={isSubmitting} disabled={isSubmitting}>{isSubmitting ? 'Posting...' : 'Post Discussion'}</Button>
           </div>
         </form>
       </div>
@@ -282,12 +264,7 @@ export default function DiscussionForum({ courseId }) {
       {/* Header */}
       <div className="p-4 border-b flex items-center justify-between bg-gray-50">
         <h2 className="text-lg font-semibold text-gray-800">💬 Course Discussions</h2>
-        <button
-          onClick={() => setShowNewThread(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
-        >
-          New Discussion
-        </button>
+        <Button onClick={() => setShowNewThread(true)} variant="primary" size="md">New Discussion</Button>
       </div>
 
       <div className="flex h-[500px]">
@@ -353,13 +330,7 @@ export default function DiscussionForum({ courseId }) {
                       placeholder="Write a reply..."
                       className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    <button
-                      type="submit"
-                      disabled={isSubmittingReply || !replyContent.trim()}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {isSubmittingReply ? '...' : 'Reply'}
-                    </button>
+                    <Button type="submit" variant="primary" size="md" disabled={isSubmittingReply || !replyContent.trim()}>{isSubmittingReply ? '...' : 'Reply'}</Button>
                   </div>
                 </form>
               )}

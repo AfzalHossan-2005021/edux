@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import secureLocalStorage from "react-secure-storage";
 import { apiPost } from "../lib/api";
+import { Button } from "@/components/ui";
 
 export default function Login() {
   const router = useRouter();
@@ -82,11 +83,11 @@ export default function Login() {
     <div>
       <div className="w-full min-h-screen flex justify-center items-center bg-gray-900">
         <div className="relative w-[380px] h-[420px] bg-gray-800 rounded-tr-3xl rounded-bl-3xl overflow-hidden">
-          <div className="absolute w-[380px] h-[420px] bg-gradient-to-r from-lime-500 via-lime-500 to-transparent -top-[50%] -left-[50%] animate-spin-slow origin-bottom-right"></div>
-          <div className="absolute w-[380px] h-[420px] bg-gradient-to-r from-lime-500 via-lime-500 to-transparent -top-[50%] -left-[50%] animate-spin-delay origin-bottom-right"></div>
+          <div className="absolute w-[380px] h-[420px] bg-gradient-to-r from-indigo-600 via-indigo-600 to-transparent -top-[50%] -left-[50%] animate-spin-slow origin-bottom-right"></div>
+          <div className="absolute w-[380px] h-[420px] bg-gradient-to-r from-indigo-600 via-indigo-600 to-transparent -top-[50%] -left-[50%] animate-spin-delay origin-bottom-right"></div>
           <div className="absolute inset-1 bg-gray-800 rounded-tr-3xl rounded-bl-3xl z-10 p-5">
             <form className="flex-col space-y-8">
-              <h2 className="text-xl font-semibold text-lime-500 text-center">
+              <h2 className="text-xl font-semibold text-indigo-600 text-center">
                 Log in
               </h2>
               {isErrorOccured && (
@@ -111,11 +112,11 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder=""
-                  className="relative z-10 border-0 border-lime-500 h-10 bg-transparent text-gray-100 outline-none px-2 peer"
+                  className="relative z-10 border-0 border-indigo-600 h-10 bg-transparent text-gray-100 outline-none px-2 peer"
                   autoComplete="email"
                 />
-                <i className="bg-lime-500 rounded w-full bottom-0 left-0 absolute h-10 -z-10 duration-500 origin-bottom transform peer-focus:h-10 peer-placeholder-shown:h-[0.5px]" />
-                <label className="peer-focus:font-medium absolute text-sm duration-500 transform -translate-y-8 scale-75 top-3 left-0 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-lime-500 text-lime-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:text-gray-500 peer-focus:scale-75 peer-focus:-translate-y-8">
+                <i className="bg-indigo-600 rounded w-full bottom-0 left-0 absolute h-10 -z-10 duration-500 origin-bottom transform peer-focus:h-10 peer-placeholder-shown:h-[0.5px]" />
+                <label className="peer-focus:font-medium absolute text-sm duration-500 transform -translate-y-8 scale-75 top-3 left-0 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-indigo-600 text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:text-gray-500 peer-focus:scale-75 peer-focus:-translate-y-8">
                   Enter Email
                 </label>
               </div>
@@ -126,11 +127,11 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder=""
-                  className="relative z-10 border-0 border-lime-500 h-10 bg-transparent text-gray-100 outline-none px-2 peer"
+                  className="relative z-10 border-0 border-indigo-600 h-10 bg-transparent text-gray-100 outline-none px-2 peer"
                   autoComplete="current-password"
                 />
-                <i className="bg-lime-500 rounded w-full bottom-0 left-0 absolute h-10 -z-10 duration-500 origin-bottom transform peer-focus:h-10 peer-placeholder-shown:h-[0.5px]" />
-                <label className="peer-focus:font-medium absolute text-sm duration-500 transform -translate-y-8 scale-75 top-3 left-0 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-lime-500 text-lime-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:text-gray-500 peer-focus:scale-75 peer-focus:-translate-y-8">
+                <i className="bg-indigo-600 rounded w-full bottom-0 left-0 absolute h-10 -z-10 duration-500 origin-bottom transform peer-focus:h-10 peer-placeholder-shown:h-[0.5px]" />
+                <label className="peer-focus:font-medium absolute text-sm duration-500 transform -translate-y-8 scale-75 top-3 left-0 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-indigo-600 text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:text-gray-500 peer-focus:scale-75 peer-focus:-translate-y-8">
                   Enter Password
                 </label>
               </div>
@@ -153,20 +154,20 @@ export default function Login() {
                 </div>
                 <a
                   href="/forgot-password"
-                  className="text-lime-500 text-sm font-medium text-primary-600 hover:underline"
+                  className="text-indigo-600 text-sm font-medium hover:underline"
                 >
                   Forgot password?
                 </a>
               </div>
               <div className="flex justify-center">
-                <button
+                <Button
                   type="submit"
                   onClick={checkUser}
                   disabled={isLoading}
-                  className="border-solid border-lime-500 border-2 hover:bg-lime-500 rounded-md px-10 py-1.5 tracking-widest font-semibold text-white items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="border-solid border-indigo-600 border-2 hover:bg-indigo-600 rounded-md px-10 py-1.5 tracking-widest font-semibold text-white items-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? "Logging in..." : "Log In"}
-                </button>
+                </Button>
               </div>
               <div>
                 <p className="text-sm font-light text-gray-500 dark:text-gray-400">

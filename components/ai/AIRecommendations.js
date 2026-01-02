@@ -86,10 +86,10 @@ export default function AIRecommendations({ limit = 4 }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {recommendations.map((course) => (
+        {recommendations.map((course, index) => (
           <a
-            key={course.id}
-            href={`/courses/${course.id}`}
+            key={course.course_id || course.id || `rec-${index}`}
+            href={`/courses/${course.course_id || course.id}`}
             className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden group"
           >
             <div className="h-24 bg-gradient-to-r from-indigo-400 to-purple-400 relative">

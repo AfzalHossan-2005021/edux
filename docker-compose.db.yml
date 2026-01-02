@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # Oracle Database Service (db-only compose)
+  oracle-db:
+    image: gvenzl/oracle-xe:21-slim
+    container_name: edux-oracle-db
+    environment:
+      - ORACLE_PASSWORD=oracle123
+      - ORACLE_DATABASE=EDUX
+      - APP_USER=EDUX
+      - APP_USER_PASSWORD=edux123
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+      - ./docker/oracle/init:/container-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    networks:
+      - edux-network
+
+volumes:
+  oracle-data:
+    driver: local
+
+networks:
+  edux-network:
+    driver: bridge

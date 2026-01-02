@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { Button } from '../../components/ui';
 
 // Stats Card Component
 function StatCard({ title, value, change, changeType, icon }) {
@@ -131,18 +132,16 @@ export default function AdminDashboard() {
 
           <nav className="space-y-1">
             {tabs.map((tab) => (
-              <button
+              <Button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-300 hover:bg-slate-700'
-                }`}
+                variant={activeTab === tab.id ? 'primary' : 'ghost'}
+                size="md"
+                className="w-full justify-start"
               >
                 <span className="mr-3">{tab.icon}</span>
                 {tab.label}
-              </button>
+              </Button>
             ))}
           </nav>
 
@@ -166,11 +165,11 @@ export default function AdminDashboard() {
               <p className="text-gray-500">Welcome back, Admin</p>
             </div>
             <div className="flex items-center space-x-4">
-              <button className="p-2 hover:bg-gray-100 rounded-lg">
+              <Button variant="icon" size="md" className="p-2" aria-label="Notifications">
                 <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
-              </button>
+              </Button>
               <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
                 A
               </div>
@@ -237,7 +236,7 @@ export default function AdminDashboard() {
             <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-800">Recent Activity</h3>
-                <button className="text-sm text-blue-600 hover:text-blue-700">View All</button>
+                <Button variant="ghost" size="sm" className="text-sm text-blue-600 hover:text-blue-700">View All</Button>
               </div>
               <div>
                 {recentActivity.map((activity, index) => (
@@ -250,7 +249,7 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-800">Top Courses</h3>
-                <button className="text-sm text-blue-600 hover:text-blue-700">View All</button>
+                <Button variant="ghost" size="sm" className="text-sm text-blue-600 hover:text-blue-700">View All</Button>
               </div>
               <div className="space-y-4">
                 {[

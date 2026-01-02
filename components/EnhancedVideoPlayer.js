@@ -348,7 +348,7 @@ const EnhancedVideoPlayer = ({
     const aspectRatio = 9 / 16;
     
     return (
-      <div ref={containerRef} className="enhanced-video-player relative bg-black rounded-lg overflow-hidden">
+      <div ref={containerRef} role="region" aria-label={title || 'Video player'} className="enhanced-video-player relative bg-black rounded-lg overflow-hidden">
         <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
           <iframe
             className="absolute top-0 left-0 w-full h-full"
@@ -370,6 +370,8 @@ const EnhancedVideoPlayer = ({
   return (
     <div 
       ref={containerRef}
+      role="region"
+      aria-label={title || 'Video player'}
       className="enhanced-video-player relative bg-black rounded-lg overflow-hidden group"
     >
       {/* Video Element */}

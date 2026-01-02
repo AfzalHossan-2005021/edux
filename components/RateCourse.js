@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import secureLocalStorage from 'react-secure-storage';
 import { apiPost } from '../lib/api';
+import { Button } from './ui';
 
 
 const RateCourse = ({ c_id }) => {
@@ -22,9 +23,7 @@ const RateCourse = ({ c_id }) => {
   return (
     <div>
       <div className='flex items-center justify-center'>
-        <button onClick={toggleDivVisibility} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Rate the Course
-        </button>
+        <Button variant="primary" size="md" onClick={toggleDivVisibility}>Rate the Course</Button>
       </div>
 
       {isDivVisible && (
@@ -49,12 +48,9 @@ const RateCourse = ({ c_id }) => {
             value={review}
             onChange={(event) => setReview(event.target.value)}
           ></textarea>
-          <button
-            onClick={submitRating}
-            className="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Submit
-          </button>
+          <div className="mt-2 flex justify-end">
+            <Button variant="primary" size="md" onClick={submitRating}>Submit</Button>
+          </div>
         </div>
       )}
     </div>

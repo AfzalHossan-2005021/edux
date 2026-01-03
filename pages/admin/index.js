@@ -8,6 +8,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Button } from '../../components/ui';
+import { withAdminOnlyAuth } from '../../lib/auth/withServerSideAuth';
 
 // Stats Card Component
 function StatCard({ title, value, change, changeType, icon }) {
@@ -282,3 +283,6 @@ export default function AdminDashboard() {
     </>
   );
 }
+
+// Server-side admin-only authentication
+export const getServerSideProps = withAdminOnlyAuth();

@@ -22,22 +22,28 @@ export default async function handler(req, res) {
 
   try {
     connection = await pool.acquire();
-    const result = await connection.execute(
-      `BEGIN
-              :code := ADD_TO_WISHLIST(:u_id, :c_id);
-              commit;
-          END;`,
-      {
-        u_id: u_id,
-        c_id: c_id,
-        code: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 100 },
-      },
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    
+    // Check if already in wishlist
+    const checkResult = await connection.execute(
+      `SELECT COUNT(*) as cnt FROM EDUX."Wishlist" WHERE "u_id" = :u_id AND "c_id" = :c_id`,
+      { u_id: parseInt(u_id), c_id: parseInt(c_id) }
     );
-    res.status(200).json({ success: true, ...result.outBinds });
+    
+    if (checkResult.rows[0]?.cnt > 0 || checkResult.rows[0]?.CNT > 0) {
+      return res.status(200).json({ success: true, code: 0, message: "Already in wishlist" });
+    }
+    
+    // Add to wishlist
+    await connection.execute(
+      `INSERT INTO EDUX."Wishlist"("u_id", "c_id") VALUES (:u_id, :c_id)`,
+      { u_id: parseInt(u_id), c_id: parseInt(c_id) },
+      { autoCommit: true }
+    );
+    
+    res.status(200).json({ success: true, code: 1, message: "Added to wishlist" });
   } catch (error) {
     console.error("Error adding to wishlist:", error.message);
-    res.status(500).json({ success: false, message: "An error occurred." });
+    res.status(500).json({ success: false, message: "An error occurred: " + error.message });
   } finally {
     if (connection) pool.release(connection);
   }

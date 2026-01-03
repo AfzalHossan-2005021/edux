@@ -1,14 +1,13 @@
 import React, { useRef, useState, useEffect } from "react";
-import { AiOutlineCaretDown } from "react-icons/ai";
-import { Button } from './ui';
+import Link from "next/link";
+import { HiChevronDown, HiSparkles, HiArrowRight } from "react-icons/hi";
 import {
   FaCode,
   FaMicroscope,
-  FaCalculus,
+  FaCalculator,
   FaPalette,
   FaChartBar,
   FaGlobeAmericas,
-  FaChevronRight,
 } from "react-icons/fa";
 
 const ExploreDropDown = ({ isOpen, setIsOpen }) => {
@@ -21,37 +20,43 @@ const ExploreDropDown = ({ isOpen, setIsOpen }) => {
       name: "Information Technology",
       description: "Programming, Web Dev, Cloud",
       icon: FaCode,
-      color: "from-blue-400 to-blue-600",
+      gradient: "from-blue-500 to-indigo-600",
+      bgLight: "bg-blue-50 dark:bg-blue-900/20",
     },
     {
       name: "Science and Engineering",
       description: "Physics, Chemistry, Engineering",
       icon: FaMicroscope,
-      color: "from-purple-400 to-purple-600",
+      gradient: "from-violet-500 to-purple-600",
+      bgLight: "bg-violet-50 dark:bg-violet-900/20",
     },
     {
       name: "Mathematics and Logic",
       description: "Algebra, Calculus, Statistics",
-      icon: FaCalculus,
-      color: "from-amber-400 to-amber-600",
+      icon: FaCalculator,
+      gradient: "from-amber-500 to-orange-600",
+      bgLight: "bg-amber-50 dark:bg-amber-900/20",
     },
     {
       name: "Arts and Humanities",
       description: "History, Literature, Philosophy",
       icon: FaPalette,
-      color: "from-pink-400 to-pink-600",
+      gradient: "from-pink-500 to-rose-600",
+      bgLight: "bg-pink-50 dark:bg-pink-900/20",
     },
     {
       name: "Social Science",
       description: "Psychology, Economics, Sociology",
       icon: FaChartBar,
-      color: "from-green-400 to-green-600",
+      gradient: "from-emerald-500 to-teal-600",
+      bgLight: "bg-emerald-50 dark:bg-emerald-900/20",
     },
     {
       name: "Language Learning",
       description: "English, Spanish, Mandarin, more",
       icon: FaGlobeAmericas,
-      color: "from-red-400 to-red-600",
+      gradient: "from-cyan-500 to-blue-600",
+      bgLight: "bg-cyan-50 dark:bg-cyan-900/20",
     },
   ];
 
@@ -119,87 +124,93 @@ const ExploreDropDown = ({ isOpen, setIsOpen }) => {
   return (
     <div className="relative" ref={containerRef}>
       {/* Explore Button */}
-      <Button
+      <button
         aria-label="Explore categories"
         aria-expanded={isOpen}
         aria-controls="explore-dropdown"
         onClick={() => setIsOpen(!isOpen)}
-        variant="primary"
-        size="md"
-        className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-bold text-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 ${isOpen ? 'scale-105 shadow-2xl' : 'shadow-lg hover:shadow-xl'}`}
+        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 ${
+          isOpen
+            ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+            : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 dark:hover:text-primary-400'
+        }`}
       >
-        <span className="text-sm font-bold">Explore</span>
-        <AiOutlineCaretDown className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
-      </Button>
+        <HiSparkles className={`w-4 h-4 ${isOpen ? 'text-primary-500' : 'text-amber-500'}`} />
+        <span>Explore</span>
+        <HiChevronDown className={`w-4 h-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
 
-      {/* Dropdown Menu with Portal-like behavior */}
+      {/* Dropdown Menu */}
       {isOpen && (
         <div
           id="explore-dropdown"
-          className="absolute top-full left-0 mt-2 bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl overflow-hidden z-50 border border-gray-100 dark:border-neutral-700 min-w-max animate-in fade-in slide-in-from-top-2 duration-200"
+          className="absolute top-full left-0 mt-3 w-80 bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl shadow-neutral-900/10 dark:shadow-neutral-900/50 overflow-hidden z-50 border border-neutral-200/80 dark:border-neutral-700/80 animate-in fade-in slide-in-from-top-2 duration-200"
           role="menu"
         >
           {/* Header */}
-          <div className="px-5 py-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-neutral-700 dark:to-neutral-600 border-b border-blue-200 dark:border-neutral-700">
-            <h3 className="text-sm font-bold text-gray-900 dark:text-white">
-              Choose Your Learning Path
-            </h3>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+          <div className="px-5 py-4 bg-gradient-to-r from-primary-50 to-indigo-50 dark:from-primary-900/20 dark:to-indigo-900/20 border-b border-neutral-200/80 dark:border-neutral-700/80">
+            <div className="flex items-center gap-2 mb-1">
+              <HiSparkles className="w-4 h-4 text-amber-500" />
+              <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
+                Choose Your Path
+              </h3>
+            </div>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
               Explore diverse categories and courses
             </p>
           </div>
 
           {/* Categories Grid */}
-          <div className="grid grid-cols-1 gap-1 p-2 max-h-96 overflow-y-auto">
+          <div className="p-2 max-h-[360px] overflow-y-auto">
             {categories.map((category, index) => {
               const IconComponent = category.icon;
               return (
-                <a
+                <Link
                   key={index}
                   ref={(el) => (menuItemsRef.current[index] = el)}
-                  href={`/courses?category=${encodeURIComponent(category.name)}`}
+                  href={`/explore?category=${encodeURIComponent(category.name)}`}
                   role="menuitem"
                   tabIndex={focusedIndex === index ? 0 : -1}
                   onFocus={() => setFocusedIndex(index)}
-                  className={`group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 focus:outline-none ${
+                  onClick={() => setIsOpen(false)}
+                  className={`group flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
                     focusedIndex === index
-                      ? "bg-blue-100 dark:bg-neutral-700"
-                      : "hover:bg-gray-50 dark:hover:bg-neutral-700"
+                      ? category.bgLight
+                      : "hover:bg-neutral-50 dark:hover:bg-neutral-800"
                   }`}
                 >
-                  {/* Icon with gradient background */}
-                  <div
-                    className={`flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br ${category.color} shadow-md group-hover:shadow-lg transition-all duration-200 group-hover:scale-110`}
-                  >
-                    <IconComponent className="text-white h-5 w-5" />
+                  {/* Icon */}
+                  <div className={`flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br ${category.gradient} flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-200`}>
+                    <IconComponent className="text-white w-5 h-5" />
                   </div>
 
-                  {/* Text Content */}
+                  {/* Text */}
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <h4 className="text-sm font-semibold text-neutral-800 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">
                       {category.name}
                     </h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
                       {category.description}
                     </p>
                   </div>
 
-                  {/* Arrow Indicator */}
-                  <FaChevronRight className="flex-shrink-0 h-4 w-4 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-all translate-x-0 group-hover:translate-x-1 duration-200" />
-                </a>
+                  {/* Arrow */}
+                  <HiArrowRight className="w-4 h-4 text-neutral-300 dark:text-neutral-600 group-hover:text-primary-500 group-hover:translate-x-1 transition-all duration-200" />
+                </Link>
               );
             })}
           </div>
 
           {/* Footer */}
-          <div className="px-5 py-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-700 dark:to-neutral-600 border-t border-gray-200 dark:border-neutral-700">
-            <a
-              href="/courses"
-              className="text-sm font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors flex items-center gap-2 group"
+          <div className="px-4 py-3 bg-neutral-50 dark:bg-neutral-800/50 border-t border-neutral-200/80 dark:border-neutral-700/80">
+            <Link
+              href="/explore"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-primary-500 to-indigo-600 text-white text-sm font-semibold hover:from-primary-600 hover:to-indigo-700 transition-all duration-200 shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40"
             >
-              View All Courses
-              <FaChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
-            </a>
+              <span>View All Courses</span>
+              <HiArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       )}

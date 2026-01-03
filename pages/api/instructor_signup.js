@@ -1,4 +1,12 @@
-const oracledb = require('oracledb');
+/**
+ * Instructor Signup API Endpoint (Legacy/Backward Compatibility)
+ * POST /api/instructor_signup
+ * 
+ * This endpoint maintains backward compatibility.
+ * For new implementations, use: POST /api/auth/instructor/signup
+ */
+
+import oracledb from 'oracledb';
 import pool from "../../middleware/connectdb";
 import { hashPassword } from '../../lib/auth/password';
 import { generateTokens } from '../../lib/auth/jwt';
@@ -7,7 +15,11 @@ import { instructorSignupSchema, validateRequest } from '../../lib/validation/sc
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
-        return res.status(405).json({ success: false, message: 'Method not allowed' });
+        res.setHeader('Allow', ['POST']);
+        return res.status(405).json({ 
+            success: false, 
+            message: `Method ${req.method} not allowed` 
+        });
     }
 
     // Validate input
@@ -28,7 +40,7 @@ export default async function handler(req, res) {
 
         // Check if email already exists
         const existingUser = await connection.execute(
-            `SELECT "u_id" FROM EDUX."Users" WHERE "email" = :email`,
+            `SELECT "u_id" FROM EDUX."Users" WHERE LOWER("email") = LOWER(:email)`,
             { email },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
@@ -36,7 +48,7 @@ export default async function handler(req, res) {
         if (existingUser.rows && existingUser.rows.length > 0) {
             return res.status(409).json({ 
                 success: false, 
-                message: 'Email already registered' 
+                message: 'An account with this email already exists' 
             });
         }
 
@@ -46,28 +58,36 @@ export default async function handler(req, res) {
         // Create instructor with hashed password
         const result = await connection.execute(
             `BEGIN
-                :u_id := CREATE_INSTRUCTOR(:name, :email, :password, :subject);
-                commit;
+                :u_id := EDUX.CREATE_INSTRUCTOR(:name, :email, :password, :subject);
             END;`,
             {
-                name: name,
-                email: email,
+                name,
+                email: email.toLowerCase(),
                 password: hashedPassword,
-                subject: subject,
+                subject,
                 u_id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
             },
-            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+            { autoCommit: true }
         );
 
         const u_id = result.outBinds.u_id;
 
+        if (!u_id || u_id < 0) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to create instructor account',
+            });
+        }
+
         // Generate JWT tokens
         const userData = {
-            u_id: u_id,
-            email: email,
-            name: name,
+            u_id,
+            email: email.toLowerCase(),
+            name,
+            role: 'instructor',
             isStudent: false,
             isInstructor: true,
+            isAdmin: false,
         };
 
         const { accessToken, refreshToken } = generateTokens(userData);
@@ -80,11 +100,14 @@ export default async function handler(req, res) {
             success: true, 
             message: 'Instructor account created successfully',
             user: {
-                u_id: u_id,
-                name: name,
-                email: email,
+                u_id,
+                name,
+                email: email.toLowerCase(),
+                subject,
+                role: 'instructor',
                 isStudent: false,
                 isInstructor: true,
+                isAdmin: false,
             },
             accessToken,
         });
@@ -93,11 +116,15 @@ export default async function handler(req, res) {
         console.error('Instructor signup error:', error);
         return res.status(500).json({ 
             success: false, 
-            message: 'An error occurred during registration' 
+            message: 'An error occurred during registration. Please try again.' 
         });
     } finally {
         if (connection) {
-            pool.release(connection);
+            try {
+                pool.release(connection);
+            } catch (releaseError) {
+                console.error('Connection release error:', releaseError);
+            }
         }
     }
 }

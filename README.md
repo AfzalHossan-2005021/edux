@@ -44,10 +44,24 @@ EduX is a modern, AI-enhanced Learning Management System (LMS) designed to provi
 ## ✨ Features
 
 ### 👥 User Management
-- **Multi-role Authentication**: Separate login for students and instructors
-- **JWT Authentication**: Secure token-based auth with refresh tokens
+- **Multi-role Authentication**: Separate login for students, instructors, and admins
+- **Role-Based Access Control (RBAC)**: Route protection based on user role
+  - `/student/*` - Students only
+  - `/instructor/*` - Instructors only
+  - `/admin/*` - Admins only
+- **JWT Authentication**: Secure token-based auth with refresh tokens and rotation
 - **Profile Management**: Update profile, change password, manage settings
 - **OAuth Ready**: Architecture supports social login integration
+
+### 🔐 Advanced Authentication & Security
+- **Next.js Middleware**: Edge runtime route protection for all pages
+- **Server-Side Auth (SSR)**: `withServerSideAuth` HOC prevents flash of unauthorized content
+- **Session Management**: Track and manage active sessions across devices
+- **Refresh Token Rotation**: Enhanced security with token version tracking
+- **Rate Limiting**: Configurable rate limits for login (5/15min), signup (3/hr)
+- **CSRF Protection**: Signed tokens with expiry for form submissions
+- **Audit Logging**: Comprehensive security event logging
+- **Session Invalidation**: Logout from all devices, auto-invalidate on password change
 
 ### 📚 Course Management
 - **Course Creation**: Instructors can create and manage courses
@@ -117,11 +131,18 @@ EduX is a modern, AI-enhanced Learning Management System (LMS) designed to provi
 - **Background Sync**: Sync progress when back online
 
 ### 🔒 Security
-- **CSRF Protection**: Token-based CSRF prevention
-- **Rate Limiting**: API rate limiting (100 req/15min)
+- **Role-Based Access Control**: Middleware-based route protection
+- **Server-Side Auth**: SSR authentication to prevent content flash
+- **CSRF Protection**: Signed token-based CSRF prevention
+- **Rate Limiting**: Configurable API rate limiting
+  - Login: 5 attempts per 15 minutes
+  - Signup: 3 attempts per hour
+  - Password Reset: 3 attempts per hour
 - **Input Validation**: Zod schema validation
 - **Security Headers**: Helmet.js security headers
-- **JWT Security**: HttpOnly cookies, token rotation
+- **JWT Security**: HttpOnly cookies, token rotation, session versioning
+- **Audit Logging**: Complete authentication event trail
+- **Session Management**: Multi-device session tracking and invalidation
 
 ### ⚡ Performance
 - **Redis Caching**: Multi-tier caching strategy
@@ -389,11 +410,18 @@ edux/
 ### Authentication
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/signup` | POST | Register new user |
-| `/api/login` | POST | User login |
+| `/api/auth/user/signup` | POST | Register new student |
+| `/api/auth/user/login` | POST | Student login |
+| `/api/auth/instructor/signup` | POST | Register new instructor |
+| `/api/auth/instructor/login` | POST | Instructor login |
+| `/api/auth/admin/login` | POST | Admin login |
 | `/api/logout` | POST | User logout |
-| `/api/refresh-token` | POST | Refresh JWT token |
+| `/api/refresh-token` | POST | Refresh JWT token (with rotation) |
 | `/api/me` | GET | Get current user |
+| `/api/auth/csrf` | GET | Get CSRF token |
+| `/api/auth/sessions` | GET | Get all active sessions |
+| `/api/auth/sessions` | DELETE | Invalidate sessions |
+| `/api/auth/change-password` | POST | Change password (invalidates other sessions) |
 
 ### Courses
 | Endpoint | Method | Description |
@@ -559,9 +587,23 @@ npx playwright show-report
 - ✅ **WCAG 2.1 AA accessibility compliance**
 - ✅ **Enterprise-grade testing infrastructure**
 
-### Recent Improvements (2024) 🚀
+### Recent Improvements (2024-2026) 🚀
 
-The EduX platform has been significantly enhanced to achieve a perfect **10/10 UI score** through comprehensive improvements in testing, accessibility, and error handling:
+The EduX platform has been significantly enhanced to achieve a perfect **10/10 UI score** through comprehensive improvements in testing, accessibility, error handling, and security:
+
+#### 🔐 **Enterprise-Grade Role-Based Authentication (2026)**
+- **Next.js Edge Middleware**: Route protection at the edge for optimal performance
+- **Role-Based Access Control**: 
+  - `/student/*` routes for students
+  - `/instructor/*` routes for instructors  
+  - `/admin/*` routes for administrators
+- **Server-Side Authentication**: `withServerSideAuth`, `withStudentAuth`, `withInstructorAuth`, `withAdminOnlyAuth` HOCs
+- **Refresh Token Rotation**: Automatic token version tracking to detect token theft
+- **Session Management**: Track, view, and invalidate sessions across devices
+- **Rate Limiting**: Brute-force protection on auth endpoints
+- **CSRF Protection**: Signed, time-limited CSRF tokens
+- **Audit Logging**: Complete security event trail with severity levels
+- **Password Change Security**: Auto-invalidates all other sessions on password change
 
 #### 🧪 **Advanced Testing Infrastructure**
 - **Playwright E2E Testing**: Complete browser automation with multi-browser support

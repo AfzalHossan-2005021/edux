@@ -13,6 +13,37 @@ export default function AIQuizGenerator({ topicId, topic, onQuizStart }) {
   const [quizStarted, setQuizStarted] = useState(false);
   const [feedback, setFeedback] = useState(null);
 
+  // Normalize question format (handle both array and object options)
+  const normalizeQuestion = (q) => {
+    // If options is already an array, return as-is with normalized correct index
+    if (Array.isArray(q.options)) {
+      return {
+        ...q,
+        correct: typeof q.correct === 'number' ? q.correct : 0,
+      };
+    }
+    
+    // If options is an object like { A: "...", B: "...", C: "...", D: "..." }
+    if (q.options && typeof q.options === 'object') {
+      const optionKeys = ['A', 'B', 'C', 'D'];
+      const optionsArray = optionKeys.map(key => q.options[key] || `Option ${key}`);
+      const correctIndex = optionKeys.indexOf(q.correct_answer || q.correct || 'A');
+      
+      return {
+        ...q,
+        options: optionsArray,
+        correct: correctIndex >= 0 ? correctIndex : 0,
+      };
+    }
+    
+    // Fallback: create default options
+    return {
+      ...q,
+      options: ['Option A', 'Option B', 'Option C', 'Option D'],
+      correct: 0,
+    };
+  };
+
   const generateQuiz = async () => {
     setIsLoading(true);
     try {
@@ -32,7 +63,9 @@ export default function AIQuizGenerator({ topicId, topic, onQuizStart }) {
       const data = await response.json();
       
       if (data.success && data.questions?.length > 0) {
-        setQuestions(data.questions);
+        // Normalize all questions to have consistent format
+        const normalizedQuestions = data.questions.map(normalizeQuestion);
+        setQuestions(normalizedQuestions);
         setQuizStarted(true);
         setCurrentQuestion(0);
         setScore(0);

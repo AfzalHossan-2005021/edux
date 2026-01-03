@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, forwardRef } from 'react';
 
-const Button = ({
+const Button = forwardRef(({
   children,
   variant = 'primary',
   size = 'md',
@@ -11,7 +11,7 @@ const Button = ({
   icon,
   iconOnly = false,
   ...props
-}) => {
+}, ref) => {
   const [ripples, setRipples] = useState([]);
 
   const handleClick = (e) => {
@@ -54,6 +54,7 @@ const Button = ({
 
   return (
     <button
+      ref={ref} // <-- forward the ref here
       className={classes}
       disabled={disabled || loading}
       onClick={handleClick}
@@ -81,6 +82,6 @@ const Button = ({
       {children}
     </button>
   );
-};
+});
 
 export default Button;

@@ -97,10 +97,10 @@ export default function PaymentSuccess() {
 
             <div className="space-y-3">
               <div className="space-y-3">
-                <Link href={payment ? `/user/courses/${payment.courseId}` : '/user'} className="inline-flex w-full">
+                <Link href={payment ? `/student/courses/${payment.cId}` : '/student'} className="inline-flex w-full">
                   <Button variant="primary" size="md" className="w-full">Start Learning</Button>
                 </Link>
-                <Link href="/user" className="block w-full py-3 text-blue-600 hover:text-blue-700 transition-colors">
+                <Link href="/student" className="block w-full py-3 text-blue-600 hover:text-blue-700 transition-colors">
                   View My Courses
                 </Link>
               </div>

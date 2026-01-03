@@ -30,8 +30,8 @@ export async function verifyAuth(req) {
   try {
     const cookies = parseCookies(req);
     
-    // Get token from cookie (edux_token) or Authorization header
-    let token = cookies.edux_token || cookies.token;
+    // Get token from cookie (edux_access_token, edux_token for legacy) or Authorization header
+    let token = cookies.edux_access_token || cookies.edux_token || cookies.token;
     
     if (!token) {
       const authHeader = req.headers.authorization;

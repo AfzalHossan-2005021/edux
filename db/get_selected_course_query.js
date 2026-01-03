@@ -1,8 +1,9 @@
 export default function get_selected_course_query(c_id){
     return(
-        `SELECT "c_id", "title", "student_count", "rating", "description", "name", "subject", "course_count"
-        FROM "Courses" LEFT JOIN "Users" on "i_id" = "u_id"
-        LEFT JOIN "Instructors" ON "Courses"."i_id" = "Instructors"."i_id"
-        WHERE "Courses"."c_id" = '${c_id}'`
+        `SELECT c."c_id", c."title", c."student_count", c."rating", c."description", u."name", ins."expertise" AS "subject", ins."qualification", c."wall", c."field", c."seat", c."price"
+        FROM "Courses" c
+        LEFT JOIN "Users" u ON c."i_id" = u."u_id"
+        LEFT JOIN "Instructors" ins ON c."i_id" = ins."i_id"
+        WHERE c."c_id" = '${c_id}'`
     );
 }

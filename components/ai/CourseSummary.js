@@ -22,8 +22,12 @@ export default function CourseSummary({ courseId, type = 'course' }) {
 
       const data = await response.json();
       
-      if (data.success) {
-        setSummary(data);
+      if (data.success && data.summary) {
+        // Store the nested summary object along with aiGenerated flag
+        setSummary({
+          ...data.summary,
+          aiGenerated: data.aiGenerated
+        });
         setIsExpanded(true);
       }
     } catch (err) {
@@ -76,12 +80,12 @@ export default function CourseSummary({ courseId, type = 'course' }) {
             </div>
           )}
 
-          {/* Key Takeaways */}
-          {summary.keyTakeaways?.length > 0 && (
+          {/* Key Takeaways / Learning Objectives */}
+          {(summary.key_takeaways?.length > 0 || summary.keyTakeaways?.length > 0 || summary.learning_objectives?.length > 0) && (
             <div>
               <h4 className="font-semibold text-gray-800 mb-2">Key Takeaways</h4>
               <ul className="space-y-1">
-                {summary.keyTakeaways.map((takeaway, i) => (
+                {(summary.key_takeaways || summary.keyTakeaways || summary.learning_objectives).map((takeaway, i) => (
                   <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
                     <span className="text-indigo-500 mt-0.5">•</span>
                     {takeaway}
@@ -124,24 +128,47 @@ export default function CourseSummary({ courseId, type = 'course' }) {
           )}
 
           {/* Estimated Time */}
-          {summary.estimatedTime && (
+          {(summary.estimated_duration || summary.estimatedTime) && (
             <div className="p-3 bg-gray-50 rounded-lg">
               <span className="text-sm text-gray-600">
-                <span className="font-medium">⏱ Estimated Time:</span> {summary.estimatedTime}
+                <span className="font-medium">⏱ Estimated Time:</span> {summary.estimated_duration || summary.estimatedTime}
               </span>
             </div>
           )}
 
+          {/* Target Audience */}
+          {summary.target_audience && (
+            <div>
+              <h4 className="font-semibold text-gray-800 mb-2">Who This Is For</h4>
+              <p className="text-gray-600 text-sm">{summary.target_audience}</p>
+            </div>
+          )}
+
+          {/* Expected Outcomes */}
+          {summary.expected_outcomes?.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-gray-800 mb-2">What You'll Achieve</h4>
+              <ul className="space-y-1">
+                {summary.expected_outcomes.map((outcome, i) => (
+                  <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                    <span className="text-green-500">✓</span>
+                    {outcome}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Difficulty */}
-          {summary.difficulty && (
+          {(summary.difficulty || summary.difficulty_level) && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 font-medium">Difficulty:</span>
               <span className={`px-2 py-1 rounded-full text-xs ${
-                summary.difficulty === 'beginner' ? 'bg-green-100 text-green-700' :
-                summary.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-700' :
+                (summary.difficulty || summary.difficulty_level) === 'beginner' ? 'bg-green-100 text-green-700' :
+                (summary.difficulty || summary.difficulty_level) === 'intermediate' ? 'bg-yellow-100 text-yellow-700' :
                 'bg-red-100 text-red-700'
               }`}>
-                {summary.difficulty}
+                {summary.difficulty || summary.difficulty_level}
               </span>
             </div>
           )}

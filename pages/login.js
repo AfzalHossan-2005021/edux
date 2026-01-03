@@ -36,19 +36,24 @@ export default function Login() {
         secureLocalStorage.setItem("u_id", res.user.u_id);
         secureLocalStorage.setItem("u_email", res.user.email);
         secureLocalStorage.setItem("u_name", res.user.name);
+        secureLocalStorage.setItem("role", res.user.role);
         secureLocalStorage.setItem("isStudent", res.user.isStudent);
         secureLocalStorage.setItem("isInstructor", res.user.isInstructor);
+        secureLocalStorage.setItem("isAdmin", res.user.isAdmin);
         
         // Store access token
         if (res.accessToken) {
           localStorage.setItem("edux_access_token", res.accessToken);
         }
         
-        // Redirect based on user type
-        if (res.user.isInstructor) {
+        // Redirect based on user role
+        const role = res.user.role;
+        if (role === 'admin') {
+          router.push("/admin");
+        } else if (role === 'instructor') {
           router.push("/instructor");
         } else {
-          router.push("/user");
+          router.push("/student");
         }
       } else {
         setIsErrorOccured(true);
@@ -67,8 +72,17 @@ export default function Login() {
   };
   
   useEffect(() => {
+    // Check if user is already logged in
+    const role = secureLocalStorage.getItem("role");
     if (secureLocalStorage.getItem("u_id")) {
-      router.push("/user");
+      // Redirect based on stored role
+      if (role === 'admin') {
+        router.push("/admin");
+      } else if (role === 'instructor') {
+        router.push("/instructor");
+      } else {
+        router.push("/student");
+      }
     }
     let handler = () => {
       if (isErrorOccured) {
@@ -77,7 +91,7 @@ export default function Login() {
     };
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
-  }, [router]);
+  }, [router, isErrorOccured]);
 
   return (
     <div>

@@ -51,11 +51,15 @@ export default function Signup({ isLoggedIn, setIsLoggedIn }) {
         secureLocalStorage.setItem("u_id", res.user.u_id);
         secureLocalStorage.setItem("u_email", res.user.email);
         secureLocalStorage.setItem("u_name", res.user.name);
+        secureLocalStorage.setItem("role", res.user.role || 'student');
         secureLocalStorage.setItem("isStudent", true);
+        secureLocalStorage.setItem("isInstructor", false);
+        secureLocalStorage.setItem("isAdmin", false);
         if (res.accessToken) {
           localStorage.setItem("edux_access_token", res.accessToken);
         }
-        router.push("/user");
+        // Student signup redirects to student dashboard
+        router.push("/student");
       } else {
         setIsErrorOccured(true);
         setError(res.message || "Registration failed");
@@ -72,8 +76,16 @@ export default function Signup({ isLoggedIn, setIsLoggedIn }) {
   };
 
   useEffect(() => {
+    // Check if user is already logged in, redirect based on role
+    const role = secureLocalStorage.getItem("role");
     if (secureLocalStorage.getItem("u_id")) {
-      router.replace("/user");
+      if (role === 'admin') {
+        router.replace("/admin");
+      } else if (role === 'instructor') {
+        router.replace("/instructor");
+      } else {
+        router.replace("/student");
+      }
     }
     let handler = () => {
       if (isErrorOccured) {
@@ -82,7 +94,7 @@ export default function Signup({ isLoggedIn, setIsLoggedIn }) {
     };
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
-  }, [isErrorOccured]);
+  }, [isErrorOccured, router]);
 
   return (
     <div className="w-full min-h-screen flex justify-center items-center bg-gray-900 py-10">

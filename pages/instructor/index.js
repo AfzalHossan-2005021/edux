@@ -1,5 +1,5 @@
 /**
- * Instructor Dashboard - Comprehensive Management System
+ * Instructor Dashboard - Modern Comprehensive Management System
  * Unified interface for all instructor features
  */
 
@@ -8,8 +8,46 @@ import { useRouter } from 'next/router';
 import secureLocalStorage from 'react-secure-storage';
 import { apiPost } from '../../lib/api';
 import Link from 'next/link';
+import Head from 'next/head';
+import Image from 'next/image';
+import { withInstructorAuth } from '../../lib/auth/withServerSideAuth';
+import { Card, Button, Badge } from '../../components/ui';
+import {
+  HiAcademicCap,
+  HiChartBar,
+  HiUsers,
+  HiCurrencyDollar,
+  HiStar,
+  HiBookOpen,
+  HiPlus,
+  HiArrowRight,
+  HiSparkles,
+  HiTrendingUp,
+  HiUserGroup,
+  HiCog,
+  HiChat,
+  HiPencilAlt,
+  HiEye,
+  HiCollection,
+  HiClock,
+  HiCheckCircle,
+  HiBadgeCheck,
+  HiLightningBolt,
+  HiChevronRight,
+  HiOutlineChartPie,
+  HiOutlineDocumentText,
+  HiUser,
+  HiMail,
+  HiCalendar,
+  HiGlobe,
+  HiClipboardList
+} from 'react-icons/hi';
 
-const Instructor = () => {
+import CourseWall_1 from '../../public/course_wall-1.jpg';
+import CourseWall_2 from '../../public/course_wall-2.jpg';
+import CourseWall_3 from '../../public/course_wall-3.jpg';
+
+const Instructor = ({ serverUser }) => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
   const [instructor, setInstructor] = useState(null);
@@ -18,11 +56,16 @@ const Instructor = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const u_id = useMemo(() => secureLocalStorage.getItem('u_id'), []);
+  const u_id = useMemo(() => serverUser?.u_id || secureLocalStorage.getItem('u_id'), [serverUser]);
+
+  // Get initials for avatar
+  const initials = instructor?.name 
+    ? instructor.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() 
+    : 'I';
 
   useEffect(() => {
     if (!u_id) {
-      router.push('/login');
+      router.push('/auth/instructor/login');
       return;
     }
 
@@ -64,137 +107,191 @@ const Instructor = () => {
   }, [u_id, router]);
 
   // Navigation Tabs Component
-  const NavigationTabs = () => {
-    const tabs = [
-      { id: 'overview', label: '📊 Overview', icon: '📊' },
-      { id: 'courses', label: '📚 My Courses', icon: '📚' },
-      { id: 'students', label: '👥 Students', icon: '👥' },
-      { id: 'analytics', label: '📈 Analytics', icon: '📈' },
-      { id: 'revenue', label: '💰 Revenue', icon: '💰' },
-      { id: 'profile', label: '👤 Profile', icon: '👤' },
-    ];
-
-    return (
-      <div className="border-b border-gray-200 overflow-x-auto bg-white">
-        <div className="max-w-7xl mx-auto px-4 flex gap-0">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-4 whitespace-nowrap font-medium text-sm transition-colors ${
-                activeTab === tab.id
-                  ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <span className="mr-2">{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  };
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: HiChartBar },
+    { id: 'courses', label: 'My Courses', icon: HiBookOpen },
+    { id: 'students', label: 'Students', icon: HiUsers },
+    { id: 'analytics', label: 'Analytics', icon: HiTrendingUp },
+    { id: 'revenue', label: 'Revenue', icon: HiCurrencyDollar },
+    { id: 'profile', label: 'Profile', icon: HiUser },
+  ];
 
   // Stat Card Component
-  const StatCard = ({ title, value, subtitle, icon, color = 'blue' }) => {
-    const bgColor = {
-      blue: 'bg-blue-50',
-      green: 'bg-green-50',
-      purple: 'bg-purple-50',
-      yellow: 'bg-yellow-50',
-    }[color];
-
-    const textColor = {
-      blue: 'text-blue-600',
-      green: 'text-green-600',
-      purple: 'text-purple-600',
-      yellow: 'text-yellow-600',
-    }[color];
-
-    return (
-      <div className={`${bgColor} rounded-lg p-6 border border-gray-200`}>
+  const StatCard = ({ title, value, subtitle, icon: Icon, gradient }) => (
+    <div className={`relative overflow-hidden rounded-2xl ${gradient} p-6 text-white shadow-lg`}>
+      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl transform translate-x-8 -translate-y-8" />
+      <div className="relative z-10">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm text-gray-600">{title}</p>
-            <p className={`text-3xl font-bold ${textColor} mt-2`}>{value}</p>
-            {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
+            <p className="text-sm text-white/80 font-medium">{title}</p>
+            <p className="text-3xl font-bold mt-2">{value}</p>
+            {subtitle && <p className="text-sm text-white/70 mt-1">{subtitle}</p>}
           </div>
-          <div className="text-3xl">{icon}</div>
-        </div>
-      </div>
-    );
-  };
-
-  // Course Card Component
-  const CourseCard = ({ course }) => (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="h-40 bg-gradient-to-r from-blue-500 to-purple-600"></div>
-      <div className="p-4">
-        <h3 className="font-semibold text-gray-900 truncate">{course.title || course.NAME}</h3>
-        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-          {course.description || 'No description'}
-        </p>
-        <div className="mt-4 flex gap-2">
-          <button className="flex-1 bg-blue-600 text-white py-2 rounded text-sm font-medium hover:bg-blue-700">
-            View
-          </button>
-          <Link
-            href={`/user/courses/${course.c_id || course.C_ID}`}
-            className="flex-1 bg-gray-100 text-gray-900 py-2 rounded text-sm font-medium hover:bg-gray-200 text-center"
-          >
-            Edit
-          </Link>
+          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+            <Icon className="w-6 h-6" />
+          </div>
         </div>
       </div>
     </div>
   );
 
+  // Course Card Component
+  const CourseCard = ({ course }) => {
+    const images = [CourseWall_1, CourseWall_2, CourseWall_3];
+    const image = images[(course.c_id || course.C_ID) % 3];
+    
+    return (
+      <Card hover padding="none" className="group overflow-hidden">
+        <div className="relative h-40 overflow-hidden">
+          <Image 
+            src={image}
+            alt={course.title || course.NAME}
+            fill
+            className="object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          {course.rating && (
+            <div className="absolute top-3 right-3">
+              <Badge variant="warning" className="flex items-center gap-1 shadow-lg">
+                <HiStar className="w-3 h-3" />
+                {course.rating?.toFixed(1) || '0.0'}
+              </Badge>
+            </div>
+          )}
+          <div className="absolute bottom-3 left-3 flex items-center gap-2 text-white text-sm">
+            <HiUsers className="w-4 h-4" />
+            <span>{course.student_count || 0} students</span>
+          </div>
+        </div>
+        <div className="p-5">
+          <h3 className="font-bold text-neutral-800 dark:text-white truncate group-hover:text-primary-600 transition-colors">
+            {course.title || course.NAME}
+          </h3>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1 line-clamp-2">
+            {course.description || 'No description available'}
+          </p>
+          <div className="mt-4 flex gap-2">
+            <Link href={`/courses/${course.c_id || course.C_ID}`} className="flex-1">
+              <Button variant="primary" size="sm" className="w-full">
+                <HiEye className="w-4 h-4 mr-1" />
+                View
+              </Button>
+            </Link>
+            <Link href={`/user/courses/${course.c_id || course.C_ID}`} className="flex-1">
+              <Button variant="outline" size="sm" className="w-full">
+                <HiPencilAlt className="w-4 h-4 mr-1" />
+                Edit
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </Card>
+    );
+  };
+
+  // Quick Action Card Component
+  const QuickActionCard = ({ href, icon: Icon, title, description, gradient }) => (
+    <Link href={href}>
+      <div className={`group relative overflow-hidden rounded-2xl ${gradient} p-6 text-white cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}>
+        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-xl transform translate-x-4 -translate-y-4 group-hover:scale-150 transition-transform duration-500" />
+        <div className="relative z-10">
+          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <Icon className="w-6 h-6" />
+          </div>
+          <h4 className="font-bold text-lg">{title}</h4>
+          <p className="text-sm text-white/80 mt-1">{description}</p>
+        </div>
+      </div>
+    </Link>
+  );
+
   // Tab Content Components
   const OverviewTab = () => (
     <div className="space-y-8 pb-8">
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-8 text-white">
-        <h2 className="text-3xl font-bold mb-2">Welcome, {instructor?.name || 'Instructor'}! 👋</h2>
-        <p className="text-blue-100">Here's your teaching dashboard overview</p>
+      {/* Welcome Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-indigo-600 to-purple-700 p-8 md:p-12 text-white">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl transform translate-x-32 -translate-y-32" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-2xl transform -translate-x-16 translate-y-16" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl font-bold">
+                {initials}
+              </div>
+              <div>
+                <h2 className="text-3xl md:text-4xl font-bold">Welcome back, {instructor?.name?.split(' ')[0] || 'Instructor'}!</h2>
+                <p className="text-white/80 mt-1 flex items-center gap-2">
+                  <HiSparkles className="w-5 h-5" />
+                  Here&apos;s your teaching dashboard overview
+                </p>
+              </div>
+            </div>
+          </div>
+          <Link href="/user/create-course">
+            <Button variant="secondary" size="lg" className="bg-white text-primary-600 hover:bg-white/90 shadow-xl">
+              <HiPlus className="w-5 h-5 mr-2" />
+              Create New Course
+            </Button>
+          </Link>
+        </div>
       </div>
 
+      {/* Quick Stats */}
       {overview && (
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white">
+              <HiChartBar className="w-5 h-5" />
+            </div>
+            <h3 className="text-xl font-bold text-neutral-800 dark:text-white">Quick Stats</h3>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               title="Total Courses"
               value={overview.totalCourses || 0}
-              icon="📚"
-              color="blue"
+              icon={HiBookOpen}
+              gradient="bg-gradient-to-br from-blue-500 to-cyan-600"
             />
             <StatCard
               title="Total Students"
               value={overview.totalStudents || 0}
-              subtitle={`${overview.recentEnrollments || 0} this month`}
-              icon="👥"
-              color="green"
+              subtitle={`+${overview.recentEnrollments || 0} this month`}
+              icon={HiUsers}
+              gradient="bg-gradient-to-br from-emerald-500 to-teal-600"
             />
             <StatCard
               title="Average Rating"
-              value={overview.avgRating?.toFixed(1) || '0'}
+              value={overview.avgRating?.toFixed(1) || '0.0'}
               subtitle={`${overview.totalReviews || 0} reviews`}
-              icon="⭐"
-              color="yellow"
+              icon={HiStar}
+              gradient="bg-gradient-to-br from-amber-500 to-orange-600"
             />
             <StatCard
               title="Total Revenue"
-              value={`$${overview.totalRevenue?.toFixed(2) || '0'}`}
-              icon="💰"
-              color="purple"
+              value={`$${overview.totalRevenue?.toFixed(0) || '0'}`}
+              icon={HiCurrencyDollar}
+              gradient="bg-gradient-to-br from-purple-500 to-pink-600"
             />
           </div>
         </div>
       )}
 
+      {/* Your Courses */}
       {myCourses && myCourses.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Courses</h3>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white">
+                <HiBookOpen className="w-5 h-5" />
+              </div>
+              <h3 className="text-xl font-bold text-neutral-800 dark:text-white">Your Courses</h3>
+            </div>
+            <Link href="#" onClick={(e) => { e.preventDefault(); setActiveTab('courses'); }}>
+              <Button variant="ghost" size="sm">
+                View All <HiArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </Link>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {myCourses.slice(0, 6).map((course) => (
               <CourseCard key={course.c_id || course.C_ID} course={course} />
@@ -203,40 +300,66 @@ const Instructor = () => {
         </div>
       )}
 
+      {/* Quick Actions */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-white">
+            <HiLightningBolt className="w-5 h-5" />
+          </div>
+          <h3 className="text-xl font-bold text-neutral-800 dark:text-white">Quick Actions</h3>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link href="/instructor/analytics" className="bg-blue-50 hover:bg-blue-100 rounded-lg p-6 border border-blue-200 transition-colors text-center">
-            <div className="text-3xl mb-2">📊</div>
-            <h4 className="font-semibold text-gray-900">Analytics</h4>
-            <p className="text-sm text-gray-600 mt-1">Course performance</p>
-          </Link>
-          <Link href="/user/create-course" className="bg-green-50 hover:bg-green-100 rounded-lg p-6 border border-green-200 transition-colors text-center">
-            <div className="text-3xl mb-2">➕</div>
-            <h4 className="font-semibold text-gray-900">Create Course</h4>
-            <p className="text-sm text-gray-600 mt-1">Start a new course</p>
-          </Link>
-          <div className="bg-purple-50 hover:bg-purple-100 rounded-lg p-6 border border-purple-200 transition-colors text-center cursor-default">
-            <div className="text-3xl mb-2">💬</div>
-            <h4 className="font-semibold text-gray-900">Discussions</h4>
-            <p className="text-sm text-gray-600 mt-1">Forum activity</p>
-          </div>
-          <div className="bg-yellow-50 hover:bg-yellow-100 rounded-lg p-6 border border-yellow-200 transition-colors text-center cursor-default">
-            <div className="text-3xl mb-2">✏️</div>
-            <h4 className="font-semibold text-gray-900">Exams</h4>
-            <p className="text-sm text-gray-600 mt-1">Create & manage</p>
-          </div>
+          <QuickActionCard
+            href="/instructor/analytics"
+            icon={HiChartBar}
+            title="Analytics"
+            description="View course performance"
+            gradient="bg-gradient-to-br from-blue-500 to-indigo-600"
+          />
+          <QuickActionCard
+            href="/user/create-course"
+            icon={HiPlus}
+            title="Create Course"
+            description="Start a new course"
+            gradient="bg-gradient-to-br from-emerald-500 to-teal-600"
+          />
+          <QuickActionCard
+            href="#"
+            icon={HiChat}
+            title="Discussions"
+            description="Forum activity"
+            gradient="bg-gradient-to-br from-purple-500 to-pink-600"
+          />
+          <QuickActionCard
+            href="#"
+            icon={HiClipboardList}
+            title="Exams"
+            description="Create & manage"
+            gradient="bg-gradient-to-br from-amber-500 to-orange-600"
+          />
         </div>
       </div>
     </div>
   );
 
   const CoursesTab = () => (
-    <div className="space-y-4 pb-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">My Courses ({myCourses.length})</h2>
-        <Link href="/user/create-course" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
-          + Create Course
+    <div className="space-y-6 pb-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white">
+            <HiBookOpen className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-neutral-800 dark:text-white">My Courses</h2>
+            <p className="text-neutral-500 dark:text-neutral-400">{myCourses.length} courses published</p>
+          </div>
+        </div>
+        <Link href="/user/create-course">
+          <Button variant="primary" size="lg">
+            <HiPlus className="w-5 h-5 mr-2" />
+            Create New Course
+          </Button>
         </Link>
       </div>
 
@@ -247,174 +370,342 @@ const Instructor = () => {
           ))}
         </div>
       ) : (
-        <div className="py-12 text-center bg-gray-50 rounded-lg border border-gray-200">
-          <div className="text-5xl mb-4">📚</div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No Courses Yet</h3>
-          <p className="text-gray-600">Create your first course to get started teaching!</p>
-        </div>
+        <Card className="py-16 text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-100 to-indigo-100 dark:from-primary-900/30 dark:to-indigo-900/30 flex items-center justify-center">
+            <HiBookOpen className="w-10 h-10 text-primary-500" />
+          </div>
+          <h3 className="text-xl font-bold text-neutral-800 dark:text-white mb-2">No Courses Yet</h3>
+          <p className="text-neutral-500 dark:text-neutral-400 mb-6 max-w-md mx-auto">
+            Create your first course to start sharing your knowledge with students worldwide!
+          </p>
+          <Link href="/user/create-course">
+            <Button variant="primary" size="lg">
+              <HiPlus className="w-5 h-5 mr-2" />
+              Create Your First Course
+            </Button>
+          </Link>
+        </Card>
       )}
     </div>
   );
 
   const StudentsTab = () => (
-    <div className="pb-8">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Students Overview</h2>
+    <div className="space-y-6 pb-8">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white">
+          <HiUsers className="w-6 h-6" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-neutral-800 dark:text-white">Students Overview</h2>
+          <p className="text-neutral-500 dark:text-neutral-400">Track your student progress and engagement</p>
+        </div>
+      </div>
 
+      {/* Stats */}
       {overview && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <StatCard title="Total Students" value={overview.totalStudents || 0} icon="👥" color="blue" />
-          <StatCard title="Active This Month" value={overview.recentEnrollments || 0} icon="📍" color="green" />
-          <StatCard title="Total Enrollments" value={overview.totalEnrollments || 0} icon="✅" color="purple" />
-          <StatCard title="Avg Progress" value="0%" icon="⏳" color="yellow" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <StatCard title="Total Students" value={overview.totalStudents || 0} icon={HiUsers} gradient="bg-gradient-to-br from-blue-500 to-cyan-600" />
+          <StatCard title="Active This Month" value={overview.recentEnrollments || 0} icon={HiClock} gradient="bg-gradient-to-br from-emerald-500 to-teal-600" />
+          <StatCard title="Total Enrollments" value={overview.totalEnrollments || 0} icon={HiCheckCircle} gradient="bg-gradient-to-br from-purple-500 to-pink-600" />
+          <StatCard title="Avg Progress" value="0%" icon={HiTrendingUp} gradient="bg-gradient-to-br from-amber-500 to-orange-600" />
         </div>
       )}
 
+      {/* Students Table */}
       {students && students.length > 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Name</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Email</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Course</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Progress</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {students.slice(0, 20).map((student) => (
-                <tr key={student.userId} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-900">{student.name}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{student.email}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{student.courseName}</td>
-                  <td className="px-6 py-4 text-sm">
-                    <div className="w-24 bg-gray-200 rounded-full h-2">
-                      <div className="bg-green-600 h-2 rounded-full" style={{ width: `${student.progress}%` }}></div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      student.completed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {student.completed ? 'Completed' : 'In Progress'}
-                    </span>
-                  </td>
+        <Card padding="none" className="overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gradient-to-r from-neutral-50 to-neutral-100 dark:from-neutral-800 dark:to-neutral-900">
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-700 dark:text-neutral-300">Student</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-700 dark:text-neutral-300">Course</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-700 dark:text-neutral-300">Progress</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-700 dark:text-neutral-300">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
+                {students.slice(0, 20).map((student) => (
+                  <tr key={student.userId} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold">
+                          {student.name?.charAt(0) || 'S'}
+                        </div>
+                        <div>
+                          <p className="font-medium text-neutral-800 dark:text-white">{student.name}</p>
+                          <p className="text-sm text-neutral-500 dark:text-neutral-400">{student.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-neutral-600 dark:text-neutral-300">{student.courseName}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-24 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-primary-500 to-indigo-600 rounded-full" 
+                            style={{ width: `${student.progress || 0}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium text-neutral-600 dark:text-neutral-300">{student.progress || 0}%</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge variant={student.completed ? 'success' : 'warning'}>
+                        {student.completed ? 'Completed' : 'In Progress'}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       ) : (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-          <p className="text-gray-600">No students enrolled yet</p>
-        </div>
+        <Card className="py-16 text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 flex items-center justify-center">
+            <HiUsers className="w-10 h-10 text-emerald-500" />
+          </div>
+          <h3 className="text-xl font-bold text-neutral-800 dark:text-white mb-2">No Students Yet</h3>
+          <p className="text-neutral-500 dark:text-neutral-400">Students who enroll in your courses will appear here</p>
+        </Card>
       )}
     </div>
   );
 
   const AnalyticsTab = () => (
-    <div className="pb-8">
-      <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-        <div className="text-5xl mb-4">📊</div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">Detailed Analytics</h3>
-        <p className="text-gray-600 mb-6">View comprehensive course performance, revenue, and engagement metrics.</p>
-        <Link href="/instructor/analytics" className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700">
-          Go to Analytics Dashboard
+    <div className="space-y-6 pb-8">
+      <Card className="text-center py-16">
+        <div className="relative inline-block mb-6">
+          <div className="w-24 h-24 mx-auto rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
+            <HiChartBar className="w-12 h-12" />
+          </div>
+          <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
+            <HiSparkles className="w-4 h-4 text-white" />
+          </div>
+        </div>
+        <h3 className="text-2xl font-bold text-neutral-800 dark:text-white mb-3">Detailed Analytics</h3>
+        <p className="text-neutral-500 dark:text-neutral-400 mb-8 max-w-md mx-auto">
+          View comprehensive course performance, revenue trends, and student engagement metrics.
+        </p>
+        <Link href="/instructor/analytics">
+          <Button variant="primary" size="lg">
+            <HiChartBar className="w-5 h-5 mr-2" />
+            Go to Analytics Dashboard
+          </Button>
         </Link>
-      </div>
+      </Card>
     </div>
   );
 
   const RevenueTab = () => (
-    <div className="pb-8">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Revenue Dashboard</h2>
+    <div className="space-y-6 pb-8">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white">
+          <HiCurrencyDollar className="w-6 h-6" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-neutral-800 dark:text-white">Revenue Dashboard</h2>
+          <p className="text-neutral-500 dark:text-neutral-400">Track your earnings and financial performance</p>
+        </div>
+      </div>
+
+      {/* Revenue Stats */}
       {overview && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <StatCard title="Total Revenue" value={`$${overview.totalRevenue?.toFixed(2) || '0'}`} icon="💰" color="purple" />
-          <StatCard title="This Month" value="$0" subtitle="Coming soon" icon="📅" color="blue" />
-          <StatCard title="Avg per Course" value={`$${overview.totalCourses > 0 ? (overview.totalRevenue / overview.totalCourses).toFixed(2) : '0'}`} icon="📊" color="green" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <StatCard 
+            title="Total Revenue" 
+            value={`$${overview.totalRevenue?.toFixed(0) || '0'}`} 
+            icon={HiCurrencyDollar} 
+            gradient="bg-gradient-to-br from-purple-500 to-pink-600" 
+          />
+          <StatCard 
+            title="This Month" 
+            value="$0" 
+            subtitle="Coming soon" 
+            icon={HiCalendar} 
+            gradient="bg-gradient-to-br from-blue-500 to-cyan-600" 
+          />
+          <StatCard 
+            title="Avg per Course" 
+            value={`$${overview.totalCourses > 0 ? (overview.totalRevenue / overview.totalCourses).toFixed(0) : '0'}`} 
+            icon={HiChartBar} 
+            gradient="bg-gradient-to-br from-emerald-500 to-teal-600" 
+          />
         </div>
       )}
-      <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-        <p className="text-gray-600">Detailed revenue analytics coming soon</p>
-      </div>
+
+      <Card className="py-16 text-center">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 flex items-center justify-center">
+          <HiCurrencyDollar className="w-10 h-10 text-purple-500" />
+        </div>
+        <h3 className="text-xl font-bold text-neutral-800 dark:text-white mb-2">Detailed Revenue Analytics</h3>
+        <p className="text-neutral-500 dark:text-neutral-400">Coming soon with advanced financial insights</p>
+      </Card>
     </div>
   );
 
   const ProfileTab = () => (
     <div className="pb-8 max-w-2xl">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Instructor Profile</h2>
-      <div className="bg-white rounded-lg border border-gray-200 p-8 space-y-6">
-        <div className="flex items-center space-x-4">
-          <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
-            {instructor?.name?.charAt(0) || 'I'}
+      <Card padding="none" className="overflow-hidden">
+        {/* Profile Header */}
+        <div className="relative h-32 bg-gradient-to-br from-primary-600 via-indigo-600 to-purple-700">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl transform translate-x-16 -translate-y-16" />
+        </div>
+        
+        <div className="px-8 pb-8">
+          {/* Avatar */}
+          <div className="-mt-16 mb-6">
+            <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-primary-500 to-indigo-600 border-4 border-white dark:border-neutral-900 flex items-center justify-center text-white text-4xl font-bold shadow-xl">
+              {initials}
+            </div>
           </div>
-          <div>
-            <h3 className="text-2xl font-bold text-gray-900">{instructor?.name}</h3>
-            <p className="text-gray-600">{instructor?.subject}</p>
+
+          {/* Profile Info */}
+          <div className="mb-8">
+            <h3 className="text-2xl font-bold text-neutral-800 dark:text-white">{instructor?.name}</h3>
+            <p className="text-neutral-500 dark:text-neutral-400 flex items-center gap-2 mt-1">
+              <HiAcademicCap className="w-5 h-5" />
+              {instructor?.subject || 'Instructor'}
+            </p>
+          </div>
+
+          {/* Account Info */}
+          <div className="border-t border-neutral-200 dark:border-neutral-700 pt-6">
+            <h4 className="font-bold text-neutral-800 dark:text-white mb-4 flex items-center gap-2">
+              <HiCog className="w-5 h-5 text-primary-500" />
+              Account Information
+            </h4>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <HiMail className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <span className="text-neutral-600 dark:text-neutral-400">Email</span>
+                </div>
+                <span className="font-medium text-neutral-800 dark:text-white">{instructor?.email}</span>
+              </div>
+              <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                    <HiAcademicCap className="w-5 h-5 text-purple-500" />
+                  </div>
+                  <span className="text-neutral-600 dark:text-neutral-400">Specialty</span>
+                </div>
+                <span className="font-medium text-neutral-800 dark:text-white">{instructor?.subject}</span>
+              </div>
+              <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                    <HiCalendar className="w-5 h-5 text-emerald-500" />
+                  </div>
+                  <span className="text-neutral-600 dark:text-neutral-400">Member Since</span>
+                </div>
+                <span className="font-medium text-neutral-800 dark:text-white">{instructor?.reg_date}</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="border-t border-gray-200 pt-6">
-          <h4 className="font-semibold text-gray-900 mb-4">Account Information</h4>
-          <div className="space-y-4">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Email:</span>
-              <span className="text-gray-900 font-medium">{instructor?.email}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Specialty:</span>
-              <span className="text-gray-900 font-medium">{instructor?.subject}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Member Since:</span>
-              <span className="text-gray-900 font-medium">{instructor?.reg_date}</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      </Card>
     </div>
   );
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative inline-block">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-indigo-600 animate-pulse" />
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary-500 to-indigo-600 animate-ping opacity-20" />
+          </div>
+          <p className="mt-4 text-neutral-500 dark:text-neutral-400 font-medium">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Instructor Dashboard</h1>
-              <p className="text-gray-600 mt-1">Manage your courses and student progress</p>
+    <>
+      <Head>
+        <title>Instructor Dashboard | EduX</title>
+        <meta name="description" content="Manage your courses, track student progress, and view analytics" />
+      </Head>
+
+      <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950">
+        {/* Header */}
+        <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-b border-neutral-200 dark:border-neutral-800 sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-primary-500/25">
+                  {initials}
+                </div>
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-neutral-800 dark:text-white">Instructor Dashboard</h1>
+                  <p className="text-neutral-500 dark:text-neutral-400">Manage your courses and track student progress</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Link href="/instructor/analytics">
+                  <Button variant="outline" size="sm">
+                    <HiChartBar className="w-4 h-4 mr-2" />
+                    Analytics
+                  </Button>
+                </Link>
+                <Link href="/user/create-course">
+                  <Button variant="primary" size="sm">
+                    <HiPlus className="w-4 h-4 mr-2" />
+                    New Course
+                  </Button>
+                </Link>
+              </div>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-600">Welcome back</p>
-              <p className="font-semibold text-gray-900">{instructor?.name || 'Instructor'}</p>
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-px">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 px-4 py-3 whitespace-nowrap font-medium text-sm rounded-t-xl transition-all ${
+                      activeTab === tab.id
+                        ? 'bg-gradient-to-r from-primary-500 to-indigo-600 text-white shadow-lg shadow-primary-500/25'
+                        : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="hidden sm:inline">{tab.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <NavigationTabs />
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {activeTab === 'overview' && <OverviewTab />}
+          {activeTab === 'courses' && <CoursesTab />}
+          {activeTab === 'students' && <StudentsTab />}
+          {activeTab === 'analytics' && <AnalyticsTab />}
+          {activeTab === 'revenue' && <RevenueTab />}
+          {activeTab === 'profile' && <ProfileTab />}
+        </div>
       </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {activeTab === 'overview' && <OverviewTab />}
-        {activeTab === 'courses' && <CoursesTab />}
-        {activeTab === 'students' && <StudentsTab />}
-        {activeTab === 'analytics' && <AnalyticsTab />}
-        {activeTab === 'revenue' && <RevenueTab />}
-        {activeTab === 'profile' && <ProfileTab />}
-      </div>
-    </div>
+    </>
   );
 };
 
 export default Instructor;
+
+// Server-side authentication
+export const getServerSideProps = withInstructorAuth();

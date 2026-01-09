@@ -29,6 +29,7 @@
     "cookie": "^1.1.1",
     "crypto-js": "^4.1.1",
     "eslint-config-next": "13.4.13",
+    "formidable": "^3.5.4",
     "generic-pool": "^3.9.0",
     "jest-axe": "^10.0.0",
     "jsonwebtoken": "^9.0.3",

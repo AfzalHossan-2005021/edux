@@ -353,7 +353,7 @@ Test Case 2: Instructor Registration and Login
   5. Verify redirected to pending approval page
   6. Admin approves instructor
   7. Logout and login
-  8. Verify instructor access to /instructor/dashboard
+  8. Verify instructor access to /instructor
   9. Verify cannot access /admin or /user routes
 
 Test Case 3: Admin Registration and Login
@@ -368,7 +368,7 @@ Test Case 3: Admin Registration and Login
 
 Test Case 4: Role-Based Access Control
   1. Login as user
-  2. Attempt to access /instructor/dashboard
+  2. Attempt to access /instructor
   3. Verify redirect to /user
   4. Attempt to access /admin/dashboard
   5. Verify redirect to /user

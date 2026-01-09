@@ -10,7 +10,7 @@
 
 ### Main Implementation
 - ✅ Updated `/pages/instructor/index.js` with comprehensive dashboard
-- ✅ Created `/pages/instructor/dashboard.js` as alternative version
+- ✅ Created `/pages/instructor.js` as alternative version
 - ✅ All 6 tabs fully functional:
   - ✅ Overview tab with stats and quick actions
   - ✅ My Courses tab with course management
@@ -202,7 +202,7 @@
 - ✅ `/pages/instructor/index.js` - Completely rewritten (420 lines)
 
 ### New Files
-- ✅ `/pages/instructor/dashboard.js` - Alternative implementation (380 lines)
+- ✅ `/pages/instructor.js` - Alternative implementation (380 lines)
 - ✅ `/INSTRUCTOR_DASHBOARD.md` - Complete documentation
 - ✅ `/INSTRUCTOR_QUICK_START.md` - Quick start guide
 - ✅ `/VISUAL_GUIDE.md` - Visual layout guide

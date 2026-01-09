@@ -30,6 +30,9 @@ const Modal = ({
   }, [isOpen, onClose, closeOnEscape]);
 
   if (!isOpen) return null;
+  
+  // SSR check - don't render on server
+  if (typeof window === 'undefined' || typeof document === 'undefined') return null;
 
   const sizes = {
     sm: 'max-w-md',

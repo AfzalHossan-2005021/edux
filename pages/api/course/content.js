@@ -168,15 +168,15 @@ async function handlePost(req, res) {
 
       const result = await connection.execute(
         `INSERT INTO EDUX."Questions" ("e_id", "q_description", "option_a", "option_b", "option_c", "option_d", "right_ans", "marks", "serial")
-         VALUES (:e_id, :question, :opt1, :opt2, :opt3, :opt4, :correctAnswer, :marks, :serial)
+         VALUES (:e_id, :question, :option_a, :option_b, :option_c, :option_d, :correctAnswer, :marks, :serial)
          RETURNING "q_id" INTO :q_id`,
         {
           e_id,
           question,
-          opt1: options[0],
-          opt2: options[1],
-          opt3: options[2],
-          opt4: options[3],
+          option_a: options[0],
+          option_b: options[1],
+          option_c: options[2],
+          option_d: options[3],
           correctAnswer,
           marks: marks || 1,
           serial: serial || 1,

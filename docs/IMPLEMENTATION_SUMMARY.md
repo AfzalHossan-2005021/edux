@@ -14,7 +14,7 @@ A comprehensive instructor dashboard has been created at `http://localhost:3000/
 - **Status**: ✅ Ready to use
 
 ### 2. **Alternative Dashboard Page** (Optional)
-- **File**: `/pages/instructor/dashboard.js`
+- **File**: `/pages/instructor.js`
 - **Purpose**: Alternative implementation (standalone version)
 - **Status**: ✅ Created as backup
 
@@ -310,7 +310,7 @@ Overview  Courses  Students  Analytics  Revenue  Profile
 ## 🎯 Files Modified
 
 1. **`/pages/instructor/index.js`** - Replaced with comprehensive dashboard
-2. **`/pages/instructor/dashboard.js`** - Created as alternative implementation
+2. **`/pages/instructor.js`** - Created as alternative implementation
 
 ## 📄 Files Created
 

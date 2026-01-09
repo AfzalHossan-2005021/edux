@@ -35,22 +35,39 @@ import {
 } from 'react-icons/hi';
 
 // Floating Animation Particles
-const FloatingParticles = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    {[...Array(20)].map((_, i) => (
-      <div
-        key={i}
-        className="absolute w-2 h-2 bg-white/20 rounded-full animate-float"
-        style={{
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-          animationDelay: `${Math.random() * 5}s`,
-          animationDuration: `${5 + Math.random() * 5}s`,
-        }}
-      />
-    ))}
-  </div>
-);
+const FloatingParticles = () => {
+  const [particles, setParticles] = useState([]);
+
+  useEffect(() => {
+    // Only generate particles on client side to avoid hydration mismatch
+    setParticles(
+      [...Array(20)].map((_, i) => ({
+        id: i,
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        delay: Math.random() * 5,
+        duration: 5 + Math.random() * 5,
+      }))
+    );
+  }, []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map((particle) => (
+        <div
+          key={particle.id}
+          className="absolute w-2 h-2 bg-white/20 rounded-full animate-float"
+          style={{
+            left: `${particle.left}%`,
+            top: `${particle.top}%`,
+            animationDelay: `${particle.delay}s`,
+            animationDuration: `${particle.duration}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
 
 // Stats Counter Component
 const StatCard = ({ icon: Icon, value, label, gradient }) => (

@@ -178,7 +178,7 @@ hasRole(userObject, ['user', 'instructor']) // Returns boolean
 
 // Redirect Logic
 getRedirectPathByRole('user')       // Returns '/user/dashboard'
-getRedirectPathByRole('instructor') // Returns '/instructor/dashboard'
+getRedirectPathByRole('instructor') // Returns '/instructor'
 getRedirectPathByRole('admin')      // Returns '/admin/dashboard'
 ```
 

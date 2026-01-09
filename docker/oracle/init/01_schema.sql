@@ -49,6 +49,10 @@ CREATE TABLE EDUX."Students" (
   "date_of_birth" DATE,
   "gender" VARCHAR2(1 CHAR),
   "interests" VARCHAR2(255 CHAR),
+  "location" VARCHAR2(100 CHAR),
+  "occupation" VARCHAR2(100 CHAR),
+  "website" VARCHAR2(255 CHAR),
+  "bio" VARCHAR2(1000 CHAR),
   "course_count" NUMBER DEFAULT 0 NOT NULL,
   CONSTRAINT pk_students PRIMARY KEY ("s_id"),
   CONSTRAINT fk_students_users
@@ -98,11 +102,31 @@ CREATE TABLE EDUX."Courses" (
   "rating" NUMBER,
   "wall" VARCHAR2(255 BYTE),
   "field" VARCHAR2(255 BYTE),
+  "difficulty_level" VARCHAR2(50 BYTE),
   "seat" NUMBER,
   "price" NUMBER(10,2) DEFAULT 0,
   CONSTRAINT pk_courses PRIMARY KEY ("c_id"),
   CONSTRAINT fk_courses_instructors FOREIGN KEY ("i_id") REFERENCES EDUX."Instructors" ("i_id")
 );
+
+-- Create Prerequisites table
+CREATE TABLE EDUX."Prerequisites" (
+  "p_id" NUMBER DEFAULT EDUX.SEQUENCE.nextval NOT NULL,
+  "c_id" NUMBER NOT NULL,
+  "description" VARCHAR2(500 CHAR) NOT NULL,
+  CONSTRAINT pk_prerequisites PRIMARY KEY ("p_id"),
+  CONSTRAINT fk_prerequisites_courses FOREIGN KEY ("c_id") REFERENCES EDUX."Courses" ("c_id")
+);
+
+-- Create Outcomes table
+CREATE TABLE EDUX."Outcomes" (
+  "o_id" NUMBER DEFAULT EDUX.SEQUENCE.nextval NOT NULL,
+  "c_id" NUMBER NOT NULL,
+  "description" VARCHAR2(500 CHAR) NOT NULL,
+  CONSTRAINT pk_outcomes PRIMARY KEY ("o_id"),
+  CONSTRAINT fk_outcomes_courses FOREIGN KEY ("c_id") REFERENCES EDUX."Courses" ("c_id")
+);
+
 
 -- Create Topics table
 CREATE TABLE EDUX."Topics" (

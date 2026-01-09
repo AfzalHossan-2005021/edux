@@ -145,7 +145,7 @@ Instructor Login (Existing Approved Instructor)
 ├─ Client:
 │  ├─ Stores token in localStorage
 │  ├─ Stores user data in secureLocalStorage (with i_id)
-│  └─ Redirects to /instructor/dashboard
+│  └─ Redirects to /instructor
 └─ ✅ Instructor logged in (Pending instructors get error)
 ```
 

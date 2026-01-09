@@ -21,9 +21,6 @@ const publicRoutes = [
   '/auth/instructor/signup',
   '/auth/admin/login',
   '/auth/admin/signup',
-  '/login',
-  '/signup',
-  '/instructor_signup',
   '/offline',
   '/api-docs',
 ];

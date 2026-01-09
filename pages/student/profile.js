@@ -10,7 +10,7 @@ import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../context/AuthContext';
-import { Card, Button, Badge, Skeleton } from '../../components/ui';
+import { Card, Button, Badge } from '../../components/ui';
 import { apiGet, apiPost } from '../../lib/api';
 import {
   HiAcademicCap,
@@ -24,13 +24,9 @@ import {
   HiExclamationCircle,
   HiMail,
   HiPencil,
-  HiPhone,
-  HiPhotograph,
   HiSave,
   HiShieldCheck,
   HiSparkles,
-  HiStar,
-  HiTrendingUp,
   HiUser,
   HiUserCircle,
   HiLockClosed,
@@ -53,39 +49,68 @@ const InputField = ({
   disabled,
   error,
   helpText,
+  options = [],
 }) => (
   <div className="space-y-1.5">
     <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
       {label}
     </label>
+
     <div className="relative">
       {Icon && (
-        <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+        <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 pointer-events-none" />
       )}
-      <input
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        disabled={disabled}
-        className={`w-full ${Icon ? 'pl-12' : 'pl-4'} pr-4 py-3 rounded-xl border ${
-          error
+
+      {type === 'select' ? (
+        <select
+          value={value}
+          onChange={onChange}
+          disabled={disabled}
+          className={`w-full ${Icon ? 'pl-12' : 'pl-4'} pr-4 py-3 rounded-xl border ${error
             ? 'border-red-500 focus:ring-red-500/30'
             : 'border-neutral-200 dark:border-neutral-700 focus:ring-primary-500/30'
-        } bg-white dark:bg-neutral-800 text-neutral-800 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-4 transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
-      />
+            } bg-white dark:bg-neutral-800 text-neutral-800 dark:text-white focus:outline-none focus:ring-4 transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+        >
+          {placeholder && (
+            <option value="" disabled>
+              {placeholder}
+            </option>
+          )}
+
+          {options.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          type={type}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          disabled={disabled}
+          className={`w-full ${Icon ? 'pl-12' : 'pl-4'} pr-4 py-3 rounded-xl border ${error
+            ? 'border-red-500 focus:ring-red-500/30'
+            : 'border-neutral-200 dark:border-neutral-700 focus:ring-primary-500/30'
+            } bg-white dark:bg-neutral-800 text-neutral-800 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-4 transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+        />
+      )}
     </div>
+
     {error && (
       <p className="text-sm text-red-500 flex items-center gap-1">
         <HiExclamationCircle className="w-4 h-4" />
         {error}
       </p>
     )}
+
     {helpText && !error && (
       <p className="text-sm text-neutral-500">{helpText}</p>
     )}
   </div>
 );
+
 
 // Text Area Component
 const TextAreaField = ({
@@ -164,17 +189,19 @@ export default function ProfilePage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [showPassword, setShowPassword] = useState({ current: false, new: false, confirm: false });
-  
+
   // Profile form state
   const [profile, setProfile] = useState({
     name: '',
     email: '',
+    date_of_birth: '',
+    gender: '',
     phone: '',
     bio: '',
     location: '',
     occupation: '',
     website: '',
-    joinDate: '',
+    interests: '',
     avatar: null,
   });
 
@@ -206,35 +233,34 @@ export default function ProfilePage() {
     const fetchUserData = async () => {
       try {
         // Fetch user info
-        const userRes = await apiGet(`/api/user_info?u_id=${user.u_id}`);
-        const userData = await userRes.json();
-
-        console.log('Fetched user data:', userData);
-        
-        if (userData) {
-          setProfile({
-            name: userData.name || user.name || '',
-            email: userData.email || user.email || '',
-            date_of_birth: userData.date_of_birth || '',
-            gender: userData.gender || '',
-            phone: userData.phone || '',
-            bio: userData.bio || '',
-            location: userData.location || '',
-            occupation: userData.occupation || '',
-            website: userData.website || '',
-            joinDate: userData.join_date || new Date().toISOString(),
-            avatar: userData.avatar || null,
-          });
-        }
+        const userRes = await apiGet(`/api/student/get_personal_info?u_id=${user.u_id}`);
+        await userRes.json().then((data) => {
+          if (data && data[0]) {
+            setProfile({
+              name: data[0].name || '',
+              email: data[0].email || '',
+              date_of_birth: data[0].date_of_birth || '',
+              gender: data[0].gender || '',
+              phone: data[0].phone || '',
+              bio: data[0].bio || '',
+              location: data[0].location || '',
+              occupation: data[0].occupation || '',
+              website: data[0].website || '',
+              interests: data[0].interests || '',
+              avatar: data[0].avatar || null,
+              joinDate: data[0].reg_date || '',
+            });
+          }
+        });
 
         // Fetch user stats
-        const coursesRes = await apiGet(`/api/my_courses?u_id=${user.u_id}`);
+        const coursesRes = await apiGet(`/api/student/get_courses?u_id=${user.u_id}`);
         const coursesData = await coursesRes.json();
-        
+
         if (coursesData) {
           const courses = Array.isArray(coursesData) ? coursesData : [];
           const completed = courses.filter(c => c.progress >= 100).length;
-          
+
           setStats({
             enrolledCourses: courses.length,
             completedCourses: completed,
@@ -255,7 +281,7 @@ export default function ProfilePage() {
   // Handle profile update
   const handleUpdateProfile = async () => {
     setErrors({});
-    
+
     // Validate
     const newErrors = {};
     if (!profile.name.trim()) {
@@ -274,7 +300,7 @@ export default function ProfilePage() {
 
     setSaving(true);
     try {
-      const res = await apiPost('/api/update_profile', {
+      const res = await apiPost('/api/student/update_personal_info', {
         u_id: user.u_id,
         ...profile,
       });
@@ -514,11 +540,10 @@ export default function ProfilePage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
-                    : 'text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                }`}
+                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all whitespace-nowrap ${activeTab === tab.id
+                  ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
+                  : 'text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                  }`}
               >
                 <tab.icon className="w-5 h-5" />
                 {tab.label}
@@ -562,17 +587,26 @@ export default function ProfilePage() {
                   />
                   <InputField
                     label="Gender"
+                    type="select"
                     icon={HiUser}
                     value={profile.gender}
-                    onChange={(e) => setProfile({ ...profile, gender: e.target.value })}
-                    placeholder="Male, Female, Other"
+                    onChange={(e) =>
+                      setProfile({ ...profile, gender: e.target.value })
+                    }
+                    placeholder="Select gender"
+                    options={[
+                      { label: 'Male', value: 'M' },
+                      { label: 'Female', value: 'F' },
+                      { label: 'Other', value: 'O' },
+                    ]}
                   />
+
                   <InputField
-                    label="Phone Number"
-                    icon={HiPhone}
-                    value={profile.phone}
-                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                    placeholder="+1 (555) 000-0000"
+                    label="Interests"
+                    icon={HiSparkles}
+                    value={profile.interests}
+                    onChange={(e) => setProfile({ ...profile, interests: e.target.value })}
+                    placeholder="Your interests"
                   />
                   <InputField
                     label="Location"
@@ -769,9 +803,9 @@ export default function ProfilePage() {
                       <div>
                         <p className="font-medium text-neutral-800 dark:text-white">Last Login</p>
                         <p className="text-sm text-neutral-500">
-                          {new Date().toLocaleDateString('en-US', { 
+                          {new Date().toLocaleDateString('en-US', {
                             weekday: 'long',
-                            month: 'long', 
+                            month: 'long',
                             day: 'numeric',
                             hour: '2-digit',
                             minute: '2-digit'

@@ -152,7 +152,7 @@ The dashboard integrates with multiple APIs:
 ### URLs:
 - **Main Dashboard**: `http://localhost:3000/instructor`
 - **Analytics Page**: `http://localhost:3000/instructor/analytics`
-- **Alternative Dashboard**: `http://localhost:3000/instructor/dashboard`
+- **Alternative Dashboard**: `http://localhost:3000/instructor`
 
 ### Navigation Flow:
 1. Instructor logs in via `/login`

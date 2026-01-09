@@ -61,16 +61,14 @@ async function handleGet(req, res) {
 
     // Get all topics for a course
     const topicsResult = await connection.execute(
-      `SELECT t."t_id", t."name", t."serial", t."weight",
+      `SELECT t."t_id", t."name", t."serial", t."weight", t."c_id",
               COUNT(DISTINCT l."l_id") as lecture_count,
-              COUNT(DISTINCT e."e_id") as exam_count,
-              ROUND(AVG(CASE WHEN lp."completed" = 'Y' THEN 100 ELSE 0 END), 0) as completion_percentage
+              COUNT(DISTINCT e."e_id") as exam_count
        FROM EDUX."Topics" t
        LEFT JOIN EDUX."Lectures" l ON t."t_id" = l."t_id"
        LEFT JOIN EDUX."Exams" e ON t."t_id" = e."t_id"
-       LEFT JOIN EDUX."LectureProgress" lp ON l."l_id" = lp."l_id"
        WHERE t."c_id" = :c_id
-       GROUP BY t."t_id", t."name", t."serial", t."weight"
+       GROUP BY t."t_id", t."name", t."serial", t."weight", t."c_id"
        ORDER BY t."serial"`,
       { c_id },
       { outFormat: oracledb.OUT_FORMAT_OBJECT }

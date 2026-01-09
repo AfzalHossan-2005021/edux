@@ -48,7 +48,7 @@ export default function InstructorSignup() {
   useEffect(() => {
     if (!redirecting && isAuthenticated && user?.role === 'instructor') {
       setRedirecting(true);
-      router.replace('/instructor/dashboard');
+      router.replace('/instructor');
     }
   }, [isAuthenticated, user, router, redirecting]);
 
@@ -115,7 +115,7 @@ export default function InstructorSignup() {
       
       if (result.success) {
         setRedirecting(true);
-        router.replace('/instructor/dashboard');
+        router.replace('/instructor');
       } else {
         if (result.errors) {
           const fieldErrors = {};

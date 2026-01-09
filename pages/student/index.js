@@ -16,7 +16,7 @@ import CourseWall_1 from '../../public/course_wall-1.jpg';
 import CourseWall_2 from '../../public/course_wall-2.jpg';
 import CourseWall_3 from '../../public/course_wall-3.jpg';
 import RateCourse from '@/components/RateCourse';
-import { apiPost } from '../../lib/api';
+import { apiGet, apiPost } from '../../lib/api';
 import { AIChat, AIRecommendations, LearningAnalytics } from '../../components/ai';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/router';
@@ -301,7 +301,7 @@ const StudentDashboard = () => {
   useEffect(() => {
     if (!u_id) return;
     
-    apiPost('/api/user_info', { u_id })
+    apiGet(`/api/student/get_personal_info?u_id=${user.u_id}`)
       .then((res) => res.json())
       .then((json_res) => {
         if (json_res && json_res[0]) {

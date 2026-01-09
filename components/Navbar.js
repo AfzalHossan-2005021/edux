@@ -451,23 +451,6 @@ const Navbar = () => {
                   <LogInSignUp mobile />
                 </div>
               )}
-
-              {/* Become Instructor CTA */}
-              <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800">
-                <Link href="/instructor_signup" onClick={() => setIsMobileMenuOpen(false)}>
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 via-primary-700 to-indigo-700 p-5">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl transform translate-x-8 -translate-y-8" />
-                    <div className="relative">
-                      <div className="flex items-center gap-2 mb-2">
-                        <HiSparkles className="w-5 h-5 text-amber-400" />
-                        <span className="text-sm font-medium text-white/80">Start Teaching</span>
-                      </div>
-                      <h4 className="text-lg font-bold text-white mb-1">Become an Instructor</h4>
-                      <p className="text-sm text-white/70">Share your knowledge with millions of students</p>
-                    </div>
-                  </div>
-                </Link>
-              </div>
             </div>
           </div>
         </div>

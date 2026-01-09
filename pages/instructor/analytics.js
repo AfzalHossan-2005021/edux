@@ -7,9 +7,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
+import { Card } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Badge } from '@/components/ui';
 import {
   HiChartBar,
   HiUsers,
@@ -18,12 +18,9 @@ import {
   HiBookOpen,
   HiTrendingUp,
   HiTrendingDown,
-  HiCheckCircle,
-  HiClock,
   HiAcademicCap,
   HiArrowLeft,
   HiSparkles,
-  HiLightningBolt,
   HiClipboardList,
 } from 'react-icons/hi';
 

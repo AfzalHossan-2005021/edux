@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, message: 'Method not allowed' });
   }
 
-  const { i_id, title, description, field, seat } = req.body;
+  const { i_id, title, description, field, seat, difficulty_level, price, prerequisites = [], outcomes = [], wall } = req.body;
 
   // Validation
   if (!i_id || !title || !description || !field || !seat) {
@@ -44,14 +44,57 @@ export default async function handler(req, res) {
     });
   }
 
+  // Validate prerequisites and outcomes
+  if (!Array.isArray(prerequisites)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Prerequisites must be an array'
+    });
+  }
+
+  if (!Array.isArray(outcomes)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Outcomes must be an array'
+    });
+  }
+
+  // Check all prerequisites are valid
+  for (const prereq of prerequisites) {
+    if (typeof prereq !== 'string' || prereq.length > 500) {
+      return res.status(400).json({
+        success: false,
+        message: 'Each prerequisite must be a string with max 500 characters'
+      });
+    }
+  }
+
+  // Check all outcomes are valid
+  for (const outcome of outcomes) {
+    if (typeof outcome !== 'string' || outcome.length > 500) {
+      return res.status(400).json({
+        success: false,
+        message: 'Each outcome must be a string with max 500 characters'
+      });
+    }
+  }
+
+  // Check wall image URL if provided
+  if (wall && (typeof wall !== 'string' || wall.length > 255)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Wall image URL must be a string with max 255 characters'
+    });
+  }
+
   let connection;
 
   try {
     connection = await pool.acquire();
 
-    console.log('Creating course with data:', { i_id, title, field, seat });
+    console.log('Creating course with data:', { i_id, title, field, seat, prerequisites: prerequisites.length, outcomes: outcomes.length, wall });
 
-    // Verify the instructor exists (check Users table where role includes instructor)
+    // Verify the instructor exists
     const instructorCheck = await connection.execute(
       `SELECT "u_id" FROM EDUX."Users" WHERE "u_id" = :i_id`,
       { i_id },
@@ -68,23 +111,24 @@ export default async function handler(req, res) {
 
     console.log('Instructor verified');
 
-    // Insert the course - let Oracle apply the DEFAULT sequence value
-    console.log('Inserting course...');
-
+    // Insert the course
     await connection.execute(
-      `INSERT INTO EDUX."Courses" ("i_id", "title", "description", "field", "seat", "approve_status", "student_count") 
-       VALUES (:i_id, :title, :description, :field, :seat, 'n', 0)`,
+      `INSERT INTO EDUX."Courses" ("i_id", "title", "description", "field", "seat", "difficulty_level", "price", "wall", "approve_status", "student_count") 
+       VALUES (:i_id, :title, :description, :field, :seat, :difficulty_level, :price, :wall, 'n', 0)`,
       {
         i_id,
         title,
         description,
         field,
-        seat
+        seat,
+        wall: wall || null,
+        difficulty_level: difficulty_level || 'beginner',
+        price: price || 0
       },
       { autoCommit: true }
     );
 
-    // Get the last inserted course ID for this instructor
+    // Get the last inserted course ID
     const getCourseResult = await connection.execute(
       `SELECT "c_id" FROM EDUX."Courses" 
        WHERE "i_id" = :i_id 
@@ -101,11 +145,33 @@ export default async function handler(req, res) {
     const c_id = getCourseResult.rows[0].c_id;
     console.log('Course created with ID:', c_id);
 
-    console.log('Course created successfully with ID:', c_id);
+    // Insert prerequisites
+    if (prerequisites.length > 0) {
+      for (const prereq of prerequisites) {
+        await connection.execute(
+          `INSERT INTO EDUX."Prerequisites" ("c_id", "description") VALUES (:c_id, :description)`,
+          { c_id, description: prereq },
+          { autoCommit: true }
+        );
+      }
+      console.log(`Inserted ${prerequisites.length} prerequisites`);
+    }
+
+    // Insert outcomes
+    if (outcomes.length > 0) {
+      for (const outcome of outcomes) {
+        await connection.execute(
+          `INSERT INTO EDUX."Outcomes" ("c_id", "description") VALUES (:c_id, :description)`,
+          { c_id, description: outcome },
+          { autoCommit: true }
+        );
+      }
+      console.log(`Inserted ${outcomes.length} outcomes`);
+    }
 
     return res.status(201).json({
       success: true,
-      message: 'Course created successfully',
+      message: 'Course created successfully with prerequisites and learning outcomes',
       course: {
         c_id,
         i_id,
@@ -113,8 +179,13 @@ export default async function handler(req, res) {
         description,
         field,
         seat,
+        wall,
+        difficulty_level: difficulty_level || 'beginner',
+        price: price || 0,
         approve_status: 'n',
-        student_count: 0
+        student_count: 0,
+        prerequisitesCount: prerequisites.length,
+        outcomesCount: outcomes.length
       }
     });
 

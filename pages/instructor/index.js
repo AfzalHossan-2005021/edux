@@ -40,7 +40,9 @@ import {
   HiMail,
   HiCalendar,
   HiGlobe,
-  HiClipboardList
+  HiClipboardList,
+  HiX,
+  HiCheck
 } from 'react-icons/hi';
 
 import CourseWall_1 from '../../public/course_wall-1.jpg';
@@ -55,6 +57,16 @@ const Instructor = ({ serverUser }) => {
   const [myCourses, setMyCourses] = useState([]);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: '',
+    email: '',
+    expertise: '',
+    qualification: '',
+    bio: ''
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileMessage, setProfileMessage] = useState({ type: '', text: '' });
 
   const u_id = useMemo(() => serverUser?.u_id || secureLocalStorage.getItem('u_id'), [serverUser]);
 
@@ -75,6 +87,13 @@ const Instructor = ({ serverUser }) => {
       .then((data) => {
         if (data && data[0]) {
           setInstructor(data[0]);
+          setProfileForm({
+            name: data[0]?.name || '',
+            email: data[0]?.email || '',
+            expertise: data[0]?.expertise || '',
+            qualification: data[0]?.qualification || '',
+            bio: data[0]?.bio || ''
+          });
           localStorage.setItem('instructor', JSON.stringify({ ...data[0], I_ID: u_id }));
         }
       })
@@ -177,7 +196,7 @@ const Instructor = ({ serverUser }) => {
                 View
               </Button>
             </Link>
-            <Link href={`/user/courses/${course.c_id || course.C_ID}`} className="flex-1">
+            <Link href={`/instructor/courses/${course.c_id || course.C_ID}`} className="flex-1">
               <Button variant="outline" size="sm" className="w-full">
                 <HiPencilAlt className="w-4 h-4 mr-1" />
                 Edit
@@ -227,7 +246,7 @@ const Instructor = ({ serverUser }) => {
               </div>
             </div>
           </div>
-          <Link href="/user/create-course">
+          <Link href="/instructor/courses/create">
             <Button variant="secondary" size="lg" className="bg-white text-primary-600 hover:bg-white/90 shadow-xl">
               <HiPlus className="w-5 h-5 mr-2" />
               Create New Course
@@ -317,7 +336,7 @@ const Instructor = ({ serverUser }) => {
             gradient="bg-gradient-to-br from-blue-500 to-indigo-600"
           />
           <QuickActionCard
-            href="/user/create-course"
+            href="/instructor/courses/create"
             icon={HiPlus}
             title="Create Course"
             description="Start a new course"
@@ -355,7 +374,7 @@ const Instructor = ({ serverUser }) => {
             <p className="text-neutral-500 dark:text-neutral-400">{myCourses.length} courses published</p>
           </div>
         </div>
-        <Link href="/user/create-course">
+        <Link href="/instructor/courses/create">
           <Button variant="primary" size="lg">
             <HiPlus className="w-5 h-5 mr-2" />
             Create New Course
@@ -378,7 +397,7 @@ const Instructor = ({ serverUser }) => {
           <p className="text-neutral-500 dark:text-neutral-400 mb-6 max-w-md mx-auto">
             Create your first course to start sharing your knowledge with students worldwide!
           </p>
-          <Link href="/user/create-course">
+          <Link href="/instructor/courses/create">
             <Button variant="primary" size="lg">
               <HiPlus className="w-5 h-5 mr-2" />
               Create Your First Course
@@ -549,67 +568,277 @@ const Instructor = ({ serverUser }) => {
     </div>
   );
 
+  // Profile handlers
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target;
+    setProfileForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    setProfileMessage({ type: '', text: '' });
+    try {
+      const res = await apiPost('/api/instructor_info', {
+        u_id,
+        ...profileForm
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setInstructor(profileForm);
+        setIsEditingProfile(false);
+        setProfileMessage({ type: 'success', text: 'Profile updated successfully!' });
+        setTimeout(() => setProfileMessage({ type: '', text: '' }), 3000);
+      } else {
+        setProfileMessage({ type: 'error', text: data.message || 'Failed to update profile' });
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      setProfileMessage({ type: 'error', text: 'An error occurred while updating profile' });
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setProfileForm({
+      name: instructor?.name || '',
+      email: instructor?.email || '',
+      expertise: instructor?.expertise || '',
+      qualification: instructor?.qualification || '',
+      bio: instructor?.bio || ''
+    });
+    setIsEditingProfile(false);
+    setProfileMessage({ type: '', text: '' });
+  };
+
   const ProfileTab = () => (
-    <div className="pb-8 max-w-2xl">
+    <div className="pb-8 space-y-6">
+      {/* Success/Error Message */}
+      {profileMessage.text && (
+        <Card 
+          padding="md" 
+          className={`border-l-4 ${profileMessage.type === 'success' ? 'border-l-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-l-red-500 bg-red-50 dark:bg-red-900/20'}`}
+        >
+          <p className={profileMessage.type === 'success' ? 'text-emerald-800 dark:text-emerald-200' : 'text-red-800 dark:text-red-200'}>
+            {profileMessage.text}
+          </p>
+        </Card>
+      )}
+
+      {/* Profile Card */}
       <Card padding="none" className="overflow-hidden">
         {/* Profile Header */}
-        <div className="relative h-32 bg-gradient-to-br from-primary-600 via-indigo-600 to-purple-700">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl transform translate-x-16 -translate-y-16" />
-        </div>
         
-        <div className="px-8 pb-8">
+        <div className="p-8">
           {/* Avatar */}
-          <div className="-mt-16 mb-6">
+          <div className="flex items-end justify-between">
             <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-primary-500 to-indigo-600 border-4 border-white dark:border-neutral-900 flex items-center justify-center text-white text-4xl font-bold shadow-xl">
               {initials}
             </div>
           </div>
 
-          {/* Profile Info */}
-          <div className="mb-8">
-            <h3 className="text-2xl font-bold text-neutral-800 dark:text-white">{instructor?.name}</h3>
-            <p className="text-neutral-500 dark:text-neutral-400 flex items-center gap-2 mt-1">
-              <HiAcademicCap className="w-5 h-5" />
-              {instructor?.subject || 'Instructor'}
-            </p>
-          </div>
-
-          {/* Account Info */}
-          <div className="border-t border-neutral-200 dark:border-neutral-700 pt-6">
-            <h4 className="font-bold text-neutral-800 dark:text-white mb-4 flex items-center gap-2">
-              <HiCog className="w-5 h-5 text-primary-500" />
-              Account Information
-            </h4>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <HiMail className="w-5 h-5 text-blue-500" />
-                  </div>
-                  <span className="text-neutral-600 dark:text-neutral-400">Email</span>
+          {/* Profile Name & Bio */}
+          {!isEditingProfile ? (
+            <div className="mb-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold text-neutral-800 dark:text-white">{instructor?.name}</h3>
+                  <p className="text-neutral-500 dark:text-neutral-400 flex items-center gap-2 mt-1">
+                    <HiAcademicCap className="w-5 h-5" />
+                    {profileForm.expertise || 'No expertise set'}
+                  </p>
                 </div>
-                <span className="font-medium text-neutral-800 dark:text-white">{instructor?.email}</span>
-              </div>
-              <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                    <HiAcademicCap className="w-5 h-5 text-purple-500" />
-                  </div>
-                  <span className="text-neutral-600 dark:text-neutral-400">Specialty</span>
-                </div>
-                <span className="font-medium text-neutral-800 dark:text-white">{instructor?.subject}</span>
-              </div>
-              <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                    <HiCalendar className="w-5 h-5 text-emerald-500" />
-                  </div>
-                  <span className="text-neutral-600 dark:text-neutral-400">Member Since</span>
-                </div>
-                <span className="font-medium text-neutral-800 dark:text-white">{instructor?.reg_date}</span>
+                <Button 
+                  onClick={() => setIsEditingProfile(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition"
+                >
+                  <HiPencilAlt className="w-4 h-4" />
+                  Edit Profile
+                </Button>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="mb-8">
+              <h3 className="text-2xl font-bold text-neutral-800 dark:text-white mb-4">Edit Profile</h3>
+            </div>
+          )}
+
+          {/* Profile Information */}
+          {!isEditingProfile ? (
+            <div className="space-y-6 border-t border-neutral-200 dark:border-neutral-700 pt-6">
+              {/* Account Information */}
+              <div>
+                <h4 className="font-bold text-neutral-800 dark:text-white mb-4 flex items-center gap-2">
+                  <HiCog className="w-5 h-5 text-primary-500" />
+                  Account Information
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Email */}
+                  <div className="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                        <HiMail className="w-5 h-5 text-blue-500" />
+                      </div>
+                      <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Email</span>
+                    </div>
+                    <p className="text-neutral-800 dark:text-white font-medium">{profileForm.email}</p>
+                  </div>
+
+                  {/* Member Since */}
+                  <div className="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                        <HiCalendar className="w-5 h-5 text-emerald-500" />
+                      </div>
+                      <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Member Since</span>
+                    </div>
+                    <p className="text-neutral-800 dark:text-white font-medium">{instructor?.reg_date}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Professional Information */}
+              <div>
+                <h4 className="font-bold text-neutral-800 dark:text-white mb-4 flex items-center gap-2">
+                  <HiAcademicCap className="w-5 h-5 text-amber-500" />
+                  Professional Information
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Expertise */}
+                  <div className="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Expertise</span>
+                    </div>
+                    <p className="text-neutral-800 dark:text-white font-medium">{profileForm.expertise || 'Not specified'}</p>
+                  </div>
+
+                  {/* Qualification */}
+                  <div className="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Qualification</span>
+                    </div>
+                    <p className="text-neutral-800 dark:text-white font-medium">{profileForm.qualification || 'Not specified'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bio */}
+              {profileForm.bio && (
+                <div>
+                  <h4 className="font-bold text-neutral-800 dark:text-white mb-2">About Me</h4>
+                  <div className="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800">
+                    <p className="text-neutral-800 dark:text-white">{profileForm.bio}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Stats */}
+              {instructor?.course_count !== undefined && (
+                <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700">
+                  <h4 className="font-bold text-neutral-800 dark:text-white mb-3">Teaching Stats</h4>
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                        <HiBookOpen className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Total Courses Created</p>
+                        <p className="text-2xl font-bold text-neutral-800 dark:text-white">{instructor?.course_count || 0}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Edit Mode */
+            <form className="space-y-6 border-t border-neutral-200 dark:border-neutral-700 pt-6">
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Full Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={profileForm.name}
+                  onChange={handleProfileChange}
+                  className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="Enter your full name"
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Email Address</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={profileForm.email}
+                  onChange={handleProfileChange}
+                  className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="Enter your email"
+                />
+              </div>
+
+              {/* Expertise */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Expertise / Subject</label>
+                <input
+                  type="text"
+                  name="expertise"
+                  value={profileForm.expertise}
+                  onChange={handleProfileChange}
+                  className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="e.g., Web Development, Data Science"
+                />
+              </div>
+
+              {/* Qualification */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Qualification</label>
+                <input
+                  type="text"
+                  name="qualification"
+                  value={profileForm.qualification}
+                  onChange={handleProfileChange}
+                  className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="e.g., B.Tech in Computer Science"
+                />
+              </div>
+
+              {/* Bio */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">About Me (Bio)</label>
+                <textarea
+                  name="bio"
+                  value={profileForm.bio}
+                  onChange={handleProfileChange}
+                  rows="4"
+                  className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                  placeholder="Tell us about yourself and your teaching experience..."
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <Button 
+                  onClick={handleSaveProfile}
+                  disabled={savingProfile}
+                  className="flex items-center gap-2 px-6 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-neutral-400 text-white rounded-lg transition"
+                >
+                  <HiCheck className="w-4 h-4" />
+                  {savingProfile ? 'Saving...' : 'Save Changes'}
+                </Button>
+                <Button 
+                  onClick={handleCancelEdit}
+                  disabled={savingProfile}
+                  className="flex items-center gap-2 px-6 py-2 bg-neutral-500 hover:bg-neutral-600 disabled:bg-neutral-400 text-white rounded-lg transition"
+                >
+                  <HiX className="w-4 h-4" />
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          )}
         </div>
       </Card>
     </div>
@@ -657,7 +886,7 @@ const Instructor = ({ serverUser }) => {
                     Analytics
                   </Button>
                 </Link>
-                <Link href="/user/create-course">
+                <Link href="/instructor/courses/create">
                   <Button variant="primary" size="sm">
                     <HiPlus className="w-4 h-4 mr-2" />
                     New Course

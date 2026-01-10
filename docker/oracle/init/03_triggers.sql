@@ -3,6 +3,68 @@
 -- Make sure we are in the correct PDB
 ALTER SESSION SET CONTAINER = EDUX;
 
+--------------------------------------------------
+-- ROLE VALIDATION TRIGGERS
+--------------------------------------------------
+
+-- Student Role Check
+CREATE OR REPLACE TRIGGER trg_student_role
+BEFORE INSERT ON EDUX."Students"
+FOR EACH ROW
+DECLARE
+  v_dummy NUMBER;
+BEGIN
+  SELECT 1
+  INTO v_dummy
+  FROM EDUX."Users"
+  WHERE "u_id" = :NEW."s_id"
+    AND "role" = 'student';
+
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    RAISE_APPLICATION_ERROR(-20001, 'User role must be student');
+END;
+/
+
+
+-- Instructor Role Check
+CREATE OR REPLACE TRIGGER trg_instructor_role
+BEFORE INSERT ON EDUX."Instructors"
+FOR EACH ROW
+DECLARE
+  v_dummy NUMBER;
+BEGIN
+  SELECT 1
+  INTO v_dummy
+  FROM EDUX."Users"
+  WHERE "u_id" = :NEW."i_id"
+    AND "role" = 'instructor';
+
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    RAISE_APPLICATION_ERROR(-20002, 'User role must be instructor');
+END;
+/
+
+-- Admin Role Check
+CREATE OR REPLACE TRIGGER trg_admin_role
+BEFORE INSERT ON EDUX."Admins"
+FOR EACH ROW
+DECLARE
+  v_dummy NUMBER;
+BEGIN
+  SELECT 1
+  INTO v_dummy
+  FROM EDUX."Users"
+  WHERE "u_id" = :NEW."a_id"
+    AND "role" = 'admin';
+
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    RAISE_APPLICATION_ERROR(-20003, 'User role must be admin');
+END;
+/
+
 -- Trigger: ENROLL_CONTROL - Controls enrollment limits
 CREATE OR REPLACE TRIGGER EDUX.ENROLL_CONTROL
 BEFORE INSERT ON EDUX."Enrolls"

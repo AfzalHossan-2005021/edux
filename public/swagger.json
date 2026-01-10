@@ -863,8 +863,8 @@
         }
       }
     },
-    "/user_info": {
-      "post": {
+    "/student/get_personal_info": {
+      "get": {
         "tags": ["Authentication"],
         "summary": "Get user info",
         "description": "Get user's profile information",

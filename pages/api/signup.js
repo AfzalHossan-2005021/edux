@@ -1,4 +1,15 @@
-const oracledb = require('oracledb');
+/**
+ * Generic Signup API Endpoint (Legacy/Backward Compatibility)
+ * POST /api/signup
+ * 
+ * This endpoint maintains backward compatibility and routes to the appropriate
+ * role-specific signup endpoint. For new implementations, use:
+ * - POST /api/auth/user/signup - for students
+ * - POST /api/auth/instructor/signup - for instructors
+ * - POST /api/auth/admin/signup - for admins
+ */
+
+import oracledb from 'oracledb';
 import pool from "../../middleware/connectdb";
 import { hashPassword } from '../../lib/auth/password';
 import { generateTokens } from '../../lib/auth/jwt';
@@ -7,10 +18,14 @@ import { signupSchema, validateRequest } from '../../lib/validation/schemas';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
-        return res.status(405).json({ success: false, message: 'Method not allowed' });
+        res.setHeader('Allow', ['POST']);
+        return res.status(405).json({ 
+            success: false, 
+            message: `Method ${req.method} not allowed` 
+        });
     }
 
-    // Validate input
+    // Validate input using student signup schema (default)
     const validation = validateRequest(signupSchema, req.body);
     if (!validation.success) {
         return res.status(400).json({ 
@@ -28,7 +43,7 @@ export default async function handler(req, res) {
 
         // Check if email already exists
         const existingUser = await connection.execute(
-            `SELECT "u_id" FROM EDUX."Users" WHERE "email" = :email`,
+            `SELECT "u_id" FROM EDUX."Users" WHERE LOWER("email") = LOWER(:email)`,
             { email },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
@@ -36,52 +51,59 @@ export default async function handler(req, res) {
         if (existingUser.rows && existingUser.rows.length > 0) {
             return res.status(409).json({ 
                 success: false, 
-                message: 'Email already registered' 
+                message: 'An account with this email already exists' 
             });
         }
 
         // Hash the password
         const hashedPassword = await hashPassword(password);
 
-        // Create user with hashed password
-        const result = await connection.execute(
-            `BEGIN
-                :u_id := CREATE_USER(:name, :email, :password);
-                commit;
-            END;`,
+        // Create user in Users table with role = 'student'
+        const userResult = await connection.execute(
+            `INSERT INTO EDUX."Users" ("name", "email", "password", "role") 
+             VALUES (:name, :email, :password, 'student') 
+             RETURNING "u_id" INTO :u_id`,
             {
-                name: name,
-                email: email,
+                name,
+                email: email.toLowerCase(),
                 password: hashedPassword,
                 u_id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
             },
-            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+            { autoCommit: false }
         );
 
-        const u_id = result.outBinds.u_id;
+        const u_id = userResult.outBinds.u_id[0];
 
-        // Update student record with dob and gender if provided
-        if (dob || gender) {
-            await connection.execute(
-                `UPDATE EDUX."Students" 
-                 SET "date_of_birth" = :dob, "gender" = :gender 
-                 WHERE "s_id" = :s_id`,
-                {
-                    dob: dob ? new Date(dob) : null,
-                    gender: gender || null,
-                    s_id: u_id
-                }
-            );
-            await connection.execute('COMMIT');
+        if (!u_id) {
+            await connection.execute('ROLLBACK');
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to create user account',
+            });
         }
+
+        // Create student record in Students table
+        await connection.execute(
+            `INSERT INTO EDUX."Students" ("s_id", "date_of_birth", "gender", "interests") 
+             VALUES (:s_id, :dob, :gender, NULL)`,
+            {
+                s_id: u_id,
+                dob: dob ? new Date(dob) : null,
+                gender: gender || null,
+            }
+        );
+
+        await connection.execute('COMMIT');
 
         // Generate JWT tokens
         const userData = {
-            u_id: u_id,
-            email: email,
-            name: name,
+            u_id,
+            email: email.toLowerCase(),
+            name,
+            role: 'student',
             isStudent: true,
             isInstructor: false,
+            isAdmin: false,
         };
 
         const { accessToken, refreshToken } = generateTokens(userData);
@@ -94,24 +116,40 @@ export default async function handler(req, res) {
             success: true, 
             message: 'Account created successfully',
             user: {
-                u_id: u_id,
-                name: name,
-                email: email,
+                u_id,
+                name,
+                email: email.toLowerCase(),
+                role: 'student',
                 isStudent: true,
                 isInstructor: false,
+                isAdmin: false,
             },
             accessToken,
         });
 
     } catch (error) {
         console.error('Signup error:', error);
+        
+        // Rollback on error
+        if (connection) {
+            try {
+                await connection.execute('ROLLBACK');
+            } catch (rollbackError) {
+                console.error('Rollback error:', rollbackError);
+            }
+        }
+        
         return res.status(500).json({ 
             success: false, 
-            message: 'An error occurred during registration' 
+            message: 'An error occurred during registration. Please try again.' 
         });
     } finally {
         if (connection) {
-            pool.release(connection);
+            try {
+                pool.release(connection);
+            } catch (releaseError) {
+                console.error('Connection release error:', releaseError);
+            }
         }
     }
 }

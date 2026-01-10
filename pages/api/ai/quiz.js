@@ -32,7 +32,10 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: 'Topic is required' });
         }
 
-        result = await quiz.generateQuizQuestions(topic, {
+        // topic can be a string or object - normalize it
+        const topicData = typeof topic === 'string' ? { name: topic } : topic;
+
+        result = await quiz.generateQuizQuestions(topicData, {
           difficulty: difficulty || 'medium',
           count: count || 5,
         });
@@ -69,6 +72,7 @@ export default async function handler(req, res) {
           difficulty: difficulty || 'medium',
           count: count || 5,
         });
+        console.log('Generated practice questions:', result);
         break;
       }
 
@@ -101,6 +105,7 @@ export default async function handler(req, res) {
         };
 
         result = await quiz.generateLectureQuiz(lectureData, count || 3);
+        console.log('Generated lecture quiz:', result);
         break;
       }
 

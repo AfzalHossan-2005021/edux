@@ -88,7 +88,7 @@ export const withOptionalAuth = (handler) => {
  */
 export const withStudentAuth = (handler) => {
   return withAuth(async (req, res) => {
-    if (!req.user.isStudent) {
+    if (!req.user.isStudent && req.user.role !== 'student') {
       return res.status(403).json({ 
         success: false, 
         message: 'Student access required' 
@@ -105,7 +105,7 @@ export const withStudentAuth = (handler) => {
  */
 export const withInstructorAuth = (handler) => {
   return withAuth(async (req, res) => {
-    if (!req.user.isInstructor) {
+    if (!req.user.isInstructor && req.user.role !== 'instructor') {
       return res.status(403).json({ 
         success: false, 
         message: 'Instructor access required' 
@@ -116,12 +116,53 @@ export const withInstructorAuth = (handler) => {
 };
 
 /**
+ * Middleware to require admin role
+ * @param {function} handler - The API route handler
+ * @returns {function} Wrapped handler with admin check
+ */
+export const withAdminAuth = (handler) => {
+  return withAuth(async (req, res) => {
+    if (!req.user.isAdmin && req.user.role !== 'admin') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Admin access required' 
+      });
+    }
+    return handler(req, res);
+  });
+};
+
+/**
+ * Middleware to require specific roles (flexible role check)
+ * @param {string[]} allowedRoles - Array of allowed roles
+ * @returns {function} Middleware wrapper
+ */
+export const withRoleAuth = (allowedRoles) => {
+  return (handler) => {
+    return withAuth(async (req, res) => {
+      const userRole = req.user.role || 
+        (req.user.isAdmin ? 'admin' : 
+          req.user.isInstructor ? 'instructor' : 
+            req.user.isStudent ? 'student' : null);
+      
+      if (!userRole || !allowedRoles.includes(userRole)) {
+        return res.status(403).json({ 
+          success: false, 
+          message: `Access denied. Required roles: ${allowedRoles.join(', ')}` 
+        });
+      }
+      return handler(req, res);
+    });
+  };
+};
+
+/**
  * Combined middleware for auth and validation
- * @param {object} options - { schema, requireAuth, requireStudent, requireInstructor }
+ * @param {object} options - { schema, requireAuth, requireStudent, requireInstructor, requireAdmin }
  * @returns {function} Middleware wrapper
  */
 export const withAuthAndValidation = (options = {}) => {
-  const { schema, requireAuth = true, requireStudent = false, requireInstructor = false } = options;
+  const { schema, requireAuth = true, requireStudent = false, requireInstructor = false, requireAdmin = false } = options;
   
   return (handler) => {
     return async (req, res) => {
@@ -147,18 +188,25 @@ export const withAuthAndValidation = (options = {}) => {
 
         req.user = decoded;
 
-        // Role checks
-        if (requireStudent && !decoded.isStudent) {
+        // Role checks - check both boolean flags and role string
+        if (requireStudent && !decoded.isStudent && decoded.role !== 'student') {
           return res.status(403).json({ 
             success: false, 
             message: 'Student access required' 
           });
         }
 
-        if (requireInstructor && !decoded.isInstructor) {
+        if (requireInstructor && !decoded.isInstructor && decoded.role !== 'instructor') {
           return res.status(403).json({ 
             success: false, 
             message: 'Instructor access required' 
+          });
+        }
+
+        if (requireAdmin && !decoded.isAdmin && decoded.role !== 'admin') {
+          return res.status(403).json({ 
+            success: false, 
+            message: 'Admin access required' 
           });
         }
       }
@@ -189,5 +237,7 @@ export default {
   withOptionalAuth,
   withStudentAuth,
   withInstructorAuth,
+  withAdminAuth,
+  withRoleAuth,
   withAuthAndValidation,
 };

@@ -1,4 +1,15 @@
-const oracledb = require('oracledb');
+/**
+ * Generic Login API Endpoint (Legacy/Backward Compatibility)
+ * POST /api/login
+ * 
+ * This endpoint maintains backward compatibility and handles login for all user types.
+ * For new implementations, use:
+ * - POST /api/auth/user/login - for students
+ * - POST /api/auth/instructor/login - for instructors
+ * - POST /api/auth/admin/login - for admins
+ */
+
+import oracledb from 'oracledb';
 import pool from '../../middleware/connectdb';
 import { verifyPassword } from '../../lib/auth/password';
 import { generateTokens } from '../../lib/auth/jwt';
@@ -7,7 +18,11 @@ import { loginSchema, validateRequest } from '../../lib/validation/schemas';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, message: 'Method not allowed' });
+    res.setHeader('Allow', ['POST']);
+    return res.status(405).json({ 
+      success: false, 
+      message: `Method ${req.method} not allowed` 
+    });
   }
 
   // Validate input
@@ -26,31 +41,28 @@ export default async function handler(req, res) {
   try {
     connection = await pool.acquire();
     
-    // Get user by email using the CHECK_USER procedure
+    // Get user by email with role using new schema
     const result = await connection.execute(
-      `BEGIN
-        CHECK_USER(:email, :out_cursor);
-      END;`,
-      {
-        email: email,
-        out_cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR },
-      },
+      `SELECT U."u_id", U."name", U."email", U."password", U."role", U."reg_date",
+              S."s_id", I."i_id", A."a_id"
+       FROM EDUX."Users" U
+       LEFT JOIN EDUX."Students" S ON U."u_id" = S."s_id"
+       LEFT JOIN EDUX."Instructors" I ON U."u_id" = I."i_id"
+       LEFT JOIN EDUX."Admins" A ON U."u_id" = A."a_id"
+       WHERE LOWER(U."email") = LOWER(:email)`,
+      { email },
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
 
-    const cursor = result.outBinds.out_cursor;
-    const rows = await cursor.getRows();
-    await cursor.close();
-
     // Check if user exists
-    if (!rows || rows.length === 0) {
+    if (!result.rows || result.rows.length === 0) {
       return res.status(401).json({ 
         success: false, 
         message: 'Invalid email or password' 
       });
     }
 
-    const user = rows[0];
+    const user = result.rows[0];
 
     // Verify password - support both bcrypt hashed and plaintext (for sample data)
     let isPasswordValid = false;
@@ -71,13 +83,21 @@ export default async function handler(req, res) {
       });
     }
 
+    // Determine user role from the role field in Users table
+    const role = user.role || 'student'; // Default to student for legacy data
+    const isStudent = role === 'student' || !!user.s_id;
+    const isInstructor = role === 'instructor' || !!user.i_id;
+    const isAdmin = role === 'admin' || !!user.a_id;
+
     // Generate JWT tokens
     const userData = {
       u_id: user.u_id,
       email: user.email,
       name: user.name,
-      isStudent: user.s_id ? true : false,
-      isInstructor: user.i_id ? true : false,
+      role,
+      isStudent,
+      isInstructor,
+      isAdmin,
     };
 
     const { accessToken, refreshToken } = generateTokens(userData);
@@ -93,21 +113,27 @@ export default async function handler(req, res) {
         u_id: user.u_id,
         name: user.name,
         email: user.email,
-        isStudent: user.s_id ? true : false,
-        isInstructor: user.i_id ? true : false,
+        role,
+        isStudent,
+        isInstructor,
+        isAdmin,
       },
-      accessToken, // Also return token for client-side storage if needed
+      accessToken,
     });
 
   } catch (error) {
     console.error('Login error:', error);
     return res.status(500).json({ 
       success: false, 
-      message: 'An error occurred during login' 
+      message: 'An error occurred during login. Please try again.' 
     });
   } finally {
     if (connection) {
-      pool.release(connection);
+      try {
+        pool.release(connection);
+      } catch (releaseError) {
+        console.error('Connection release error:', releaseError);
+      }
     }
   }
 }

@@ -72,9 +72,12 @@ export default function AISearch({ onResults }) {
   };
 
   return (
-    <div className="relative w-full max-w-2xl mx-auto">
+    <div className="relative w-full max-w-2xl mx-auto px-4 sm:px-0">
+      <div id="ai-search-help" className="sr-only">
+        Search for courses using AI-powered suggestions. Type at least 2 characters to see suggestions.
+      </div>
       <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+        <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
           {isSearching ? (
             <svg className="animate-spin h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -95,17 +98,19 @@ export default function AISearch({ onResults }) {
           onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
           placeholder="Search courses with AI... (e.g., 'beginner python for data science')"
-          className="w-full pl-12 pr-24 py-3 bg-white border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm"
+          aria-label="Search courses with AI assistance"
+          aria-describedby="ai-search-help"
+          className="w-full pl-10 sm:pl-12 pr-20 sm:pr-24 py-3 sm:py-3 bg-white border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm text-sm sm:text-base"
         />
         
         <div className="absolute inset-y-0 right-0 flex items-center pr-2">
-          <span className="px-2 py-1 text-xs bg-indigo-100 text-indigo-700 rounded-full mr-2">
+          <span className="px-1.5 sm:px-2 py-1 text-xs bg-indigo-100 text-indigo-700 rounded-full mr-1 sm:mr-2">
             AI
           </span>
           <button
             onClick={() => handleSearch()}
             disabled={isSearching}
-            className="px-4 py-1.5 bg-indigo-600 text-white text-sm rounded-full hover:bg-indigo-700 transition-colors disabled:opacity-50"
+            className="px-3 sm:px-4 py-1.5 bg-indigo-600 text-white text-sm rounded-full hover:bg-indigo-700 transition-colors disabled:opacity-50"
           >
             Search
           </button>

@@ -48,18 +48,7 @@ Content-Type: application/json
 }
 ```
 
-### Sign Up (Instructor)
-```http
-POST /api/instructor_signup
-Content-Type: application/json
 
-{
-  "name": "Jane Smith",
-  "email": "instructor@example.com",
-  "password": "yourpassword",
-  "subject": "Web Development"
-}
-```
 
 ---
 

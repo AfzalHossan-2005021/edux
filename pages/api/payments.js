@@ -59,7 +59,7 @@ async function getPaymentInfo(req, res) {
   let connection;
 
   try {
-    connection = await pool.getConnection();
+    connection = await pool.acquire();
 
     // Verify Stripe session
     if (sessionId) {
@@ -83,15 +83,15 @@ async function getPaymentInfo(req, res) {
               { autoCommit: true }
             );
 
-            // Auto-enroll user in course
+            // Auto-enroll user in course using the Enrolls table
             await connection.execute(
-              `INSERT INTO EDUX.ENROLLMENT (E_ID, U_ID, C_ID, ENROLL_DATE)
-               SELECT (SELECT NVL(MAX(E_ID), 0) + 1 FROM EDUX.ENROLLMENT), :userId, :courseId, SYSDATE
+              `INSERT INTO EDUX."Enrolls" ("s_id", "c_id", "date", "approve_status")
+               SELECT :userId, :courseId, SYSDATE, 'y'
                FROM DUAL
                WHERE NOT EXISTS (
-                 SELECT 1 FROM EDUX.ENROLLMENT WHERE U_ID = :userId AND C_ID = :courseId
+                 SELECT 1 FROM EDUX."Enrolls" WHERE "s_id" = :userId AND "c_id" = :courseId
                )`,
-              { userId: payment.userId, courseId: payment.courseId },
+              { userId: payment.uId, courseId: payment.cId },
               { autoCommit: true }
             );
           }
@@ -114,9 +114,9 @@ async function getPaymentInfo(req, res) {
     // Get single payment
     if (paymentId) {
       const result = await connection.execute(
-        `SELECT p.*, c.NAME as COURSE_NAME 
+        `SELECT p.*, c."title" as COURSE_NAME 
          FROM EDUX.PAYMENTS p
-         JOIN EDUX.COURSE c ON p.C_ID = c.C_ID
+         JOIN EDUX."Courses" c ON p.C_ID = c."c_id"
          WHERE p.PAYMENT_ID = :paymentId`,
         { paymentId }
       );
@@ -131,9 +131,9 @@ async function getPaymentInfo(req, res) {
     // Get payment history
     if (action === 'history' && userId) {
       const result = await connection.execute(
-        `SELECT p.*, c.NAME as COURSE_NAME 
+        `SELECT p.*, c."title" as COURSE_NAME 
          FROM EDUX.PAYMENTS p
-         JOIN EDUX.COURSE c ON p.C_ID = c.C_ID
+         JOIN EDUX."Courses" c ON p.C_ID = c."c_id"
          WHERE p.U_ID = :userId
          ORDER BY p.CREATED_AT DESC`,
         { userId: parseInt(userId) }
@@ -149,11 +149,7 @@ async function getPaymentInfo(req, res) {
     return res.status(500).json({ error: 'Failed to fetch payment info' });
   } finally {
     if (connection) {
-      try {
-        await connection.close();
-      } catch (e) {
-        console.error('Error closing connection:', e);
-      }
+      pool.release(connection);
     }
   }
 }
@@ -191,27 +187,33 @@ async function createCheckout(req, res) {
   let connection;
 
   try {
-    connection = await pool.getConnection();
+    connection = await pool.acquire();
 
     // Get course info
     const courseResult = await connection.execute(
-      `SELECT C_ID, NAME, PRICE FROM EDUX.COURSE WHERE C_ID = :courseId`,
+      `SELECT "c_id", "title", "price" FROM EDUX."Courses" WHERE "c_id" = :courseId`,
       { courseId: parseInt(courseId) }
     );
 
     if (courseResult.rows.length === 0) {
+      pool.release(connection);
       return res.status(404).json({ error: 'Course not found' });
     }
 
-    const [cId, courseName, basePrice] = courseResult.rows[0];
+    // Since OUT_FORMAT_OBJECT is set globally, rows are objects
+    const courseData = courseResult.rows[0];
+    const cId = courseData.c_id;
+    const courseName = courseData.title;
+    const basePrice = courseData.price;
 
     // Check if already enrolled
     const enrollResult = await connection.execute(
-      `SELECT * FROM EDUX.ENROLLMENT WHERE U_ID = :userId AND C_ID = :courseId`,
+      `SELECT * FROM EDUX."Enrolls" WHERE "s_id" = :userId AND "c_id" = :courseId`,
       { userId: parseInt(userId), courseId: parseInt(courseId) }
     );
 
     if (enrollResult.rows.length > 0) {
+      pool.release(connection);
       return res.status(400).json({ error: 'Already enrolled in this course' });
     }
 
@@ -275,11 +277,7 @@ async function createCheckout(req, res) {
     return res.status(500).json({ error: 'Failed to create checkout session' });
   } finally {
     if (connection) {
-      try {
-        await connection.close();
-      } catch (e) {
-        console.error('Error closing connection:', e);
-      }
+      pool.release(connection);
     }
   }
 }
@@ -295,7 +293,7 @@ async function processRefund(req, res) {
   let connection;
 
   try {
-    connection = await pool.getConnection();
+    connection = await pool.acquire();
 
     // Get payment record
     const result = await connection.execute(
@@ -336,7 +334,7 @@ async function processRefund(req, res) {
 
     // Remove enrollment
     await connection.execute(
-      `DELETE FROM EDUX.ENROLLMENT WHERE U_ID = :userId AND C_ID = :courseId`,
+      `DELETE FROM EDUX."Enrolls" WHERE "s_id" = :userId AND "c_id" = :courseId`,
       { userId: payment.uId, courseId: payment.cId },
       { autoCommit: true }
     );
@@ -351,17 +349,24 @@ async function processRefund(req, res) {
     return res.status(500).json({ error: 'Failed to process refund' });
   } finally {
     if (connection) {
-      try {
-        await connection.close();
-      } catch (e) {
-        console.error('Error closing connection:', e);
-      }
+      pool.release(connection);
     }
   }
 }
 
-// Helper function to format row
+// Helper function to format row - converts Oracle column names to camelCase
 function formatRow(row, metaData) {
+  // If row is already an object (OUT_FORMAT_OBJECT), convert keys to camelCase
+  if (row && typeof row === 'object' && !Array.isArray(row)) {
+    const formatted = {};
+    Object.keys(row).forEach(key => {
+      const camelKey = key.toLowerCase().replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+      formatted[camelKey] = row[key];
+    });
+    return formatted;
+  }
+  
+  // Fallback for array format with metaData
   const formatted = {};
   metaData.forEach((col, index) => {
     const key = col.name.toLowerCase().replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());

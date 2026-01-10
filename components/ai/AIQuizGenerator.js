@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Button } from '../ui';
 
 export default function AIQuizGenerator({ topicId, topic, onQuizStart }) {
   const [questions, setQuestions] = useState([]);
@@ -11,6 +12,37 @@ export default function AIQuizGenerator({ topicId, topic, onQuizStart }) {
   const [questionCount, setQuestionCount] = useState(5);
   const [quizStarted, setQuizStarted] = useState(false);
   const [feedback, setFeedback] = useState(null);
+
+  // Normalize question format (handle both array and object options)
+  const normalizeQuestion = (q) => {
+    // If options is already an array, return as-is with normalized correct index
+    if (Array.isArray(q.options)) {
+      return {
+        ...q,
+        correct: typeof q.correct === 'number' ? q.correct : 0,
+      };
+    }
+    
+    // If options is an object like { A: "...", B: "...", C: "...", D: "..." }
+    if (q.options && typeof q.options === 'object') {
+      const optionKeys = ['A', 'B', 'C', 'D'];
+      const optionsArray = optionKeys.map(key => q.options[key] || `Option ${key}`);
+      const correctIndex = optionKeys.indexOf(q.correct_answer || q.correct || 'A');
+      
+      return {
+        ...q,
+        options: optionsArray,
+        correct: correctIndex >= 0 ? correctIndex : 0,
+      };
+    }
+    
+    // Fallback: create default options
+    return {
+      ...q,
+      options: ['Option A', 'Option B', 'Option C', 'Option D'],
+      correct: 0,
+    };
+  };
 
   const generateQuiz = async () => {
     setIsLoading(true);
@@ -31,7 +63,9 @@ export default function AIQuizGenerator({ topicId, topic, onQuizStart }) {
       const data = await response.json();
       
       if (data.success && data.questions?.length > 0) {
-        setQuestions(data.questions);
+        // Normalize all questions to have consistent format
+        const normalizedQuestions = data.questions.map(normalizeQuestion);
+        setQuestions(normalizedQuestions);
         setQuizStarted(true);
         setCurrentQuestion(0);
         setScore(0);
@@ -118,17 +152,15 @@ export default function AIQuizGenerator({ topicId, topic, onQuizStart }) {
             </label>
             <div className="flex gap-2">
               {['easy', 'medium', 'hard'].map((level) => (
-                <button
+                <Button
                   key={level}
                   onClick={() => setDifficulty(level)}
-                  className={`flex-1 py-2 px-4 rounded-lg capitalize transition-colors ${
-                    difficulty === level
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                  variant={difficulty === level ? 'primary' : 'outline'}
+                  size="md"
+                  className="flex-1 capitalize"
                 >
                   {level}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -140,42 +172,23 @@ export default function AIQuizGenerator({ topicId, topic, onQuizStart }) {
             </label>
             <div className="flex gap-2">
               {[3, 5, 10].map((count) => (
-                <button
+                <Button
                   key={count}
                   onClick={() => setQuestionCount(count)}
-                  className={`flex-1 py-2 px-4 rounded-lg transition-colors ${
-                    questionCount === count
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                  variant={questionCount === count ? 'primary' : 'outline'}
+                  size="md"
+                  className="flex-1"
                 >
                   {count}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
 
           {/* Generate Button */}
-          <button
-            onClick={generateQuiz}
-            disabled={isLoading}
-            className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {isLoading ? (
-              <>
-                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                Generating Questions...
-              </>
-            ) : (
-              <>
-                <span>✨</span>
-                Generate Quiz
-              </>
-            )}
-          </button>
+          <Button onClick={generateQuiz} loading={isLoading} variant="primary" size="md" className="w-full flex items-center justify-center gap-2">
+            {isLoading ? 'Generating Questions...' : (<><span>✨</span>Generate Quiz</>)}
+          </Button>
         </div>
       </div>
     );
@@ -221,24 +234,14 @@ export default function AIQuizGenerator({ topicId, topic, onQuizStart }) {
         </div>
 
         <div className="flex gap-4 justify-center">
-          <button
-            onClick={restartQuiz}
-            className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            New Quiz
-          </button>
-          <button
-            onClick={() => {
+          <Button variant="outline" size="md" onClick={restartQuiz}>New Quiz</Button>
+          <Button variant="primary" size="md" onClick={() => {
               setShowResult(false);
               setCurrentQuestion(0);
               setSelectedAnswer(null);
               setScore(0);
               setFeedback(null);
-            }}
-            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-          >
-            Retry Same Quiz
-          </button>
+            }}>Retry Same Quiz</Button>
         </div>
       </div>
     );
@@ -345,12 +348,7 @@ export default function AIQuizGenerator({ topicId, topic, onQuizStart }) {
 
         {/* Next Button */}
         {selectedAnswer !== null && (
-          <button
-            onClick={nextQuestion}
-            className="mt-6 w-full py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-          >
-            {currentQuestion + 1 < questions.length ? 'Next Question' : 'See Results'}
-          </button>
+          <Button onClick={nextQuestion} variant="primary" size="md" className="mt-6 w-full">{currentQuestion + 1 < questions.length ? 'Next Question' : 'See Results'}</Button>
         )}
       </div>
     </div>

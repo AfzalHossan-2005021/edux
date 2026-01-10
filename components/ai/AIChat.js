@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { Button } from '../ui';
 
 export default function AIChat({ courseId = null, onClose }) {
   const [messages, setMessages] = useState([
@@ -121,14 +122,11 @@ export default function AIChat({ courseId = null, onClose }) {
   if (isMinimized) {
     return (
       <div className="fixed bottom-4 right-4 z-50">
-        <button
-          onClick={() => setIsMinimized(false)}
-          className="bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 transition-all"
-        >
+        <Button variant="primary" size="md" className="p-4 rounded-full" onClick={() => setIsMinimized(false)}>
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
           </svg>
-        </button>
+        </Button>
       </div>
     );
   }
@@ -147,20 +145,17 @@ export default function AIChat({ courseId = null, onClose }) {
           </div>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={() => setIsMinimized(true)}
-            className="p-1 hover:bg-white/20 rounded"
-          >
+          <Button variant="icon" size="md" className="p-1" onClick={() => setIsMinimized(true)} aria-label="Minimize">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
             </svg>
-          </button>
+          </Button>
           {onClose && (
-            <button onClick={onClose} className="p-1 hover:bg-white/20 rounded">
+            <Button variant="icon" size="md" className="p-1" onClick={onClose} aria-label="Close">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -204,13 +199,7 @@ export default function AIChat({ courseId = null, onClose }) {
       <div className="px-4 py-2 border-t border-gray-100">
         <div className="flex gap-2 overflow-x-auto">
           {quickActions.map((action, index) => (
-            <button
-              key={index}
-              onClick={() => handleQuickAction(action.action)}
-              className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full whitespace-nowrap transition-colors"
-            >
-              {action.label}
-            </button>
+            <Button key={index} variant="outline" size="sm" className="px-3 py-1 text-xs rounded-full whitespace-nowrap" onClick={() => handleQuickAction(action.action)}>{action.label}</Button>
           ))}
         </div>
       </div>
@@ -227,15 +216,11 @@ export default function AIChat({ courseId = null, onClose }) {
             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
             disabled={isLoading}
           />
-          <button
-            onClick={sendMessage}
-            disabled={isLoading || !input.trim()}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
+          <Button variant="primary" size="md" onClick={sendMessage} disabled={isLoading || !input.trim()}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
-          </button>
+          </Button>
         </div>
       </div>
     </div>

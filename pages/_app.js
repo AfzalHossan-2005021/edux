@@ -5,6 +5,9 @@ import Navbar from '@/components/Navbar'
 import { useEffect, useState } from 'react'
 import { TranslationProvider } from '@/lib/i18n'
 import { registerServiceWorker, setupInstallPrompt } from '@/lib/pwa'
+import { ThemeProvider } from '@/context/ThemeContext'
+import { AuthProvider } from '@/context/AuthContext'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 export default function App({ Component, pageProps }) {
 
@@ -79,14 +82,18 @@ export default function App({ Component, pageProps }) {
       <link rel="manifest" href="/manifest.json" />
       <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
     </Head>
-    <TranslationProvider>
-      <div className='flex-col'>
-        <Navbar isLoggedIn={isLoggedIn} cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} clearCart={clearCart} subTotal={subTotal} />
-        <div className='flex-col mt-16'>
-          <Component isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} clearCart={clearCart} subTotal={subTotal} {...pageProps} />
-        </div>
-        <Footer />
-      </div>
-    </TranslationProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <TranslationProvider>
+          <ThemeProvider>
+            <Navbar isLoggedIn={isLoggedIn} cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} clearCart={clearCart} subTotal={subTotal} />
+            <div className='pt-20'>
+              <Component isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} clearCart={clearCart} subTotal={subTotal} {...pageProps} />
+            </div>
+            <Footer />
+          </ThemeProvider>
+        </TranslationProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   </>
 }

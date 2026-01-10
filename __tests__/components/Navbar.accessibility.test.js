@@ -5,10 +5,11 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import Navbar from '../../components/Navbar';
 import { ThemeProvider } from '../../context/ThemeContext';
+import { AuthProvider } from '../../context/AuthContext'; // Add this import
 
 // Mock secure local storage
 jest.mock('react-secure-storage', () => ({
-  getItem: jest.fn(() => null),
+  getItem: jest. fn(() => null),
 }));
 
 // Provide a basic fetch mock that returns empty lists for API calls
@@ -19,7 +20,7 @@ global.fetch = jest.fn((url) =>
   })
 );
 
-// This test will run only if jest-axe is installed; otherwise it will be skipped gracefully.
+// This test will run only if jest-axe is installed; otherwise it will be skipped gracefully. 
 let axeAvailable = true;
 try {
   require.resolve('jest-axe');
@@ -30,9 +31,11 @@ try {
 
 (axeAvailable ? test : test.skip)('Navbar should have no detectable accessibility violations', async () => {
   const { container } = render(
-    <ThemeProvider>
-      <Navbar />
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider>
+        <Navbar />
+      </ThemeProvider>
+    </AuthProvider>
   );
   const { axe, toHaveNoViolations } = require('jest-axe');
   expect.extend(toHaveNoViolations);

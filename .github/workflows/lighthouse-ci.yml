@@ -42,9 +42,17 @@ jobs:
             sleep 5
           done
 
+      - name: Migration sanity check
+        run: |
+          echo "Listing DB init scripts in container"
+          docker exec edux-oracle-db ls /container-entrypoint-initdb.d || true
+          echo "Checking ORACLE data directory"
+          docker exec edux-oracle-db ls /opt/oracle/oradata || true
+
       - name: Start server (background)
         run: |
-          nohup npm run start > server.log 2>&1 &
+          echo "Starting Next standalone server"
+          nohup node .next/standalone/server.js > server.log 2>&1 &
           echo "Server started in background, logging to server.log"
 
       - name: Wait for server
@@ -73,3 +81,12 @@ jobs:
         with:
           name: server-log
           path: server.log
+
+      - name: Teardown server and Oracle DB (always)
+        if: always()
+        run: |
+          echo "Stopping local server (if running)"
+          pkill -f 'npm run start' || true
+          echo "Tearing down Oracle DB docker-compose"
+          docker compose -f docker-compose.db.yml down -v --remove-orphans || true
+          echo "Teardown complete"

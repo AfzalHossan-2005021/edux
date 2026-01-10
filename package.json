@@ -38,6 +38,7 @@
     "meilisearch": "^0.37.0",
     "next": "^13.4.13",
     "oracledb": "^6.0.3",
+    "sharp": "^0.32.1",
     "popper.js": "^1.16.1",
     "posthog-js": "^1.100.0",
     "react": "^18.2.0",

@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { act } from 'react-dom/test-utils';
 import Navbar from '../../components/Navbar';
 import SearchBar from '../../components/SearchBar';
 import SearchResultsList from '../../components/SearchResultsList';
@@ -30,13 +31,17 @@ global.fetch = jest.fn((url) => {
 
 describe('Basic accessibility attributes', () => {
   it('Navbar should have wishlist and user menu buttons with ARIA', async () => {
-    render(
-      <AuthProvider>
-        <ThemeProvider>
-          <Navbar />
-        </ThemeProvider>
-      </AuthProvider>
-    );
+    await act(async () => {
+      render(
+        <AuthProvider>
+          <ThemeProvider>
+            <Navbar />
+          </ThemeProvider>
+        </AuthProvider>
+      );
+      // allow effects to run
+      await Promise.resolve();
+    });
 
     // Wait for auth to resolve and the navbar to update to logged-in state
     const wishlistBtn = await screen.findByLabelText(/wishlist/i);
@@ -46,18 +51,24 @@ describe('Basic accessibility attributes', () => {
     expect(userMenuBtn).toBeInTheDocument();
   });
 
-  it('SearchBar input should have accessible label', () => {
-    render(<SearchBar setResults={() => {}} allCourses={[]} />);
+  it('SearchBar input should have accessible label', async () => {
+    await act(async () => {
+      render(<SearchBar setResults={() => {}} allCourses={[]} />);
+      await Promise.resolve();
+    });
     const input = screen.getByLabelText(/search courses/i);
     expect(input).toBeInTheDocument();
   });
 
-  it('SearchResultsList should expose a listbox and options', () => {
+  it('SearchResultsList should expose a listbox and options', async () => {
     const mockResults = [
       { c_id: 1, title: 'One' },
       { c_id: 2, title: 'Two' },
     ];
-    render(<SearchResultsList results={mockResults} setResults={() => {}} />);
+    await act(async () => {
+      render(<SearchResultsList results={mockResults} setResults={() => {}} />);
+      await Promise.resolve();
+    });
 
     const listbox = screen.getByRole('listbox');
     expect(listbox).toBeInTheDocument();

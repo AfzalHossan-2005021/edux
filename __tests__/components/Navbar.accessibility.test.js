@@ -6,6 +6,7 @@ import { render } from '@testing-library/react';
 import Navbar from '../../components/Navbar';
 import { ThemeProvider } from '../../context/ThemeContext';
 import { AuthProvider } from '../../context/AuthContext'; // Add this import
+import { act } from 'react-dom/test-utils';
 
 // Mock secure local storage
 jest.mock('react-secure-storage', () => ({
@@ -39,13 +40,19 @@ try {
 }
 
 (axeAvailable ? test : test.skip)('Navbar should have no detectable accessibility violations', async () => {
-  const { container } = render(
-    <AuthProvider>
-      <ThemeProvider>
-        <Navbar />
-      </ThemeProvider>
-    </AuthProvider>
-  );
+  let container;
+  await act(async () => {
+    const rendered = render(
+      <AuthProvider>
+        <ThemeProvider>
+          <Navbar />
+        </ThemeProvider>
+      </AuthProvider>
+    );
+    container = rendered.container;
+    await Promise.resolve();
+  });
+
   const { axe, toHaveNoViolations } = require('jest-axe');
   expect.extend(toHaveNoViolations);
   const results = await axe(container);

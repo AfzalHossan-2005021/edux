@@ -11,7 +11,12 @@ export default async function selected_course(req, res) {
 			[],
 			{ outFormat: oracledb.OUT_FORMAT_OBJECT }
 		);
-		res.status(200).json(result.rows);
+		const rows = result.rows.map(row => ({
+			...row,
+			PREREQUISITES_LIST: row.PREREQUISITES_LIST ? JSON.parse(row.PREREQUISITES_LIST) : [],
+			OUTCOMES_LIST: row.OUTCOMES_LIST ? JSON.parse(row.OUTCOMES_LIST) : [],
+		}));
+		res.status(200).json(rows);
 	} catch (error) {
 		res.status(500).json({ error: 'An error occurred' });
 	} finally {

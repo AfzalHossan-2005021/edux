@@ -11,7 +11,7 @@ import secureLocalStorage from "react-secure-storage";
 import { apiPost } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 import { CourseSummary } from "../../components/ai";
-import { Card, CardContent, Button, Badge } from "../../components/ui";
+import { Card, Button, Badge } from "../../components/ui";
 import { 
   HiStar, 
   HiOutlineStar,
@@ -25,7 +25,6 @@ import {
   HiCheckCircle,
   HiArrowRight,
   HiSparkles,
-  HiUser,
   HiOfficeBuilding,
   HiChartBar
 } from "react-icons/hi";
@@ -124,7 +123,12 @@ export default function CoursePage({ c_id }) {
         const courseRes = await apiPost("/api/selected_course", { c_id });
         const courseData = await courseRes.json();
         if (courseData?.[0]) {
-          setCourse(courseData[0]);
+          const c = courseData[0];
+          setCourse({
+            ...c,
+            prerequisites: c.PREREQUISITES_LIST ? c.PREREQUISITES_LIST : (c.prerequisites || []),
+            outcomes: c.OUTCOMES_LIST ? c.OUTCOMES_LIST : (c.outcomes || []),
+          });
         }
 
         // Fetch reviews
@@ -464,6 +468,28 @@ export default function CoursePage({ c_id }) {
               </div>
             </Card>
 
+            {/* Prerequisites */}
+            <Card>
+              <h2 className="text-xl font-bold text-neutral-800 dark:text-white mb-4 flex items-center gap-2">
+                <HiArrowRight className="w-6 h-6 text-primary-500" />
+                Prerequisites
+              </h2>
+              {course?.prerequisites && course.prerequisites.length > 0 ? (
+                <div className="space-y-3">
+                  {course.prerequisites.map((p, idx) => (
+                    <div key={idx} className="flex items-start gap-3">
+                      <HiCheckCircle className="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-neutral-700 dark:text-neutral-300">{p}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  No prerequisites listed for this course.
+                </p>
+              )}
+            </Card>
+
             {/* What You'll Learn */}
             <Card>
               <h2 className="text-xl font-bold text-neutral-800 dark:text-white mb-4 flex items-center gap-2">
@@ -471,14 +497,14 @@ export default function CoursePage({ c_id }) {
                 What You'll Learn
               </h2>
               <div className="grid sm:grid-cols-2 gap-3">
-                {[
+                {(course?.outcomes && course.outcomes.length > 0 ? course.outcomes : [
                   'Core concepts and fundamentals',
                   'Hands-on practical projects',
                   'Industry best practices',
                   'Real-world applications',
                   'Problem-solving techniques',
                   'Professional skill development',
-                ].map((item, idx) => (
+                ]).map((item, idx) => (
                   <div key={idx} className="flex items-start gap-3">
                     <HiCheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
                     <span className="text-neutral-700 dark:text-neutral-300">{item}</span>

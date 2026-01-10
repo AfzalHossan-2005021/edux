@@ -152,10 +152,10 @@ function ManageExamQuestions({ serverUser }) {
     setFormData({
       q_id: question.q_id || question.Q_ID,
       q_description: question.q_description || question.Q_DESCRIPTION || '',
-      option_a: question.option_a || question.OPTION_A || question.opt1 || '',
-      option_b: question.option_b || question.OPTION_B || question.opt2 || '',
-      option_c: question.option_c || question.OPTION_C || question.opt3 || '',
-      option_d: question.option_d || question.OPTION_D || question.opt4 || '',
+      option_a: question.option_a || question.OPTION_A || '',
+      option_b: question.option_b || question.OPTION_B || '',
+      option_c: question.option_c || question.OPTION_C || '',
+      option_d: question.option_d || question.OPTION_D || '',
       right_ans: String(question.right_ans || question.RIGHT_ANS || '1'),
       marks: Number(question.marks || question.MARKS || 1),
     });

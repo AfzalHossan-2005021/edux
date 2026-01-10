@@ -134,10 +134,10 @@ const QuestionNavButton = ({ number, status, isCurrent, onClick }) => {
 // Question Card Component
 const QuestionCard = ({ question, index, totalQuestions, selectedOption, onOptionSelect }) => {
   const options = [
-    { key: 'opt1', letter: 'A', value: question.opt1 },
-    { key: 'opt2', letter: 'B', value: question.opt2 },
-    { key: 'opt3', letter: 'C', value: question.opt3 },
-    { key: 'opt4', letter: 'D', value: question.opt4 },
+    { key: 'option_a', letter: 'A', value: question.option_a },
+    { key: 'option_b', letter: 'B', value: question.option_b },
+    { key: 'option_c', letter: 'C', value: question.option_c },
+    { key: 'option_d', letter: 'D', value: question.option_d },
   ];
 
   return (
@@ -332,11 +332,33 @@ export default function StudentExamPage({ e_id }) {
     const indexToLetter = { 1: 'A', 2: 'B', 3: 'C', 4: 'D' };
     
     for (let i = 0; i < questions.length; i++) {
-      const selectedLetter = indexToLetter[selectedOptions[i]];
-      if (selectedLetter === questions[i].right_ans) {
-        newScore += questions[i].marks;
+      // Normalize selected and correct answers to indices (1-4) so both 'A'/'B' and '1'/'2' formats work
+      const rawSelected = selectedOptions[i];
+      const rawCorrect = questions[i].right_ans;
+
+      // Derive numeric index for correct answer
+      let correctIndex = null;
+      if (typeof rawCorrect === 'number') {
+        correctIndex = rawCorrect;
+      } else if (typeof rawCorrect === 'string') {
+        const t = rawCorrect.trim();
+        if (/^[A-D]$/i.test(t)) {
+          correctIndex = { A: 1, B: 2, C: 3, D: 4 }[t.toUpperCase()];
+        } else if (/^[1-4]$/.test(t)) {
+          correctIndex = parseInt(t, 10);
+        } else {
+          const p = parseInt(t, 10);
+          correctIndex = Number.isNaN(p) ? null : p;
+        }
+      }
+
+      console.log('Question', i + 1, 'Selected:', rawSelected, 'Correct(raw):', rawCorrect, 'Correct(index):', correctIndex);
+
+      if (rawSelected != null && correctIndex != null && Number(rawSelected) === Number(correctIndex)) {
+        newScore += (questions[i].marks || 0);
       }
     }
+    console.log('Total Score:', newScore);
     
     try {
       await apiPost("/api/update_mark", { s_id, e_id, score: newScore });

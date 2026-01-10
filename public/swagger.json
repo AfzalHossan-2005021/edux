@@ -1209,16 +1209,16 @@
           "q_description": {
             "type": "string"
           },
-          "opt1": {
+          "option_a": {
             "type": "string"
           },
-          "opt2": {
+          "option_b": {
             "type": "string"
           },
-          "opt3": {
+          "option_c": {
             "type": "string"
           },
-          "opt4": {
+          "option_d": {
             "type": "string"
           },
           "marks": {

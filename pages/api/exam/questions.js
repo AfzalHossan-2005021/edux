@@ -43,8 +43,6 @@ export default async function handler(req, res) {
     const result = await connection.execute(
       `SELECT q."q_id", q."q_description", 
               q."option_a", q."option_b", q."option_c", q."option_d",
-              q."option_a" AS "opt1", q."option_b" AS "opt2", 
-              q."option_c" AS "opt3", q."option_d" AS "opt4", 
               q."right_ans", q."marks", q."serial", q."e_id"
        FROM EDUX."Questions" q
        WHERE q."e_id" = :e_id

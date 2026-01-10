@@ -7,7 +7,7 @@ const QuizQuestion = ({ question, index, selectedOption, onOptionSelect }) => (
     </h2>
     <p className="mb-2">{question.q_description}</p>
     <ul>
-      {['opt1', 'opt2', 'opt3', 'opt4'].map((optionKey, optionIndex) => (
+      {['option_a', 'option_b', 'option_c', 'option_d'].map((optionKey, optionIndex) => (
         <li
           key={optionIndex}
           className={`mb-2 flex items-center cursor-pointer`}

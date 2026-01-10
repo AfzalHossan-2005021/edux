@@ -221,11 +221,11 @@ async function handlePut(req, res) {
         bindParams.question = question;
       }
       if (options && Array.isArray(options) && options.length === 4) {
-        updateFields.push(`"option_a" = :opt1, "option_b" = :opt2, "option_c" = :opt3, "option_d" = :opt4`);
-        bindParams.opt1 = options[0];
-        bindParams.opt2 = options[1];
-        bindParams.opt3 = options[2];
-        bindParams.opt4 = options[3];
+        updateFields.push(`"option_a" = :option_a, "option_b" = :option_b, "option_c" = :option_c, "option_d" = :option_d`);
+        bindParams.option_a = options[0];
+        bindParams.option_b = options[1];
+        bindParams.option_c = options[2];
+        bindParams.option_d = options[3];
       }
       if (correctAnswer !== undefined) {
         updateFields.push(`"right_ans" = :correctAnswer`);

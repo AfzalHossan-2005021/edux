@@ -9,6 +9,11 @@ on:
 jobs:
   lhci:
     runs-on: ubuntu-latest
+    env:
+      DB_URL: '127.0.0.1:1521/EDUX'
+      DB_USER: 'EDUX'
+      DB_PASSWORD: 'edux123'
+      ORACLE_PASSWORD: 'oracle123'
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
@@ -19,6 +24,23 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
+
+      - name: Start Oracle DB (docker compose)
+        run: |
+          echo "Starting Oracle DB via docker-compose.db.yml"
+          docker compose -f docker-compose.db.yml up -d
+
+      - name: Wait for Oracle DB to be healthy
+        run: |
+          echo "Waiting for Oracle DB container to report healthy status..."
+          for i in {1..60}; do
+            status=$(docker inspect --format='{{.State.Health.Status}}' edux-oracle-db 2>/dev/null || echo 'starting')
+            echo "Oracle health: $status"
+            if [ "$status" = "healthy" ]; then
+              echo "Oracle is healthy"; break
+            fi
+            sleep 5
+          done
 
       - name: Start server (background)
         run: |

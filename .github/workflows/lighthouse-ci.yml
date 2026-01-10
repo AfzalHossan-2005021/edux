@@ -37,5 +37,17 @@ jobs:
           urls: 'http://localhost:3000'
           runs: '3'
           uploadArtifacts: true
+          artifactName: 'lhci_results'
         env:
           LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Print server log on failure
+        if: failure()
+        run: tail -n 200 server.log || true
+
+      - name: Upload server log artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-log
+          path: server.log

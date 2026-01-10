@@ -261,7 +261,7 @@ const Navbar = () => {
                             ? 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
                             : 'hover:bg-white/20 dark:hover:bg-white/10 text-neutral-700 dark:text-white'
                       }`}
-                      aria-label="Wishlist"
+                      aria-label="Open wishlist"
                     >
                       <HiHeart className={`w-5 h-5 transition-transform group-hover:scale-110 ${isWishlistOpen ? 'fill-current' : ''}`} />
                       {wishlistCourses.length > 0 && (
@@ -292,6 +292,7 @@ const Navbar = () => {
                       title={userName || 'Account'}
                       aria-haspopup="true"
                       aria-expanded={isUserDropdownOpen}
+                      aria-label="Open user menu"
                     >
                       {initials ? (
                         <div className="w-full h-full bg-gradient-to-br from-primary-500 via-primary-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">

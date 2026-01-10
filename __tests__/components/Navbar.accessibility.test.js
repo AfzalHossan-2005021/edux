@@ -9,16 +9,25 @@ import { AuthProvider } from '../../context/AuthContext'; // Add this import
 
 // Mock secure local storage
 jest.mock('react-secure-storage', () => ({
-  getItem: jest. fn(() => null),
+  getItem: jest.fn(() => null),
 }));
 
-// Provide a basic fetch mock that returns empty lists for API calls
-global.fetch = jest.fn((url) =>
-  Promise.resolve({
+// Provide a basic fetch mock that returns sensible responses for API calls
+global.fetch = jest.fn((url) => {
+  if (typeof url === 'string' && url.includes('/api/me')) {
+    return Promise.resolve({
+      ok: true,
+      headers: { get: () => 'application/json' },
+      json: () => Promise.resolve({ success: true, user: { u_id: '1', name: 'Test User' } }),
+    });
+  }
+
+  return Promise.resolve({
     ok: true,
+    headers: { get: () => 'application/json' },
     json: () => Promise.resolve([]),
-  })
-);
+  });
+});
 
 // This test will run only if jest-axe is installed; otherwise it will be skipped gracefully. 
 let axeAvailable = true;

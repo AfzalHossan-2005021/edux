@@ -86,7 +86,7 @@ const SearchBar = ({ allCourses, setResults, containerRef, inputRef }) => {
         id="search_input"
         ref={inputRef}
         aria-label="Search courses"
-        aria-controls="search-results-listbox"
+        aria-controls={input.trim() ? "search-results-listbox" : undefined}
         className="relative flex-1 bg-transparent text-sm dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 px-2 py-3.5 outline-none transition-colors"
         placeholder="Search courses, topics, instructors..."
         value={input}

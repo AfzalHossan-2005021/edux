@@ -4,27 +4,43 @@ import Navbar from '../../components/Navbar';
 import SearchBar from '../../components/SearchBar';
 import SearchResultsList from '../../components/SearchResultsList';
 import { ThemeProvider } from '../../context/ThemeContext';
+import { AuthProvider } from '../../context/AuthContext'; // added for components that use useAuth
 
 // Mock secure local storage
 jest.mock('react-secure-storage', () => ({
   getItem: jest.fn((key) => (key === 'u_id' ? '1' : null)),
 }));
 
-// Basic fetch mock
-global.fetch = jest.fn(() =>
-  Promise.resolve({ ok: true, json: () => Promise.resolve([]) })
-);
+// Basic fetch mock that includes headers for JSON parsing used by api helpers
+global.fetch = jest.fn((url) => {
+  if (typeof url === 'string' && url.includes('/api/me')) {
+    return Promise.resolve({
+      ok: true,
+      headers: { get: () => 'application/json' },
+      json: () => Promise.resolve({ success: true, user: { u_id: '1', name: 'Test User' } }),
+    });
+  }
+
+  return Promise.resolve({
+    ok: true,
+    headers: { get: () => 'application/json' },
+    json: () => Promise.resolve([]),
+  });
+});
 
 describe('Basic accessibility attributes', () => {
-  it('Navbar should have wishlist and user menu buttons with ARIA', () => {
+  it('Navbar should have wishlist and user menu buttons with ARIA', async () => {
     render(
-      <ThemeProvider>
-        <Navbar />
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <Navbar />
+        </ThemeProvider>
+      </AuthProvider>
     );
 
-    const wishlistBtn = screen.getByLabelText(/open wishlist/i);
-    const userMenuBtn = screen.getByLabelText(/open user menu/i);
+    // Wait for auth to resolve and the navbar to update to logged-in state
+    const wishlistBtn = await screen.findByLabelText(/wishlist/i);
+    const userMenuBtn = await screen.findByLabelText(/account|open user menu/i);
 
     expect(wishlistBtn).toBeInTheDocument();
     expect(userMenuBtn).toBeInTheDocument();

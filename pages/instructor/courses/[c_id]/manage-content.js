@@ -158,7 +158,7 @@ function ManageCourseContent({ serverUser }) {
     setSaving(true);
 
     try {
-      const endpoint = currentTopic.t_id || currentTopic.T_ID ? '/api/update-topic' : '/api/add-topic';
+      const endpoint = currentTopic.t_id || currentTopic.T_ID ? '/api/topic/update' : '/api/topic/create';
       const response = await apiPost(endpoint, {
         ...currentTopic,
         c_id: Number(c_id),
@@ -185,7 +185,7 @@ function ManageCourseContent({ serverUser }) {
 
   const handleDeleteTopic = async (topicId) => {
     try {
-      const response = await apiPost('/api/delete-topic', { t_id: topicId });
+      const response = await apiPost('/api/topic/delete', { t_id: topicId });
       const result = await response.json();
 
       if (result.success) {

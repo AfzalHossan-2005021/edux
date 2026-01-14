@@ -41,6 +41,7 @@ const CreateCourse = ({ serverUser }) => {
     seat: '50',
     difficulty_level: 'beginner',
     price: '',
+    lecture_weight: 50,
     prerequisites: [],
     outcomes: [],
     wall: null,
@@ -145,13 +146,11 @@ const CreateCourse = ({ serverUser }) => {
       courseFormData.append('seat', parseInt(formData.seat));
       courseFormData.append('difficulty_level', formData.difficulty_level.trim());
       courseFormData.append('price', formData.price ? parseFloat(formData.price) : 0);
+      courseFormData.append('lecture_weight', parseInt(formData.lecture_weight || 0));
       courseFormData.append('prerequisites', JSON.stringify(formData.prerequisites));
-
       courseFormData.append('outcomes', JSON.stringify(formData.outcomes));
 
       courseFormData.append('wall', formData.wall);
-
-      console.log('Submitting course data:', courseFormData);
 
       const response = await apiPost('/api/course/create', courseFormData);
       const data = await response.json();
@@ -173,6 +172,7 @@ const CreateCourse = ({ serverUser }) => {
           seat: '50',
           difficulty_level: 'beginner',
           price: '',
+          lecture_weight: 50,
           prerequisites: [],
           outcomes: [],
           wall: null,
@@ -405,6 +405,39 @@ const CreateCourse = ({ serverUser }) => {
                         error={errors.price}
                         helperText="Set to 0 for free courses"
                       />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Course Weighting */}
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                      <HiClipboardList className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Course Weighting</h2>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-gray-700">Total Lecture Weight: <strong className="ml-1">{parseInt(formData.lecture_weight) || 0}%</strong></span>
+                      <span className="text-sm text-gray-700">Total Exam Weight: <strong className="ml-1">{100 - (parseInt(formData.lecture_weight) || 0)}%</strong></span>
+                    </div>
+
+                    <input
+                      type="range"
+                      name="lecture_weight"
+                      min="0"
+                      max="100"
+                      step="5"
+                      value={formData.lecture_weight}
+                      onChange={handleInputChange}
+                      className="w-full h-2 bg-gray-200 rounded-lg accent-indigo-600 focus:outline-none"
+                    />
+
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>0%</span>
+                      <span>100%</span>
                     </div>
                   </div>
                 </div>

@@ -105,6 +105,7 @@ CREATE TABLE EDUX."Courses" (
   "difficulty_level" VARCHAR2(50 BYTE),
   "seat" NUMBER,
   "price" NUMBER(10,2) DEFAULT 0,
+  "lecture_weight" NUMBER DEFAULT 50 NOT NULL,
   CONSTRAINT pk_courses PRIMARY KEY ("c_id"),
   CONSTRAINT fk_courses_instructors FOREIGN KEY ("i_id") REFERENCES EDUX."Instructors" ("i_id")
 );

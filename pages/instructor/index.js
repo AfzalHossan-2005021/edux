@@ -246,12 +246,6 @@ const Instructor = ({ serverUser }) => {
               </div>
             </div>
           </div>
-          <Link href="/instructor/courses/create">
-            <Button variant="secondary" size="lg" className="bg-white text-primary-600 hover:bg-white/90 shadow-xl">
-              <HiPlus className="w-5 h-5 mr-2" />
-              Create New Course
-            </Button>
-          </Link>
         </div>
       </div>
 
@@ -880,12 +874,6 @@ const Instructor = ({ serverUser }) => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Link href="/instructor/analytics">
-                  <Button variant="outline" size="sm">
-                    <HiChartBar className="w-4 h-4 mr-2" />
-                    Analytics
-                  </Button>
-                </Link>
                 <Link href="/instructor/courses/create">
                   <Button variant="primary" size="sm">
                     <HiPlus className="w-4 h-4 mr-2" />

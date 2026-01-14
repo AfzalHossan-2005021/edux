@@ -9,6 +9,7 @@ export default function get_instructor_courses_query() {
     	  	c."price",
     	  	c."wall",
     	  	c."difficulty_level",
+					c."lecture_weight",
     	  	c."approve_status",
     	  	c."student_count",
     	  	p.prerequisites_list,

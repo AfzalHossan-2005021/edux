@@ -36,15 +36,16 @@ export default async function handler(req, res) {
   const seat = fields.seat[0];
   const difficulty_level = fields.difficulty_level[0]
   const price = fields.price[0]
+  const lecture_weight = fields.lecture_weight[0]
   const prerequisites = JSON.parse(fields.prerequisites[0] || '[]');
   const outcomes = JSON.parse(fields.outcomes[0] || '[]');
   const wall = files.wall
 
   // Validation
-  if (!i_id || !title || !description || !field || !seat) {
+  if (!i_id || !title || !description || !field || !seat || !lecture_weight) {
     return res.status(400).json({
       success: false,
-      message: 'All fields are required (i_id, title, description, field, seat)'
+      message: 'All fields are required (i_id, title, description, field, seat, lecture_weight)'
     });
   }
 
@@ -73,6 +74,13 @@ export default async function handler(req, res) {
     return res.status(400).json({
       success: false,
       message: 'Seat must be a positive number'
+    });
+  }
+
+  if (isNaN(lecture_weight) || lecture_weight < 0 || lecture_weight > 100) {
+    return res.status(400).json({
+      success: false,
+      message: 'Lecture weight must be a number between 0 and 100'
     });
   }
 
@@ -135,8 +143,8 @@ export default async function handler(req, res) {
 
     // Insert the course
     await connection.execute(
-      `INSERT INTO EDUX."Courses" ("i_id", "title", "description", "field", "seat", "difficulty_level", "price", "approve_status", "student_count") 
-       VALUES (:i_id, :title, :description, :field, :seat, :difficulty_level, :price, 'n', 0)`,
+      `INSERT INTO EDUX."Courses" ("i_id", "title", "description", "field", "seat", "difficulty_level", "price", "lecture_weight", "approve_status", "student_count") 
+       VALUES (:i_id, :title, :description, :field, :seat, :difficulty_level, :price, :lecture_weight, 'n', 0)`,
       {
         i_id,
         title,
@@ -144,7 +152,8 @@ export default async function handler(req, res) {
         field,
         seat,
         difficulty_level: difficulty_level || 'beginner',
-        price: price || 0
+        price: price || 0,
+        lecture_weight: lecture_weight || 50
       },
       { autoCommit: true }
     );
@@ -227,6 +236,7 @@ export default async function handler(req, res) {
         wall: wallPath,
         difficulty_level: difficulty_level || 'beginner',
         price: price || 0,
+        lecture_weight: lecture_weight || 50,
         approve_status: 'n',
         student_count: 0,
         prerequisitesCount: prerequisites.length,

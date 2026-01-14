@@ -41,6 +41,9 @@ export default async function handler(req, res) {
     const field = Array.isArray(fields.field) ? fields.field[0] : fields.field;
     const seat = Array.isArray(fields.seat) ? fields.seat[0] : fields.seat;
     const price = Array.isArray(fields.price) ? fields.price[0] : fields.price;
+    const lecture_weight = Array.isArray(fields.lecture_weight) ? fields.lecture_weight[0] : fields.lecture_weight;
+
+    // Validation
 
     if (!c_id || !u_id || !title || !description || !field) {
       return res.status(400).json({ 
@@ -93,6 +96,11 @@ export default async function handler(req, res) {
       if (price) {
         updateQuery += `, "price" = :price`;
         binds.price = parseFloat(price) || 0;
+      }
+
+      if (lecture_weight) {
+        updateQuery += `, "lecture_weight" = :lecture_weight`;
+        binds.lecture_weight = parseInt(lecture_weight) || 50;
       }
 
       if (thumbnailPath) {

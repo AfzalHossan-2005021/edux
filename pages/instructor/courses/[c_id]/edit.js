@@ -44,6 +44,7 @@ function EditCourse({ serverUser }) {
     field: '',
     seat: '',
     price: '',
+    lecture_weight: 50,
     thumbnail: null,
     prerequisites: [],
     outcomes: [],
@@ -81,6 +82,8 @@ function EditCourse({ serverUser }) {
           field: foundCourse.field || '',
           seat: foundCourse.seat || '',
           price: foundCourse.price || '',
+          // Try multiple possible property names for backwards compatibility
+          lecture_weight: foundCourse.lecture_weight || foundCourse.LECTURE_WEIGHT || 50,
           thumbnail: null,
           prerequisites: foundCourse.PREREQUISITES_LIST,
           outcomes: foundCourse.OUTCOMES_LIST,
@@ -140,6 +143,14 @@ function EditCourse({ serverUser }) {
 
     if (formData.price && (isNaN(formData.price) || formData.price < 0)) {
       newErrors.price = 'Please enter a valid price';
+    }
+
+    // Validate lecture weight
+    if (formData.lecture_weight !== undefined) {
+      const lw = parseInt(formData.lecture_weight, 10);
+      if (isNaN(lw) || lw < 0 || lw > 100) {
+        newErrors.lecture_weight = 'Lecture weight must be between 0 and 100';
+      }
     }
 
     setErrors(newErrors);
@@ -208,6 +219,7 @@ function EditCourse({ serverUser }) {
       formDataToSend.append('seat', formData.seat || 0);
       formDataToSend.append('price', formData.price || 0);
       formDataToSend.append('difficulty_level', formData.difficulty_level);
+      formDataToSend.append('lecture_weight', formData.lecture_weight || 0);
       
       if (formData.thumbnail) {
         formDataToSend.append('thumbnail', formData.thumbnail);
@@ -433,6 +445,39 @@ function EditCourse({ serverUser }) {
                 </div>
 
                 <div className="space-y-8">
+                  {/* Course Weighting */}
+                  <div className="mb-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                        <HiClipboardList className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Course Weighting</h3>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-gray-700">Total Lecture Weight: <strong className="ml-1">{parseInt(formData.lecture_weight || 0, 10)}%</strong></span>
+                        <span className="text-sm text-gray-700">Total Exam Weight: <strong className="ml-1">{100 - parseInt(formData.lecture_weight || 0, 10)}%</strong></span>
+                      </div>
+
+                      <input
+                        type="range"
+                        name="lecture_weight"
+                        min="0"
+                        max="100"
+                        step="5"
+                        value={formData.lecture_weight}
+                        onChange={handleChange}
+                        className="w-full h-2 bg-gray-200 rounded-lg accent-indigo-600 focus:outline-none"
+                      />
+
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>0%</span>
+                        <span>100%</span>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Prerequisites Section */}
                   <div>
                     <div className="flex items-center gap-2 mb-4">

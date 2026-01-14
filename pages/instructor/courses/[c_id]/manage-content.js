@@ -218,7 +218,7 @@ function ManageCourseContent({ serverUser }) {
     setSaving(true);
 
     try {
-      const endpoint = currentLecture.l_id || currentLecture.L_ID ? '/api/update-lecture' : '/api/add-lecture';
+      const endpoint = currentLecture.l_id || currentLecture.L_ID ? '/api/lecture/update' : '/api/lecture/create';
       const response = await apiPost(endpoint, {
         ...currentLecture,
         t_id: selectedTopicId,
@@ -246,7 +246,7 @@ function ManageCourseContent({ serverUser }) {
 
   const handleDeleteLecture = async (lectureId) => {
     try {
-      const response = await apiPost('/api/delete-lecture', { l_id: lectureId });
+      const response = await apiPost('/api/lecture/delete', { l_id: lectureId });
       const result = await response.json();
 
       if (result.success) {
@@ -596,22 +596,46 @@ function ManageCourseContent({ serverUser }) {
                                 >
                                   <div className="flex items-start justify-between">
                                     <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2 mb-1">
+                                      <div className="flex items-center gap-3 mb-2">
                                         <Badge variant="info">{lectureIndex + 1}</Badge>
-                                        <p className="font-medium text-gray-900 dark:text-white">
-                                          {lecture.description || lecture.DESCRIPTION}
-                                        </p>
+                                        <div className="min-w-0">
+                                          <p className="font-medium text-gray-900 dark:text-white truncate">
+                                            {lecture.title || lecture.TITLE || lecture.description || lecture.DESCRIPTION}
+                                          </p>
+                                          {(lecture.description || lecture.DESCRIPTION) && (
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
+                                              {lecture.description || lecture.DESCRIPTION}
+                                            </p>
+                                          )}
+                                        </div>
                                       </div>
-                                      {lecture.video && (
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                          📹 {lecture.video}
-                                        </p>
-                                      )}
-                                      {lecture.duration && (
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                                          ⏱️ {lecture.duration} minutes
-                                        </p>
-                                      )}
+
+                                      <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                                        {lecture.video && (
+                                          <a
+                                            href={lecture.video}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 truncate hover:text-indigo-600 dark:hover:text-indigo-400"
+                                            title={lecture.video}
+                                          >
+                                            <HiVideoCamera className="w-4 h-4" />
+                                            <span className="truncate">View Video</span>
+                                          </a>
+                                        )}
+
+                                        {lecture.duration && (
+                                          <span className="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full text-xs">
+                                            ⏱️ {lecture.duration} min
+                                          </span>
+                                        )}
+
+                                        {(lecture.order_num || lecture.order) && (
+                                          <span className="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full text-xs">
+                                            #{lecture.order_num || lecture.order}
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
                                     <div className="flex gap-2 ml-4">
                                       <Button
@@ -793,28 +817,40 @@ function ManageCourseContent({ serverUser }) {
       )}
 
       {/* Lecture Modal */}
-      {showLectureModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {currentLecture?.l_id || currentLecture?.L_ID ? 'Edit Lecture' : 'Add New Lecture'}
-              </h3>
-            </div>
-            <form onSubmit={handleSaveLecture} className="p-6 space-y-4">
+      <Modal isOpen={showLectureModal} onClose={() => { setShowLectureModal(false); setCurrentLecture(null); setSelectedTopicId(null); }} size="md">
+        <ModalHeader onClose={() => { setShowLectureModal(false); setCurrentLecture(null); setSelectedTopicId(null); }}>
+          {currentLecture?.l_id || currentLecture?.L_ID ? 'Edit Lecture' : 'Add New Lecture'}
+        </ModalHeader>
+        <form onSubmit={handleSaveLecture}>
+          <ModalBody>
+            <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Lecture Title/Description *
+                  Lecture Title *
                 </label>
                 <input
                   type="text"
                   required
-                  value={currentLecture?.description || ''}
-                  onChange={(e) => setCurrentLecture({ ...currentLecture, description: e.target.value })}
+                  value={currentLecture?.title || ''}
+                  onChange={(e) => setCurrentLecture({ ...currentLecture, title: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all"
                   placeholder="e.g., Introduction to Components"
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Lecture Description
+                </label>
+                <textarea
+                  rows={4}
+                  value={currentLecture?.description || ''}
+                  onChange={(e) => setCurrentLecture({ ...currentLecture, description: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all"
+                  placeholder="Brief summary of what this lecture covers (optional)"
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Video URL *
@@ -827,61 +863,38 @@ function ManageCourseContent({ serverUser }) {
                   className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all"
                   placeholder="https://youtube.com/watch?v=..."
                 />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Paste a YouTube, Vimeo, or hosted video URL.</p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Duration (minutes)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={currentLecture?.duration || ''}
-                    onChange={(e) => setCurrentLecture({ ...currentLecture, duration: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all"
-                    placeholder="30"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Order Number
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={currentLecture?.order_num || ''}
-                    onChange={(e) => setCurrentLecture({ ...currentLecture, order_num: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all"
-                    placeholder="1"
-                  />
-                </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Duration (minutes)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={currentLecture?.duration || ''}
+                  onChange={(e) => setCurrentLecture({ ...currentLecture, duration: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all"
+                  placeholder="30"
+                />
               </div>
-              <div className="flex gap-3 pt-4">
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={saving}
-                  className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600"
-                >
-                  {saving ? 'Saving...' : <><HiSave className="w-5 h-5 mr-2" /> Save Lecture</>}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowLectureModal(false);
-                    setCurrentLecture(null);
-                    setSelectedTopicId(null);
-                  }}
-                  disabled={saving}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            </div>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button type="button" variant="outline" onClick={() => { setShowLectureModal(false); setCurrentLecture(null); setSelectedTopicId(null); }} disabled={saving}>Cancel</Button>
+            <Button type="submit" variant="primary" disabled={saving} className="bg-gradient-to-r from-green-600 to-emerald-600">
+              {saving ? (
+                'Saving...'
+              ) : (
+                <>
+                  <HiSave className="w-5 h-5 mr-2" />
+                  Save Lecture
+                </>
+              )}
+            </Button>
+          </ModalFooter>
+        </form>
+      </Modal>
 
       {/* Exam Modal */}
       {showExamModal && (

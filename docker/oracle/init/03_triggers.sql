@@ -209,11 +209,200 @@ BEGIN
       WHERE "e_id" = l_eid;
     END LOOP;
 
+    -- collect affected course ids and recalculate exam weights
+    DECLARE
+      TYPE t_cids IS TABLE OF NUMBER INDEX BY PLS_INTEGER;
+      distinct_cids t_cids;
+      l_cid NUMBER;
+      cid_found BOOLEAN;
+      cid_idx PLS_INTEGER := 0;
+    BEGIN
+      FOR i IN 1..distinct_eids.COUNT LOOP
+        l_eid := distinct_eids(i);
+        BEGIN
+          SELECT t."c_id" INTO l_cid FROM EDUX."Exams" e JOIN EDUX."Topics" t ON e."t_id" = t."t_id" WHERE e."e_id" = l_eid;
+        EXCEPTION WHEN NO_DATA_FOUND THEN l_cid := NULL;
+        END;
+        IF l_cid IS NOT NULL THEN
+          cid_found := FALSE;
+          FOR j IN 1..cid_idx LOOP
+            IF distinct_cids(j) = l_cid THEN
+              cid_found := TRUE; EXIT;
+            END IF;
+          END LOOP;
+          IF NOT cid_found THEN
+            cid_idx := cid_idx + 1;
+            distinct_cids(cid_idx) := l_cid;
+          END IF;
+        END IF;
+      END LOOP;
+
+      FOR j IN 1..cid_idx LOOP
+        IF NOT EDUX.RECALC_CTRL.g_locked_exams THEN
+          RECALC_EXAM_WEIGHTS(distinct_cids(j));
+        END IF;
+      END LOOP;
+    END;
+
     -- clear collections
     g_eids.DELETE; distinct_eids.DELETE;
   END IF;
 END AFTER STATEMENT;
 END QUESTIONS_CHANGE;
+/
+
+-- Compound trigger on Exams to collect affected course(s) and run the recalculation once per statement
+CREATE OR REPLACE TRIGGER EDUX.TRG_RECALC_EXAM_WEIGHTS
+FOR INSERT OR UPDATE OR DELETE ON EDUX."Exams"
+COMPOUND TRIGGER
+  TYPE num_tab IS TABLE OF NUMBER;
+  affected_cids num_tab := num_tab();
+
+  -- helper to add unique course id
+  PROCEDURE add_cid(p_cid NUMBER) IS
+    v_found BOOLEAN := FALSE;
+  BEGIN
+    IF p_cid IS NULL THEN
+      RETURN;
+    END IF;
+    FOR i IN 1..affected_cids.COUNT LOOP
+      IF affected_cids(i) = p_cid THEN
+        v_found := TRUE;
+        EXIT;
+      END IF;
+    END LOOP;
+    IF NOT v_found THEN
+      affected_cids.EXTEND;
+      affected_cids(affected_cids.COUNT) := p_cid;
+    END IF;
+  END add_cid;
+
+  BEFORE EACH ROW IS
+    v_old_cid NUMBER;
+    v_new_cid NUMBER;
+  BEGIN
+    IF INSERTING THEN
+      BEGIN
+        SELECT "c_id" INTO v_new_cid FROM EDUX."Topics" WHERE "t_id" = :NEW."t_id";
+        add_cid(v_new_cid);
+      EXCEPTION WHEN NO_DATA_FOUND THEN NULL;
+      END;
+    ELSIF DELETING THEN
+      BEGIN
+        SELECT "c_id" INTO v_old_cid FROM EDUX."Topics" WHERE "t_id" = :OLD."t_id";
+        add_cid(v_old_cid);
+      EXCEPTION WHEN NO_DATA_FOUND THEN NULL;
+      END;
+    ELSIF UPDATING THEN
+      BEGIN
+        SELECT "c_id" INTO v_old_cid FROM EDUX."Topics" WHERE "t_id" = :OLD."t_id";
+        add_cid(v_old_cid);
+      EXCEPTION WHEN NO_DATA_FOUND THEN NULL;
+      END;
+      BEGIN
+        SELECT "c_id" INTO v_new_cid FROM EDUX."Topics" WHERE "t_id" = :NEW."t_id";
+        add_cid(v_new_cid);
+      EXCEPTION WHEN NO_DATA_FOUND THEN NULL;
+      END;
+    END IF;
+  END BEFORE EACH ROW;
+
+  AFTER STATEMENT IS
+  BEGIN
+    FOR i IN 1..affected_cids.COUNT LOOP
+      -- call the shared procedure if not already in progress
+      IF NOT EDUX.RECALC_CTRL.g_locked_exams THEN
+        RECALC_EXAM_WEIGHTS(affected_cids(i));
+      END IF;
+    END LOOP;
+    -- clear for next statement
+    affected_cids := num_tab();
+  END AFTER STATEMENT;
+END TRG_RECALC_EXAM_WEIGHTS;
+/
+
+-- Trigger on Courses to recalculate exam weights when lecture_weight changes
+CREATE OR REPLACE TRIGGER EDUX.TRG_RECALC_ON_COURSE_LECTURE_WEIGHT
+AFTER UPDATE OF "lecture_weight" ON EDUX."Courses"
+FOR EACH ROW
+BEGIN
+  IF NOT EDUX.RECALC_CTRL.g_locked_exams THEN
+    RECALC_EXAM_WEIGHTS(:NEW."c_id");
+  END IF;
+  IF NOT EDUX.RECALC_CTRL.g_locked_lectures THEN
+    RECALC_LECTURE_WEIGHTS(:NEW."c_id");
+  END IF;
+END TRG_RECALC_ON_COURSE_LECTURE_WEIGHT;
+/
+
+-- Compound trigger on Lectures to collect affected course(s) and run the recalculation once per statement
+CREATE OR REPLACE TRIGGER EDUX.TRG_RECALC_LECTURE_WEIGHTS
+FOR INSERT OR UPDATE OR DELETE ON EDUX."Lectures"
+COMPOUND TRIGGER
+  TYPE num_tab IS TABLE OF NUMBER;
+  affected_cids num_tab := num_tab();
+
+  -- helper to add unique course id
+  PROCEDURE add_cid(p_cid NUMBER) IS
+    v_found BOOLEAN := FALSE;
+  BEGIN
+    IF p_cid IS NULL THEN
+      RETURN;
+    END IF;
+    FOR i IN 1..affected_cids.COUNT LOOP
+      IF affected_cids(i) = p_cid THEN
+        v_found := TRUE;
+        EXIT;
+      END IF;
+    END LOOP;
+    IF NOT v_found THEN
+      affected_cids.EXTEND;
+      affected_cids(affected_cids.COUNT) := p_cid;
+    END IF;
+  END add_cid;
+
+  BEFORE EACH ROW IS
+    v_old_cid NUMBER;
+    v_new_cid NUMBER;
+  BEGIN
+    IF INSERTING THEN
+      BEGIN
+        SELECT "c_id" INTO v_new_cid FROM EDUX."Topics" WHERE "t_id" = :NEW."t_id";
+        add_cid(v_new_cid);
+      EXCEPTION WHEN NO_DATA_FOUND THEN NULL;
+      END;
+    ELSIF DELETING THEN
+      BEGIN
+        SELECT "c_id" INTO v_old_cid FROM EDUX."Topics" WHERE "t_id" = :OLD."t_id";
+        add_cid(v_old_cid);
+      EXCEPTION WHEN NO_DATA_FOUND THEN NULL;
+      END;
+    ELSIF UPDATING THEN
+      BEGIN
+        SELECT "c_id" INTO v_old_cid FROM EDUX."Topics" WHERE "t_id" = :OLD."t_id";
+        add_cid(v_old_cid);
+      EXCEPTION WHEN NO_DATA_FOUND THEN NULL;
+      END;
+      BEGIN
+        SELECT "c_id" INTO v_new_cid FROM EDUX."Topics" WHERE "t_id" = :NEW."t_id";
+        add_cid(v_new_cid);
+      EXCEPTION WHEN NO_DATA_FOUND THEN NULL;
+      END;
+    END IF;
+  END BEFORE EACH ROW;
+
+  AFTER STATEMENT IS
+  BEGIN
+    FOR i IN 1..affected_cids.COUNT LOOP
+      -- call the shared procedure if not already in progress
+      IF NOT EDUX.RECALC_CTRL.g_locked_lectures THEN
+        RECALC_LECTURE_WEIGHTS(affected_cids(i));
+      END IF;
+    END LOOP;
+    -- clear for next statement
+    affected_cids := num_tab();
+  END AFTER STATEMENT;
+END TRG_RECALC_LECTURE_WEIGHTS;
 /
 
 COMMIT;

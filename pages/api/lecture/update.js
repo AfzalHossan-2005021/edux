@@ -10,12 +10,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { l_id, description, video, weight, serial, order_num } = req.body;
+  const { l_id, title, description, video, duration } = req.body;
 
-  if (!l_id || !description || !video) {
+  if (!l_id || !title || !description || !video || !duration) {
     return res.status(400).json({ 
       success: false,
-      message: 'Lecture ID, description, and video URL are required' 
+      message: 'Lecture ID, title, description, video URL, and duration are required' 
     });
   }
 
@@ -23,21 +23,19 @@ export default async function handler(req, res) {
   try {
     connection = await pool.acquire();
 
-    const updateSerial = serial || order_num;
-
     const result = await connection.execute(
       `UPDATE EDUX."Lectures" 
-       SET "description" = :description,
+       SET "title" = :title,
+           "description" = :description,
            "video" = :video,
-           "serial" = NVL(:serial, "serial"),
-           "weight" = NVL(:weight, "weight")
+           "duration" = :duration
        WHERE "l_id" = :l_id`,
       {
         l_id,
+        title,
         description,
         video,
-        serial: updateSerial || null,
-        weight: weight || null
+        duration
       },
       { autoCommit: true }
     );

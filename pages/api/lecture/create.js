@@ -10,12 +10,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { t_id, description, video, weight, serial, order_num } = req.body;
+  const { t_id, title, description, video, duration } = req.body;
 
-  if (!t_id || !description || !video) {
-    return res.status(400).json({ 
+  if (!t_id || !title || !description || !video || !duration) {
+    return res.status(400).json({
       success: false,
-      message: 'Topic ID, description, and video URL are required' 
+      message: 'Topic ID, title, description, video URL, and duration are required'
     });
   }
 
@@ -31,30 +31,28 @@ export default async function handler(req, res) {
     );
     const nextId = idResult.rows[0]?.NEXT_ID || 1;
 
-    // Get next serial if not provided
-    let lectureSerial = serial || order_num;
-    if (!lectureSerial) {
-      const serialResult = await connection.execute(
-        `SELECT NVL(MAX("serial"), 0) + 1 as next_serial 
+    // Get next serial
+    const serialResult = await connection.execute(
+      `SELECT NVL(MAX("serial"), 0) + 1 as next_serial 
          FROM EDUX."Lectures" 
          WHERE "t_id" = :t_id`,
-        { t_id },
-        { outFormat: oracledb.OUT_FORMAT_OBJECT }
-      );
-      lectureSerial = serialResult.rows[0]?.NEXT_SERIAL || 1;
-    }
+      { t_id },
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+    const lectureSerial = serialResult.rows[0]?.NEXT_SERIAL || 1;
 
     // Insert new lecture
     await connection.execute(
-      `INSERT INTO EDUX."Lectures" ("l_id", "t_id", "description", "video", "weight", "serial")
-       VALUES (:l_id, :t_id, :description, :video, :weight, :serial)`,
+      `INSERT INTO EDUX."Lectures" ("l_id", "t_id", "title", "description", "video", "serial", "duration")
+       VALUES (:l_id, :t_id, :title, :description, :video, :serial, :duration)`,
       {
         l_id: nextId,
         t_id,
+        title,
         description,
         video,
-        weight: weight || 1,
-        serial: lectureSerial
+        serial: lectureSerial,
+        duration
       },
       { autoCommit: true }
     );
@@ -76,10 +74,10 @@ export default async function handler(req, res) {
         console.error('Rollback error:', e);
       }
     }
-    return res.status(500).json({ 
+    return res.status(500).json({
       success: false,
       message: 'Failed to add lecture',
-      error: error.message 
+      error: error.message
     });
   }
 }

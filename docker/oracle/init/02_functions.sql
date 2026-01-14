@@ -3,6 +3,20 @@
 -- Make sure we are in the correct PDB
 ALTER SESSION SET CONTAINER = EDUX;
 
+-- Package: RECALC_CTRL (prevents recursive trigger calls)
+CREATE OR REPLACE PACKAGE EDUX.RECALC_CTRL IS
+  g_locked_exams BOOLEAN := FALSE;
+  g_locked_lectures BOOLEAN := FALSE;
+END RECALC_CTRL;
+/
+
+CREATE OR REPLACE PACKAGE BODY EDUX.RECALC_CTRL IS
+BEGIN
+  g_locked_exams := FALSE;
+  g_locked_lectures := FALSE;
+END RECALC_CTRL;
+/
+
 -- Function: ADD_TO_WISHLIST
 CREATE OR REPLACE FUNCTION EDUX.ADD_TO_WISHLIST (ID IN NUMBER, COURSE_ID IN NUMBER) 
 RETURN SYS_REFCURSOR AS
@@ -230,6 +244,223 @@ BEGIN
     WHERE t."c_id" = COURSE_ID
     ORDER BY t."serial", l."serial";
 END;
+/
+
+-- Procedure to recalculate exam weights for a course
+-- Ensures the sum of exam weights == (100 - lecture_weight)
+CREATE OR REPLACE PROCEDURE EDUX.RECALC_EXAM_WEIGHTS(p_c_id IN NUMBER) IS
+  v_total_marks     NUMBER := 0;
+  v_remaining_wt    NUMBER := 0;
+  v_lecture_wt      NUMBER := 0;
+  v_sum_assigned    NUMBER := 0;
+  v_cnt             NUMBER := 0;
+  v_idx             NUMBER := 0;
+  l_eid             NUMBER;
+  l_marks           NUMBER;
+  CURSOR c_exams IS
+    SELECT e."e_id" AS e_id, NVL(e."marks",0) AS marks
+      FROM EDUX."Exams" e
+      JOIN EDUX."Topics" t ON e."t_id" = t."t_id"
+     WHERE t."c_id" = p_c_id
+     ORDER BY e."e_id";
+  v_rec c_exams%ROWTYPE;
+BEGIN
+  -- Prevent recursive recalculation
+  IF p_c_id IS NULL THEN
+    RETURN;
+  END IF;
+
+  IF EDUX.RECALC_CTRL.g_locked_exams THEN
+    RETURN;
+  END IF;
+
+  EDUX.RECALC_CTRL.g_locked_exams := TRUE;
+
+  BEGIN
+    BEGIN
+      SELECT "lecture_weight" INTO v_lecture_wt FROM EDUX."Courses" WHERE "c_id" = p_c_id;
+    EXCEPTION WHEN NO_DATA_FOUND THEN
+      v_lecture_wt := 0;
+    END;
+
+    v_remaining_wt := GREATEST(0, 100 - NVL(v_lecture_wt, 0));
+
+    SELECT NVL(SUM(e."marks"),0) INTO v_total_marks
+      FROM EDUX."Exams" e
+      JOIN EDUX."Topics" t ON e."t_id" = t."t_id"
+     WHERE t."c_id" = p_c_id;
+
+    -- Count exams for fallbacks / equal distribution
+    SELECT COUNT(*) INTO v_cnt
+      FROM EDUX."Exams" e
+      JOIN EDUX."Topics" t ON e."t_id" = t."t_id"
+     WHERE t."c_id" = p_c_id;
+
+    IF v_cnt = 0 THEN
+      -- nothing to do
+      NULL;
+    ELSIF v_total_marks = 0 THEN
+      -- No marks but there are exams: distribute remaining weight equally
+      v_idx := 0;
+      v_sum_assigned := 0;
+      OPEN c_exams;
+      LOOP
+        FETCH c_exams INTO v_rec;
+        EXIT WHEN c_exams%NOTFOUND;
+        v_idx := v_idx + 1;
+
+        IF v_idx < v_cnt THEN
+          UPDATE EDUX."Exams"
+             SET "weight" = TRUNC(v_remaining_wt / v_cnt, 6)
+           WHERE "e_id" = v_rec.e_id
+             AND NVL("weight",0) <> TRUNC(v_remaining_wt / v_cnt, 6);
+          v_sum_assigned := v_sum_assigned + TRUNC(v_remaining_wt / v_cnt, 6);
+        ELSE
+          UPDATE EDUX."Exams"
+             SET "weight" = (v_remaining_wt - v_sum_assigned)
+           WHERE "e_id" = v_rec.e_id
+             AND NVL("weight",0) <> (v_remaining_wt - v_sum_assigned);
+        END IF;
+      END LOOP;
+      CLOSE c_exams;
+    ELSE
+      -- Distribute remaining weight proportionally by marks (truncate for all but last)
+      v_idx := 0;
+      v_sum_assigned := 0;
+      OPEN c_exams;
+      LOOP
+        FETCH c_exams INTO v_rec;
+        EXIT WHEN c_exams%NOTFOUND;
+        v_idx := v_idx + 1;
+
+        IF v_idx < v_cnt THEN
+          -- use TRUNC to avoid overshooting total; keep 6 decimal places
+          UPDATE EDUX."Exams"
+             SET "weight" = TRUNC((v_remaining_wt * v_rec.marks) / v_total_marks, 6)
+           WHERE "e_id" = v_rec.e_id
+             AND NVL("weight",0) <> TRUNC((v_remaining_wt * v_rec.marks) / v_total_marks, 6);
+
+          v_sum_assigned := v_sum_assigned + TRUNC((v_remaining_wt * v_rec.marks) / v_total_marks, 6);
+        ELSE
+          -- last exam gets the remainder to ensure exact sum
+          UPDATE EDUX."Exams"
+             SET "weight" = (v_remaining_wt - v_sum_assigned)
+           WHERE "e_id" = v_rec.e_id
+             AND NVL("weight",0) <> (v_remaining_wt - v_sum_assigned);
+        END IF;
+      END LOOP;
+      CLOSE c_exams;
+    END IF;
+  EXCEPTION WHEN OTHERS THEN
+    -- ensure lock is released on error
+    EDUX.RECALC_CTRL.g_locked_exams := FALSE;
+    RAISE;
+  END;
+
+  -- release lock
+  EDUX.RECALC_CTRL.g_locked_exams := FALSE;
+END RECALC_EXAM_WEIGHTS;
+/
+
+-- Procedure: RECALC_LECTURE_WEIGHTS
+-- Ensures sum of lecture weights == course.lecture_weight distributed by lecture duration
+CREATE OR REPLACE PROCEDURE EDUX.RECALC_LECTURE_WEIGHTS(p_c_id IN NUMBER) IS
+  v_total_duration NUMBER := 0;
+  v_target_wt      NUMBER := 0;
+  v_cnt            NUMBER := 0;
+  v_idx            NUMBER := 0;
+  v_sum_assigned   NUMBER := 0;
+  CURSOR c_lect IS
+    SELECT l."l_id" AS l_id, NVL(l."duration",0) AS duration
+      FROM EDUX."Lectures" l
+      JOIN EDUX."Topics" t ON l."t_id" = t."t_id"
+     WHERE t."c_id" = p_c_id
+     ORDER BY l."l_id";
+  v_rec c_lect%ROWTYPE;
+BEGIN
+  IF p_c_id IS NULL THEN
+    RETURN;
+  END IF;
+
+  IF EDUX.RECALC_CTRL.g_locked_lectures THEN
+    RETURN;
+  END IF;
+
+  EDUX.RECALC_CTRL.g_locked_lectures := TRUE;
+
+  BEGIN
+    BEGIN
+      SELECT "lecture_weight" INTO v_target_wt FROM EDUX."Courses" WHERE "c_id" = p_c_id;
+    EXCEPTION WHEN NO_DATA_FOUND THEN
+      v_target_wt := 0;
+    END;
+
+    SELECT NVL(SUM(NVL(l."duration",0)),0) INTO v_total_duration
+      FROM EDUX."Lectures" l
+      JOIN EDUX."Topics" t ON l."t_id" = t."t_id"
+     WHERE t."c_id" = p_c_id;
+
+    SELECT COUNT(*) INTO v_cnt
+      FROM EDUX."Lectures" l
+      JOIN EDUX."Topics" t ON l."t_id" = t."t_id"
+     WHERE t."c_id" = p_c_id;
+
+    IF v_cnt = 0 THEN
+      NULL; -- nothing to do
+    ELSIF v_total_duration = 0 THEN
+      -- Equal distribution
+      v_idx := 0;
+      v_sum_assigned := 0;
+      OPEN c_lect;
+      LOOP
+        FETCH c_lect INTO v_rec;
+        EXIT WHEN c_lect%NOTFOUND;
+        v_idx := v_idx + 1;
+        IF v_idx < v_cnt THEN
+          UPDATE EDUX."Lectures"
+             SET "weight" = TRUNC(v_target_wt / v_cnt, 6)
+           WHERE "l_id" = v_rec.l_id
+             AND NVL("weight",0) <> TRUNC(v_target_wt / v_cnt, 6);
+          v_sum_assigned := v_sum_assigned + TRUNC(v_target_wt / v_cnt, 6);
+        ELSE
+          UPDATE EDUX."Lectures"
+             SET "weight" = (v_target_wt - v_sum_assigned)
+           WHERE "l_id" = v_rec.l_id
+             AND NVL("weight",0) <> (v_target_wt - v_sum_assigned);
+        END IF;
+      END LOOP;
+      CLOSE c_lect;
+    ELSE
+      -- Proportional distribution by duration
+      v_idx := 0;
+      v_sum_assigned := 0;
+      OPEN c_lect;
+      LOOP
+        FETCH c_lect INTO v_rec;
+        EXIT WHEN c_lect%NOTFOUND;
+        v_idx := v_idx + 1;
+        IF v_idx < v_cnt THEN
+          UPDATE EDUX."Lectures"
+             SET "weight" = TRUNC((v_target_wt * v_rec.duration) / v_total_duration, 6)
+           WHERE "l_id" = v_rec.l_id
+             AND NVL("weight",0) <> TRUNC((v_target_wt * v_rec.duration) / v_total_duration, 6);
+          v_sum_assigned := v_sum_assigned + TRUNC((v_target_wt * v_rec.duration) / v_total_duration, 6);
+        ELSE
+          UPDATE EDUX."Lectures"
+             SET "weight" = (v_target_wt - v_sum_assigned)
+           WHERE "l_id" = v_rec.l_id
+             AND NVL("weight",0) <> (v_target_wt - v_sum_assigned);
+        END IF;
+      END LOOP;
+      CLOSE c_lect;
+    END IF;
+  EXCEPTION WHEN OTHERS THEN
+    EDUX.RECALC_CTRL.g_locked_lectures := FALSE;
+    RAISE;
+  END;
+
+  EDUX.RECALC_CTRL.g_locked_lectures := FALSE;
+END RECALC_LECTURE_WEIGHTS;
 /
 
 COMMIT;

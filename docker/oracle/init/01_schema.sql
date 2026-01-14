@@ -144,8 +144,10 @@ CREATE TABLE EDUX."Topics" (
 CREATE TABLE EDUX."Lectures" (
   "l_id" NUMBER DEFAULT EDUX.SEQUENCE.nextval NOT NULL,
   "t_id" NUMBER NOT NULL,
-  "description" VARCHAR2(200 CHAR),
-  "video" VARCHAR2(200 CHAR),
+  "title" VARCHAR2(248 CHAR) NOT NULL,
+  "description" VARCHAR2(2048 CHAR),
+  "video" VARCHAR2(512 CHAR),
+  "duration" NUMBER DEFAULT 5 NOT NULL,
   "weight" NUMBER DEFAULT 0 NOT NULL,
   "serial" NUMBER,
   CONSTRAINT pk_lectures PRIMARY KEY ("l_id"),
@@ -158,7 +160,7 @@ CREATE TABLE EDUX."Exams" (
   "t_id" NUMBER NOT NULL,
   "question_count" NUMBER DEFAULT 0 NOT NULL,
   "marks" NUMBER DEFAULT 0 NOT NULL,
-  "duration" NUMBER,
+  "duration" NUMBER DEFAULT 5 NOT NULL,
   "pass_pct" NUMBER DEFAULT 40 NOT NULL,
   "weight" NUMBER DEFAULT 0 NOT NULL,
   CONSTRAINT pk_exams PRIMARY KEY ("e_id"),
@@ -185,7 +187,7 @@ CREATE TABLE EDUX."Questions" (
 CREATE TABLE EDUX."Enrolls" (
   "s_id" NUMBER,
   "c_id" NUMBER,
-  "date" DATE DEFAULT sysdate,
+  "date" DATE DEFAULT sysdate NOT NULL,
   "approve_status" VARCHAR2(1 CHAR) DEFAULT NULL,
   "progress" NUMBER DEFAULT 0 NOT NULL,
   "end_date" DATE,
@@ -200,7 +202,7 @@ CREATE TABLE EDUX."Feedbacks" (
   "c_id" NUMBER NOT NULL,
   "rating" NUMBER NOT NULL,
   "review" VARCHAR2(500 CHAR),
-  "date" DATE DEFAULT sysdate,
+  "date" DATE DEFAULT sysdate NOT NULL,
   CONSTRAINT fk_feedbacks_students FOREIGN KEY ("s_id") REFERENCES EDUX."Students" ("s_id") ON DELETE CASCADE,
   CONSTRAINT fk_feedbacks_courses FOREIGN KEY ("c_id") REFERENCES EDUX."Courses" ("c_id") ON DELETE CASCADE
 );
@@ -219,7 +221,7 @@ CREATE TABLE EDUX."Takes" (
 CREATE TABLE EDUX."Watches" (
   "s_id" NUMBER NOT NULL,
   "l_id" NUMBER NOT NULL,
-  "w_date" DATE,
+  "w_date" DATE DEFAULT sysdate NOT NULL,
   CONSTRAINT fk_watches_students FOREIGN KEY ("s_id") REFERENCES EDUX."Students" ("s_id") ON DELETE CASCADE,
   CONSTRAINT fk_watches_lectures FOREIGN KEY ("l_id") REFERENCES EDUX."Lectures" ("l_id") ON DELETE CASCADE
 );
@@ -236,7 +238,7 @@ CREATE TABLE EDUX."Wishlist" (
 CREATE TABLE EDUX."Notifications" (
   "n_id" NUMBER DEFAULT EDUX.SEQUENCE.nextval NOT NULL,
   "u_id" NUMBER NOT NULL,
-  "date" DATE NOT NULL,
+  "date" DATE DEFAULT sysdate NOT NULL,
   "about" VARCHAR2(200 CHAR) NOT NULL,
   "seen_status" VARCHAR2(1 CHAR) DEFAULT 'n' NOT NULL,
   CONSTRAINT pk_notifications PRIMARY KEY ("n_id"),

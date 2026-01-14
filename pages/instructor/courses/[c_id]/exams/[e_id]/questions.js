@@ -199,7 +199,7 @@ function ManageExamQuestions({ serverUser }) {
         right_ans: String(formData.right_ans),
       };
 
-      const url = isEditing ? '/api/update-question' : '/api/add-question';
+      const url = isEditing ? '/api/question/update' : '/api/question/create';
       
       const response = await apiPost(url, payload);
       const data = await response.json();
@@ -232,7 +232,7 @@ function ManageExamQuestions({ serverUser }) {
     setDeleting(true);
     
     try {
-      const response = await apiPost('/api/delete-question', {
+      const response = await apiPost('/api/question/delete', {
         q_id: questionToDelete.q_id || questionToDelete.Q_ID
       });
       const data = await response.json();

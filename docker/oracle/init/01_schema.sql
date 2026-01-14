@@ -107,7 +107,7 @@ CREATE TABLE EDUX."Courses" (
   "price" NUMBER(10,2) DEFAULT 0,
   "lecture_weight" NUMBER DEFAULT 50 NOT NULL,
   CONSTRAINT pk_courses PRIMARY KEY ("c_id"),
-  CONSTRAINT fk_courses_instructors FOREIGN KEY ("i_id") REFERENCES EDUX."Instructors" ("i_id")
+  CONSTRAINT fk_courses_instructors FOREIGN KEY ("i_id") REFERENCES EDUX."Instructors" ("i_id") ON DELETE CASCADE
 );
 
 -- Create Prerequisites table
@@ -116,7 +116,7 @@ CREATE TABLE EDUX."Prerequisites" (
   "c_id" NUMBER NOT NULL,
   "description" VARCHAR2(500 CHAR) NOT NULL,
   CONSTRAINT pk_prerequisites PRIMARY KEY ("p_id"),
-  CONSTRAINT fk_prerequisites_courses FOREIGN KEY ("c_id") REFERENCES EDUX."Courses" ("c_id")
+  CONSTRAINT fk_prerequisites_courses FOREIGN KEY ("c_id") REFERENCES EDUX."Courses" ("c_id") ON DELETE CASCADE
 );
 
 -- Create Outcomes table
@@ -125,7 +125,7 @@ CREATE TABLE EDUX."Outcomes" (
   "c_id" NUMBER NOT NULL,
   "description" VARCHAR2(500 CHAR) NOT NULL,
   CONSTRAINT pk_outcomes PRIMARY KEY ("o_id"),
-  CONSTRAINT fk_outcomes_courses FOREIGN KEY ("c_id") REFERENCES EDUX."Courses" ("c_id")
+  CONSTRAINT fk_outcomes_courses FOREIGN KEY ("c_id") REFERENCES EDUX."Courses" ("c_id") ON DELETE CASCADE
 );
 
 
@@ -137,7 +137,7 @@ CREATE TABLE EDUX."Topics" (
   "serial" NUMBER NOT NULL,
   "weight" NUMBER DEFAULT 0 NOT NULL,
   CONSTRAINT pk_topics PRIMARY KEY ("t_id"),
-  CONSTRAINT fk_topics_courses FOREIGN KEY ("c_id") REFERENCES EDUX."Courses" ("c_id")
+  CONSTRAINT fk_topics_courses FOREIGN KEY ("c_id") REFERENCES EDUX."Courses" ("c_id") ON DELETE CASCADE
 );
 
 -- Create Lectures table
@@ -162,7 +162,7 @@ CREATE TABLE EDUX."Exams" (
   "pass_pct" NUMBER DEFAULT 40 NOT NULL,
   "weight" NUMBER DEFAULT 0 NOT NULL,
   CONSTRAINT pk_exams PRIMARY KEY ("e_id"),
-  CONSTRAINT fk_exams_topics FOREIGN KEY ("t_id") REFERENCES EDUX."Topics" ("t_id")
+  CONSTRAINT fk_exams_topics FOREIGN KEY ("t_id") REFERENCES EDUX."Topics" ("t_id") ON DELETE CASCADE
 );
 
 -- Create Questions table
@@ -178,7 +178,7 @@ CREATE TABLE EDUX."Questions" (
   "marks" NUMBER DEFAULT 1 NOT NULL,
   "serial" NUMBER NOT NULL,
   CONSTRAINT pk_questions PRIMARY KEY ("q_id"),
-  CONSTRAINT fk_questions_exams FOREIGN KEY ("e_id") REFERENCES EDUX."Exams" ("e_id")
+  CONSTRAINT fk_questions_exams FOREIGN KEY ("e_id") REFERENCES EDUX."Exams" ("e_id") ON DELETE CASCADE
 );
 
 -- Create Enrolls table
@@ -189,7 +189,9 @@ CREATE TABLE EDUX."Enrolls" (
   "approve_status" VARCHAR2(1 CHAR) DEFAULT NULL,
   "progress" NUMBER DEFAULT 0 NOT NULL,
   "end_date" DATE,
-  "grade" VARCHAR2(5 BYTE)
+  "grade" VARCHAR2(5 BYTE),
+  CONSTRAINT fk_enrolls_students FOREIGN KEY ("s_id") REFERENCES EDUX."Students" ("s_id") ON DELETE CASCADE,
+  CONSTRAINT fk_enrolls_courses FOREIGN KEY ("c_id") REFERENCES EDUX."Courses" ("c_id") ON DELETE CASCADE
 );
 
 -- Create Feedbacks table
@@ -199,8 +201,8 @@ CREATE TABLE EDUX."Feedbacks" (
   "rating" NUMBER NOT NULL,
   "review" VARCHAR2(500 CHAR),
   "date" DATE DEFAULT sysdate,
-  CONSTRAINT fk_feedbacks_students FOREIGN KEY ("s_id") REFERENCES EDUX."Students" ("s_id"),
-  CONSTRAINT fk_feedbacks_courses FOREIGN KEY ("c_id") REFERENCES EDUX."Courses" ("c_id")
+  CONSTRAINT fk_feedbacks_students FOREIGN KEY ("s_id") REFERENCES EDUX."Students" ("s_id") ON DELETE CASCADE,
+  CONSTRAINT fk_feedbacks_courses FOREIGN KEY ("c_id") REFERENCES EDUX."Courses" ("c_id") ON DELETE CASCADE
 );
 
 -- Create Takes table
@@ -209,8 +211,8 @@ CREATE TABLE EDUX."Takes" (
   "e_id" NUMBER NOT NULL,
   "status" VARCHAR2(10 CHAR),
   "marks" NUMBER,
-  CONSTRAINT fk_takes_students FOREIGN KEY ("s_id") REFERENCES EDUX."Students" ("s_id"),
-  CONSTRAINT fk_takes_exams FOREIGN KEY ("e_id") REFERENCES EDUX."Exams" ("e_id")
+  CONSTRAINT fk_takes_students FOREIGN KEY ("s_id") REFERENCES EDUX."Students" ("s_id") ON DELETE CASCADE,
+  CONSTRAINT fk_takes_exams FOREIGN KEY ("e_id") REFERENCES EDUX."Exams" ("e_id") ON DELETE CASCADE
 );
 
 -- Create Watches table
@@ -218,16 +220,16 @@ CREATE TABLE EDUX."Watches" (
   "s_id" NUMBER NOT NULL,
   "l_id" NUMBER NOT NULL,
   "w_date" DATE,
-  CONSTRAINT fk_watches_students FOREIGN KEY ("s_id") REFERENCES EDUX."Students" ("s_id"),
-  CONSTRAINT fk_watches_lectures FOREIGN KEY ("l_id") REFERENCES EDUX."Lectures" ("l_id")
+  CONSTRAINT fk_watches_students FOREIGN KEY ("s_id") REFERENCES EDUX."Students" ("s_id") ON DELETE CASCADE,
+  CONSTRAINT fk_watches_lectures FOREIGN KEY ("l_id") REFERENCES EDUX."Lectures" ("l_id") ON DELETE CASCADE
 );
 
 -- Create Wishlist table
 CREATE TABLE EDUX."Wishlist" (
   "u_id" NUMBER NOT NULL,
   "c_id" NUMBER NOT NULL,
-  CONSTRAINT fk_wishlist_users FOREIGN KEY ("u_id") REFERENCES EDUX."Users" ("u_id"),
-  CONSTRAINT fk_wishlist_courses FOREIGN KEY ("c_id") REFERENCES EDUX."Courses" ("c_id")
+  CONSTRAINT fk_wishlist_users FOREIGN KEY ("u_id") REFERENCES EDUX."Users" ("u_id") ON DELETE CASCADE,
+  CONSTRAINT fk_wishlist_courses FOREIGN KEY ("c_id") REFERENCES EDUX."Courses" ("c_id") ON DELETE CASCADE
 );
 
 -- Create Notifications table
@@ -238,7 +240,7 @@ CREATE TABLE EDUX."Notifications" (
   "about" VARCHAR2(200 CHAR) NOT NULL,
   "seen_status" VARCHAR2(1 CHAR) DEFAULT 'n' NOT NULL,
   CONSTRAINT pk_notifications PRIMARY KEY ("n_id"),
-  CONSTRAINT fk_notifications_users FOREIGN KEY ("u_id") REFERENCES EDUX."Users" ("u_id")
+  CONSTRAINT fk_notifications_users FOREIGN KEY ("u_id") REFERENCES EDUX."Users" ("u_id") ON DELETE CASCADE
 );
 
 --------------------------------------------------

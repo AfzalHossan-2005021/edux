@@ -11,7 +11,7 @@ import Link from 'next/link';
 import secureLocalStorage from 'react-secure-storage';
 import { apiPost, apiGet } from '@/lib/api';
 import { withInstructorAuth } from '@/lib/auth/withServerSideAuth';
-import { Card, Button, Badge } from '@/components/ui';
+import { Card, Button, Badge, Modal, ModalHeader, ModalBody, ModalFooter } from '@/components/ui';
 import {
   HiArrowLeft,
   HiAcademicCap,
@@ -38,18 +38,31 @@ function ManageCourseContent({ serverUser }) {
   const [course, setCourse] = useState(null);
   const [topics, setTopics] = useState([]);
   const [expandedTopics, setExpandedTopics] = useState({});
-  
+
   // Modal states
   const [showTopicModal, setShowTopicModal] = useState(false);
   const [showLectureModal, setShowLectureModal] = useState(false);
   const [showExamModal, setShowExamModal] = useState(false);
-  
+
+  // Delete confirmation modals
+  const [isDeleteTopicModalOpen, setIsDeleteTopicModalOpen] = useState(false);
+  const [topicToDelete, setTopicToDelete] = useState(null);
+  const [deletingTopic, setDeletingTopic] = useState(false);
+
+  const [isDeleteLectureModalOpen, setIsDeleteLectureModalOpen] = useState(false);
+  const [lectureToDelete, setLectureToDelete] = useState(null);
+  const [deletingLecture, setDeletingLecture] = useState(false);
+
+  const [isDeleteExamModalOpen, setIsDeleteExamModalOpen] = useState(false);
+  const [examToDelete, setExamToDelete] = useState(null);
+  const [deletingExam, setDeletingExam] = useState(false);
+
   // Form states
   const [currentTopic, setCurrentTopic] = useState(null);
   const [currentLecture, setCurrentLecture] = useState(null);
   const [currentExam, setCurrentExam] = useState(null);
   const [selectedTopicId, setSelectedTopicId] = useState(null);
-  
+
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -73,29 +86,29 @@ function ManageCourseContent({ serverUser }) {
       const data = await response.json();
       const courses = Array.isArray(data) ? data : (data.courses || []);
       const foundCourse = courses.find(c => (c.c_id || c.C_ID) === Number(c_id));
-      
+
       if (!foundCourse) {
         router.push('/instructor');
         return;
       }
-      
+
       setCourse(foundCourse);
-      
+
       // Load topics with lectures and exams
       await loadTopics();
-      
+
       setLoading(false);
     } catch (error) {
       console.error('Error loading course:', error);
       router.push('/instructor');
-    }
-  };
+    };
+  }
 
   const loadTopics = async () => {
     try {
       const response = await apiGet(`/api/course/topics?c_id=${c_id}`);
       const data = await response.json();
-      
+
       if (data.success && data.topics) {
         // Load lectures and exams for each topic
         const topicsWithContent = await Promise.all(
@@ -104,10 +117,10 @@ function ManageCourseContent({ serverUser }) {
               apiGet(`/api/topic/lectures?t_id=${topic.t_id || topic.T_ID}`),
               apiGet(`/api/topic/exams?t_id=${topic.t_id || topic.T_ID}`),
             ]);
-            
+
             const lecturesData = await lecturesRes.json();
             const examsData = await examsRes.json();
-            
+
             return {
               ...topic,
               lectures: lecturesData.lectures || [],
@@ -115,7 +128,7 @@ function ManageCourseContent({ serverUser }) {
             };
           })
         );
-        
+
         setTopics(topicsWithContent);
       }
     } catch (error) {
@@ -143,7 +156,7 @@ function ManageCourseContent({ serverUser }) {
   const handleSaveTopic = async (e) => {
     e.preventDefault();
     setSaving(true);
-    
+
     try {
       const endpoint = currentTopic.t_id || currentTopic.T_ID ? '/api/update-topic' : '/api/add-topic';
       const response = await apiPost(endpoint, {
@@ -151,9 +164,9 @@ function ManageCourseContent({ serverUser }) {
         c_id: Number(c_id),
         t_id: currentTopic.t_id || currentTopic.T_ID,
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         await loadTopics();
         setShowTopicModal(false);
@@ -171,14 +184,10 @@ function ManageCourseContent({ serverUser }) {
   };
 
   const handleDeleteTopic = async (topicId) => {
-    if (!confirm('Are you sure? This will delete all lectures and exams in this topic.')) {
-      return;
-    }
-    
     try {
       const response = await apiPost('/api/delete-topic', { t_id: topicId });
       const result = await response.json();
-      
+
       if (result.success) {
         await loadTopics();
         showMessage('success', 'Topic deleted successfully!');
@@ -207,7 +216,7 @@ function ManageCourseContent({ serverUser }) {
   const handleSaveLecture = async (e) => {
     e.preventDefault();
     setSaving(true);
-    
+
     try {
       const endpoint = currentLecture.l_id || currentLecture.L_ID ? '/api/update-lecture' : '/api/add-lecture';
       const response = await apiPost(endpoint, {
@@ -215,9 +224,9 @@ function ManageCourseContent({ serverUser }) {
         t_id: selectedTopicId,
         l_id: currentLecture.l_id || currentLecture.L_ID,
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         await loadTopics();
         setShowLectureModal(false);
@@ -236,14 +245,10 @@ function ManageCourseContent({ serverUser }) {
   };
 
   const handleDeleteLecture = async (lectureId) => {
-    if (!confirm('Are you sure you want to delete this lecture?')) {
-      return;
-    }
-    
     try {
       const response = await apiPost('/api/delete-lecture', { l_id: lectureId });
       const result = await response.json();
-      
+
       if (result.success) {
         await loadTopics();
         showMessage('success', 'Lecture deleted successfully!');
@@ -272,7 +277,7 @@ function ManageCourseContent({ serverUser }) {
   const handleSaveExam = async (e) => {
     e.preventDefault();
     setSaving(true);
-    
+
     try {
       const endpoint = currentExam.e_id || currentExam.E_ID ? '/api/exam/update' : '/api/exam/create';
       const response = await apiPost(endpoint, {
@@ -280,9 +285,9 @@ function ManageCourseContent({ serverUser }) {
         t_id: selectedTopicId,
         e_id: currentExam.e_id || currentExam.E_ID,
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         await loadTopics();
         setShowExamModal(false);
@@ -301,14 +306,10 @@ function ManageCourseContent({ serverUser }) {
   };
 
   const handleDeleteExam = async (examId) => {
-    if (!confirm('Are you sure? This will delete all questions in this exam.')) {
-      return;
-    }
-    
     try {
       const response = await apiPost('/api/exam/delete', { e_id: examId });
       const result = await response.json();
-      
+
       if (result.success) {
         await loadTopics();
         showMessage('success', 'Exam deleted successfully!');
@@ -320,6 +321,61 @@ function ManageCourseContent({ serverUser }) {
       showMessage('error', 'An error occurred');
     }
   };
+
+  // Open delete confirmation modals
+  const openTopicDeleteModal = (topic) => {
+    setTopicToDelete(topic);
+    setIsDeleteTopicModalOpen(true);
+  };
+
+  const handleConfirmDeleteTopic = async () => {
+    if (!topicToDelete) return;
+    setDeletingTopic(true);
+    try {
+      const t_id = topicToDelete.t_id || topicToDelete.T_ID;
+      await handleDeleteTopic(t_id);
+      setIsDeleteTopicModalOpen(false);
+      setTopicToDelete(null);
+    } finally {
+      setDeletingTopic(false);
+    }
+  };
+
+  const openLectureDeleteModal = (lecture) => {
+    setLectureToDelete(lecture);
+    setIsDeleteLectureModalOpen(true);
+  };
+
+  const handleConfirmDeleteLecture = async () => {
+    if (!lectureToDelete) return;
+    setDeletingLecture(true);
+    try {
+      const l_id = lectureToDelete.l_id || lectureToDelete.L_ID;
+      await handleDeleteLecture(l_id);
+      setIsDeleteLectureModalOpen(false);
+      setLectureToDelete(null);
+    } finally {
+      setDeletingLecture(false);
+    }
+  };
+
+  const openExamDeleteModal = (exam) => {
+    setExamToDelete(exam);
+    setIsDeleteExamModalOpen(true);
+  };
+
+  const handleConfirmDeleteExam = async () => {
+    if (!examToDelete) return;
+    setDeletingExam(true);
+    try {
+      const e_id = examToDelete.e_id || examToDelete.E_ID;
+      await handleDeleteExam(e_id);
+      setIsDeleteExamModalOpen(false);
+      setExamToDelete(null);
+    } finally {
+      setDeletingExam(false);
+    }
+  }
 
   // Question CRUD operations (simplified)
   const handleManageQuestions = (examId) => {
@@ -408,21 +464,19 @@ function ManageCourseContent({ serverUser }) {
         {/* Message Banner */}
         {message.text && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-            <div className={`p-4 rounded-xl border-2 flex items-center gap-3 ${
-              message.type === 'success' 
-                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
-                : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-            }`}>
+            <div className={`p-4 rounded-xl border-2 flex items-center gap-3 ${message.type === 'success'
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+              }`}>
               {message.type === 'success' ? (
                 <HiCheck className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0" />
               ) : (
                 <HiX className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0" />
               )}
-              <p className={`font-medium ${
-                message.type === 'success' 
-                  ? 'text-green-800 dark:text-green-200' 
-                  : 'text-red-800 dark:text-red-200'
-              }`}>
+              <p className={`font-medium ${message.type === 'success'
+                ? 'text-green-800 dark:text-green-200'
+                : 'text-red-800 dark:text-red-200'
+                }`}>
                 {message.text}
               </p>
             </div>
@@ -461,7 +515,7 @@ function ManageCourseContent({ serverUser }) {
               {topics.map((topic, index) => {
                 const topicId = topic.t_id || topic.T_ID;
                 const isExpanded = expandedTopics[topicId];
-                
+
                 return (
                   <Card key={topicId} padding="none" className="overflow-hidden">
                     {/* Topic Header */}
@@ -483,7 +537,7 @@ function ManageCourseContent({ serverUser }) {
                             </p>
                           </div>
                         </button>
-                        
+
                         <div className="flex items-center gap-2 ml-4">
                           <Button
                             variant="outline"
@@ -495,7 +549,7 @@ function ManageCourseContent({ serverUser }) {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDeleteTopic(topicId)}
+                            onClick={() => openTopicDeleteModal(topic)}
                             className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                           >
                             <HiTrash className="w-4 h-4" />
@@ -532,7 +586,7 @@ function ManageCourseContent({ serverUser }) {
                               Add Lecture
                             </Button>
                           </div>
-                          
+
                           {topic.lectures?.length > 0 ? (
                             <div className="space-y-2">
                               {topic.lectures.map((lecture, lectureIndex) => (
@@ -570,7 +624,7 @@ function ManageCourseContent({ serverUser }) {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => handleDeleteLecture(lecture.l_id || lecture.L_ID)}
+                                        onClick={() => openLectureDeleteModal(lecture)}
                                         className="text-red-600 hover:text-red-700"
                                       >
                                         <HiTrash className="w-4 h-4" />
@@ -607,7 +661,7 @@ function ManageCourseContent({ serverUser }) {
                               Add Exam
                             </Button>
                           </div>
-                          
+
                           {topic.exams?.length > 0 ? (
                             <div className="space-y-2">
                               {topic.exams.map((exam, examIndex) => (
@@ -650,7 +704,7 @@ function ManageCourseContent({ serverUser }) {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => handleDeleteExam(exam.e_id || exam.E_ID)}
+                                        onClick={() => openExamDeleteModal(exam)}
                                         className="text-red-600 hover:text-red-700"
                                       >
                                         <HiTrash className="w-4 h-4" />
@@ -896,9 +950,119 @@ function ManageCourseContent({ serverUser }) {
           </div>
         </div>
       )}
+      {/* Delete Topic Modal */}
+      <Modal isOpen={isDeleteTopicModalOpen} onClose={() => setIsDeleteTopicModalOpen(false)} size="sm">
+        <ModalHeader onClose={() => setIsDeleteTopicModalOpen(false)}>
+          Delete Topic
+        </ModalHeader>
+        <ModalBody>
+          <div className="text-center py-4">
+            <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-10 h-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M5 12h14" /></svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Are you sure?</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-2">This will delete all lectures and exams in this topic.</p>
+            {topicToDelete && (
+              <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 p-3 rounded-lg italic">
+                "{(topicToDelete.name || topicToDelete.NAME || '').slice(0, 100)}{(topicToDelete.name || topicToDelete.NAME || '').length > 100 ? '...' : ''}"
+              </p>
+            )}
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <Button type="button" variant="outline" onClick={() => setIsDeleteTopicModalOpen(false)} disabled={deletingTopic}>Cancel</Button>
+          <Button type="button" variant="primary" onClick={handleConfirmDeleteTopic} disabled={deletingTopic} className="bg-red-600 hover:bg-red-700 focus:ring-red-500">
+            {deletingTopic ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                Deleting...
+              </>
+            ) : (
+              <>
+                <HiTrash className="w-5 h-5 mr-2" />
+                Delete Topic
+              </>
+            )}
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      {/* Delete Lecture Modal */}
+      <Modal isOpen={isDeleteLectureModalOpen} onClose={() => setIsDeleteLectureModalOpen(false)} size="sm">
+        <ModalHeader onClose={() => setIsDeleteLectureModalOpen(false)}>
+          Delete Lecture
+        </ModalHeader>
+        <ModalBody>
+          <div className="text-center py-4">
+            <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-10 h-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M5 12h14" /></svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Are you sure?</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-2">This action cannot be undone. The lecture will be permanently deleted.</p>
+            {lectureToDelete && (
+              <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 p-3 rounded-lg italic">
+                "{(lectureToDelete.description || lectureToDelete.DESCRIPTION || '').slice(0, 100)}{(lectureToDelete.description || lectureToDelete.DESCRIPTION || '').length > 100 ? '...' : ''}"
+              </p>
+            )}
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <Button type="button" variant="outline" onClick={() => setIsDeleteLectureModalOpen(false)} disabled={deletingLecture}>Cancel</Button>
+          <Button type="button" variant="primary" onClick={handleConfirmDeleteLecture} disabled={deletingLecture} className="bg-red-600 hover:bg-red-700 focus:ring-red-500">
+            {deletingLecture ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                Deleting...
+              </>
+            ) : (
+              <>
+                <HiTrash className="w-5 h-5 mr-2" />
+                Delete Lecture
+              </>
+            )}
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      {/* Delete Exam Modal */}
+      <Modal isOpen={isDeleteExamModalOpen} onClose={() => setIsDeleteExamModalOpen(false)} size="sm">
+        <ModalHeader onClose={() => setIsDeleteExamModalOpen(false)}>
+          Delete Exam
+        </ModalHeader>
+        <ModalBody>
+          <div className="text-center py-4">
+            <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-10 h-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M5 12h14" /></svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Are you sure?</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-2">This will delete all questions in this exam.</p>
+            {examToDelete && (
+              <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 p-3 rounded-lg italic">
+                "Exam {(examToDelete.e_id || examToDelete.E_ID)}"
+              </p>
+            )}
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <Button type="button" variant="outline" onClick={() => setIsDeleteExamModalOpen(false)} disabled={deletingExam}>Cancel</Button>
+          <Button type="button" variant="primary" onClick={handleConfirmDeleteExam} disabled={deletingExam} className="bg-red-600 hover:bg-red-700 focus:ring-red-500">
+            {deletingExam ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                Deleting...
+              </>
+            ) : (
+              <>
+                <HiTrash className="w-5 h-5 mr-2" />
+                Delete Exam
+              </>
+            )}
+          </Button>
+        </ModalFooter>
+      </Modal>
     </>
   );
-}
+};
 
 export default ManageCourseContent;
 

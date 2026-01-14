@@ -157,37 +157,63 @@ BEGIN
 END;
 /
 
--- Trigger: QUESTIONS_CHANGE - Update exam's question_count and marks on insert/delete
-CREATE OR REPLACE TRIGGER EDUX.QUESTION_INSERT
-AFTER INSERT ON EDUX."Questions"
-FOR EACH ROW
-BEGIN
-  UPDATE EDUX."Exams"
-  SET "question_count" = NVL("question_count",0) + 1,
-      "marks" = NVL("marks",0) + NVL(:NEW."marks",0)
-  WHERE "e_id" = :NEW."e_id";
-END;
-/
+-- Trigger: QUESTIONS_CHANGE - Recompute exam's question_count and marks safely using a compound trigger to avoid mutating-table errors
+CREATE OR REPLACE TRIGGER EDUX.QUESTIONS_CHANGE
+FOR INSERT OR DELETE OR UPDATE OF "marks", "e_id" ON EDUX."Questions"
+COMPOUND TRIGGER
+  -- Use nested tables to collect affected e_ids and deduplicate in AFTER STATEMENT
+  TYPE t_eids IS TABLE OF NUMBER;
+  g_eids t_eids := t_eids();
 
-CREATE OR REPLACE TRIGGER EDUX.QUESTION_DELETE
-AFTER DELETE ON EDUX."Questions"
-FOR EACH ROW
+AFTER EACH ROW IS
 BEGIN
-  UPDATE EDUX."Exams"
-  SET "question_count" = GREATEST(NVL("question_count",0) - 1, 0),
-      "marks" = GREATEST(NVL("marks",0) - NVL(:OLD."marks",0), 0)
-  WHERE "e_id" = :OLD."e_id";
-END;
-/
+  IF INSERTING THEN
+    g_eids.EXTEND; g_eids(g_eids.COUNT) := :NEW."e_id";
+  ELSIF DELETING THEN
+    g_eids.EXTEND; g_eids(g_eids.COUNT) := :OLD."e_id";
+  ELSIF UPDATING THEN
+    g_eids.EXTEND; g_eids(g_eids.COUNT) := :NEW."e_id";
+    IF :OLD."e_id" IS NOT NULL AND :OLD."e_id" != :NEW."e_id" THEN
+      g_eids.EXTEND; g_eids(g_eids.COUNT) := :OLD."e_id";
+    END IF;
+  END IF;
+END AFTER EACH ROW;
 
-CREATE OR REPLACE TRIGGER EDUX.QUESTION_UPDATE
-AFTER UPDATE OF "marks" ON EDUX."Questions"
-FOR EACH ROW
+AFTER STATEMENT IS
+  l_eid NUMBER;
+  distinct_eids t_eids := t_eids();
+  found BOOLEAN;
 BEGIN
-  UPDATE EDUX."Exams"
-  SET "marks" = NVL("marks",0) - NVL(:OLD."marks",0) + NVL(:NEW."marks",0)
-  WHERE "e_id" = :NEW."e_id";
-END;
+  IF g_eids.COUNT > 0 THEN
+    -- deduplicate into distinct_eids
+    FOR i IN 1..g_eids.COUNT LOOP
+      l_eid := g_eids(i);
+      found := FALSE;
+      FOR j IN 1..distinct_eids.COUNT LOOP
+        IF distinct_eids(j) = l_eid THEN
+          found := TRUE;
+          EXIT;
+        END IF;
+      END LOOP;
+      IF NOT found THEN
+        distinct_eids.EXTEND; distinct_eids(distinct_eids.COUNT) := l_eid;
+      END IF;
+    END LOOP;
+
+    -- update exams for each distinct eid
+    FOR i IN 1..distinct_eids.COUNT LOOP
+      l_eid := distinct_eids(i);
+      UPDATE EDUX."Exams"
+      SET "question_count" = NVL((SELECT COUNT(*) FROM EDUX."Questions" q WHERE q."e_id" = l_eid), 0),
+          "marks" = NVL((SELECT SUM(NVL(q."marks",0)) FROM EDUX."Questions" q WHERE q."e_id" = l_eid), 0)
+      WHERE "e_id" = l_eid;
+    END LOOP;
+
+    -- clear collections
+    g_eids.DELETE; distinct_eids.DELETE;
+  END IF;
+END AFTER STATEMENT;
+END QUESTIONS_CHANGE;
 /
 
 COMMIT;

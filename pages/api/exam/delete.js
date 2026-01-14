@@ -25,7 +25,9 @@ export default async function handler(req, res) {
 
     // Delete exam (CASCADE will handle questions)
     const result = await connection.execute(
-      `DELETE FROM EDUX."Exams" WHERE "e_id" = :e_id`,
+      `DELETE
+       FROM EDUX."Exams"
+       WHERE "e_id" = :e_id`,
       { e_id },
       { autoCommit: true }
     );

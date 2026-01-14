@@ -21,8 +21,13 @@ export default async function handler(req, res) {
     connection = await pool.acquire();
 
     const result = await connection.execute(
-      `SELECT e."e_id", e."marks", e."duration", e."question_count", 
-              e."weight", e."t_id"
+      `SELECT 
+        e."e_id",
+        e."question_count",
+        e."marks",
+        e."duration",
+        e."pass_pct", 
+        e."weight"
        FROM EDUX."Exams" e
        WHERE e."t_id" = :t_id
        ORDER BY e."e_id"`,

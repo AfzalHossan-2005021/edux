@@ -157,4 +157,37 @@ BEGIN
 END;
 /
 
+-- Trigger: QUESTIONS_CHANGE - Update exam's question_count and marks on insert/delete
+CREATE OR REPLACE TRIGGER EDUX.QUESTION_INSERT
+AFTER INSERT ON EDUX."Questions"
+FOR EACH ROW
+BEGIN
+  UPDATE EDUX."Exams"
+  SET "question_count" = NVL("question_count",0) + 1,
+      "marks" = NVL("marks",0) + NVL(:NEW."marks",0)
+  WHERE "e_id" = :NEW."e_id";
+END;
+/
+
+CREATE OR REPLACE TRIGGER EDUX.QUESTION_DELETE
+AFTER DELETE ON EDUX."Questions"
+FOR EACH ROW
+BEGIN
+  UPDATE EDUX."Exams"
+  SET "question_count" = GREATEST(NVL("question_count",0) - 1, 0),
+      "marks" = GREATEST(NVL("marks",0) - NVL(:OLD."marks",0), 0)
+  WHERE "e_id" = :OLD."e_id";
+END;
+/
+
+CREATE OR REPLACE TRIGGER EDUX.QUESTION_UPDATE
+AFTER UPDATE OF "marks" ON EDUX."Questions"
+FOR EACH ROW
+BEGIN
+  UPDATE EDUX."Exams"
+  SET "marks" = NVL("marks",0) - NVL(:OLD."marks",0) + NVL(:NEW."marks",0)
+  WHERE "e_id" = :NEW."e_id";
+END;
+/
+
 COMMIT;

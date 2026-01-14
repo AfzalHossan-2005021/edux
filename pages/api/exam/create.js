@@ -10,12 +10,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { t_id, marks, duration, question_count, weight } = req.body;
+  const { t_id, duration, pass_pct } = req.body;
 
-  if (!t_id || !marks || !duration || !question_count) {
+  if (!t_id || !duration || !pass_pct) {
     return res.status(400).json({ 
       success: false,
-      message: 'Topic ID, marks, duration, and question count are required' 
+      message: 'Topic ID, duration, and pass percentage are required' 
     });
   }
 
@@ -33,15 +33,13 @@ export default async function handler(req, res) {
 
     // Insert new exam
     await connection.execute(
-      `INSERT INTO EDUX."Exams" ("e_id", "t_id", "question_count", "marks", "duration", "weight")
-       VALUES (:e_id, :t_id, :question_count, :marks, :duration, :weight)`,
+      `INSERT INTO EDUX."Exams" ("e_id", "t_id", "duration", "pass_pct")
+       VALUES (:e_id, :t_id, :duration, :pass_pct)`,
       {
         e_id: nextId,
         t_id,
-        question_count: parseInt(question_count),
-        marks: parseInt(marks),
         duration: parseInt(duration),
-        weight: weight || 1
+        pass_pct: parseInt(pass_pct),
       },
       { autoCommit: true }
     );

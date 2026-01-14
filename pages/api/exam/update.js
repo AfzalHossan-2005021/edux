@@ -10,12 +10,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { e_id, marks, duration, question_count, weight } = req.body;
+  const { e_id, duration, pass_pct } = req.body;
 
-  if (!e_id || !marks || !duration || !question_count) {
+  if (e_id == null || duration == null || pass_pct == null) {
     return res.status(400).json({ 
       success: false,
-      message: 'Exam ID, marks, duration, and question count are required' 
+      message: 'Exam ID, duration, and pass percentage are required' 
     });
   }
 
@@ -25,17 +25,13 @@ export default async function handler(req, res) {
 
     const result = await connection.execute(
       `UPDATE EDUX."Exams" 
-       SET "marks" = :marks,
-           "duration" = :duration,
-           "question_count" = :question_count,
-           "weight" = NVL(:weight, "weight")
+       SET "duration" = :duration,
+           "pass_pct" = :pass_pct
        WHERE "e_id" = :e_id`,
       {
         e_id,
-        marks: parseInt(marks),
         duration: parseInt(duration),
-        question_count: parseInt(question_count),
-        weight: weight || null
+        pass_pct: parseInt(pass_pct)
       },
       { autoCommit: true }
     );

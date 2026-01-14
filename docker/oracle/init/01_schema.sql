@@ -135,7 +135,7 @@ CREATE TABLE EDUX."Topics" (
   "name" VARCHAR2(100 CHAR) NOT NULL,
   "c_id" NUMBER NOT NULL,
   "serial" NUMBER NOT NULL,
-  "weight" NUMBER,
+  "weight" NUMBER DEFAULT 0 NOT NULL,
   CONSTRAINT pk_topics PRIMARY KEY ("t_id"),
   CONSTRAINT fk_topics_courses FOREIGN KEY ("c_id") REFERENCES EDUX."Courses" ("c_id")
 );
@@ -146,7 +146,7 @@ CREATE TABLE EDUX."Lectures" (
   "t_id" NUMBER NOT NULL,
   "description" VARCHAR2(200 CHAR),
   "video" VARCHAR2(200 CHAR),
-  "weight" NUMBER,
+  "weight" NUMBER DEFAULT 0 NOT NULL,
   "serial" NUMBER,
   CONSTRAINT pk_lectures PRIMARY KEY ("l_id"),
   CONSTRAINT fk_lectures_topics FOREIGN KEY ("t_id") REFERENCES EDUX."Topics" ("t_id") ON DELETE CASCADE
@@ -156,10 +156,11 @@ CREATE TABLE EDUX."Lectures" (
 CREATE TABLE EDUX."Exams" (
   "e_id" NUMBER DEFAULT EDUX.SEQUENCE.nextval NOT NULL,
   "t_id" NUMBER NOT NULL,
-  "question_count" NUMBER NOT NULL,
-  "marks" NUMBER NOT NULL,
+  "question_count" NUMBER DEFAULT 0 NOT NULL,
+  "marks" NUMBER DEFAULT 0 NOT NULL,
   "duration" NUMBER,
-  "weight" NUMBER,
+  "pass_pct" NUMBER DEFAULT 40 NOT NULL,
+  "weight" NUMBER DEFAULT 0 NOT NULL,
   CONSTRAINT pk_exams PRIMARY KEY ("e_id"),
   CONSTRAINT fk_exams_topics FOREIGN KEY ("t_id") REFERENCES EDUX."Topics" ("t_id")
 );
@@ -168,11 +169,11 @@ CREATE TABLE EDUX."Exams" (
 CREATE TABLE EDUX."Questions" (
   "q_id" NUMBER DEFAULT EDUX.SEQUENCE.nextval NOT NULL,
   "e_id" NUMBER NOT NULL,
-  "q_description" VARCHAR2(500 CHAR) NOT NULL,
-  "option_a" VARCHAR2(200 CHAR),
-  "option_b" VARCHAR2(200 CHAR),
-  "option_c" VARCHAR2(200 CHAR),
-  "option_d" VARCHAR2(200 CHAR),
+  "q_description" VARCHAR2(2048 CHAR) NOT NULL,
+  "option_a" VARCHAR2(512 CHAR),
+  "option_b" VARCHAR2(512 CHAR),
+  "option_c" VARCHAR2(512 CHAR),
+  "option_d" VARCHAR2(512 CHAR),
   "right_ans" VARCHAR2(1 CHAR) NOT NULL,
   "marks" NUMBER DEFAULT 1 NOT NULL,
   "serial" NUMBER NOT NULL,
@@ -186,7 +187,7 @@ CREATE TABLE EDUX."Enrolls" (
   "c_id" NUMBER,
   "date" DATE DEFAULT sysdate,
   "approve_status" VARCHAR2(1 CHAR) DEFAULT NULL,
-  "progress" NUMBER DEFAULT 0,
+  "progress" NUMBER DEFAULT 0 NOT NULL,
   "end_date" DATE,
   "grade" VARCHAR2(5 BYTE)
 );

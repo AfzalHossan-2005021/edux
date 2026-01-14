@@ -43,15 +43,12 @@ function ManageCourseContent({ serverUser }) {
   const [showTopicModal, setShowTopicModal] = useState(false);
   const [showLectureModal, setShowLectureModal] = useState(false);
   const [showExamModal, setShowExamModal] = useState(false);
-  const [showQuestionModal, setShowQuestionModal] = useState(false);
   
   // Form states
   const [currentTopic, setCurrentTopic] = useState(null);
   const [currentLecture, setCurrentLecture] = useState(null);
   const [currentExam, setCurrentExam] = useState(null);
-  const [currentQuestion, setCurrentQuestion] = useState(null);
   const [selectedTopicId, setSelectedTopicId] = useState(null);
-  const [selectedExamId, setSelectedExamId] = useState(null);
   
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -262,7 +259,7 @@ function ManageCourseContent({ serverUser }) {
   // Exam CRUD operations
   const handleAddExam = (topicId) => {
     setSelectedTopicId(topicId);
-    setCurrentExam({ marks: '', duration: '', pass_marks: '' });
+    setCurrentExam({ duration: '', pass_pct: '40' });
     setShowExamModal(true);
   };
 
@@ -277,7 +274,7 @@ function ManageCourseContent({ serverUser }) {
     setSaving(true);
     
     try {
-      const endpoint = currentExam.e_id || currentExam.E_ID ? '/api/update-exam' : '/api/add-exam';
+      const endpoint = currentExam.e_id || currentExam.E_ID ? '/api/exam/update' : '/api/exam/create';
       const response = await apiPost(endpoint, {
         ...currentExam,
         t_id: selectedTopicId,
@@ -309,7 +306,7 @@ function ManageCourseContent({ serverUser }) {
     }
     
     try {
-      const response = await apiPost('/api/delete-exam', { e_id: examId });
+      const response = await apiPost('/api/exam/delete', { e_id: examId });
       const result = await response.json();
       
       if (result.success) {
@@ -630,7 +627,7 @@ function ManageCourseContent({ serverUser }) {
                                         <span>📝 {exam.question_count || 0} Questions</span>
                                         <span>🎯 {exam.marks || 0} Marks</span>
                                         <span>⏱️ {exam.duration || 0} Minutes</span>
-                                        <span>✅ Pass: {exam.pass_marks || 0}</span>
+                                        <span>✅ Pass %: {exam.pass_pct || 0}</span>
                                       </div>
                                     </div>
                                     <div className="flex gap-2 ml-4">
@@ -842,35 +839,7 @@ function ManageCourseContent({ serverUser }) {
               </h3>
             </div>
             <form onSubmit={handleSaveExam} className="p-6 space-y-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Question Count *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    value={currentExam?.question_count || ''}
-                    onChange={(e) => setCurrentExam({ ...currentExam, question_count: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                    placeholder="10"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Total Marks *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    value={currentExam?.marks || ''}
-                    onChange={(e) => setCurrentExam({ ...currentExam, marks: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                    placeholder="100"
-                  />
-                </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Duration (min) *
@@ -883,6 +852,21 @@ function ManageCourseContent({ serverUser }) {
                     onChange={(e) => setCurrentExam({ ...currentExam, duration: e.target.value })}
                     className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                     placeholder="60"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Pass Percentage *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    max="100"
+                    value={currentExam?.pass_pct || '40'}
+                    onChange={(e) => setCurrentExam({ ...currentExam, pass_pct: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    placeholder="40"
                   />
                 </div>
               </div>

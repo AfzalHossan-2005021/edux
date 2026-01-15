@@ -154,7 +154,7 @@ const Navbar = () => {
 
   const removeFromWishlist = (courseId) => {
     const u_id = user?.u_id || secureLocalStorage.getItem("u_id");
-    apiPost('/api/wishlist/get_items/remove_item', {
+    apiPost('/api/wishlist/remove_item', {
       u_id: u_id,
       c_id: courseId,
     });

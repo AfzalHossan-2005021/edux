@@ -15,7 +15,6 @@ import { useRouter } from "next/router";
 import { Card, Button, Badge } from "../../../../../../components/ui";
 import {
   HiCheckCircle,
-  HiXCircle,
   HiArrowLeft,
   HiAcademicCap,
   HiClipboardList,
@@ -27,6 +26,8 @@ import {
   HiRefresh,
   HiDocumentText,
 } from "react-icons/hi";
+
+const OPTION_LABELS = { '1': 'A', '2': 'B', '3': 'C', '4': 'D' };
 
 // Answer Option Component
 const AnswerOption = ({ letter, text, isCorrect }) => {
@@ -87,7 +88,7 @@ const QuestionCard = ({ question, index, isExpanded, onToggle }) => {
             </h3>
             <div className="flex items-center gap-3 mt-1">
               <Badge variant="success" size="sm">
-                Answer: {correctAnswer}
+                Answer: {OPTION_LABELS[correctAnswer]}
               </Badge>
               <Badge variant="secondary" size="sm">
                 {question.marks} {question.marks === 1 ? 'mark' : 'marks'}
@@ -120,7 +121,7 @@ const QuestionCard = ({ question, index, isExpanded, onToggle }) => {
                 key={option.letter}
                 letter={option.letter}
                 text={option.text}
-                isCorrect={option.letter === correctAnswer}
+                isCorrect={option.letter === OPTION_LABELS[correctAnswer]}
               />
             ))}
           </div>
@@ -131,10 +132,10 @@ const QuestionCard = ({ question, index, isExpanded, onToggle }) => {
               <HiLightBulb className="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5" />
               <div>
                 <h5 className="font-medium text-neutral-800 dark:text-white text-sm mb-1">
-                  Correct Answer: {correctAnswer}
+                  Correct Answer: {OPTION_LABELS[correctAnswer]}
                 </h5>
                 <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                  The correct option is "{options.find(o => o.letter === correctAnswer)?.text}".
+                  The correct option is "{options.find(o => o.letter === OPTION_LABELS[correctAnswer])?.text}".
                 </p>
               </div>
             </div>

@@ -22,10 +22,13 @@ export default async function handler(req, res) {
     // Get database connection from pool
     connection = await pool.acquire();
 
-    // Get user's enrolled courses
+    // Get user's enrolled courses with lecture_count
     const coursesResult = await connection.execute(
       `SELECT c."c_id", c."title", c."field",
-              NVL(e."progress", 0) as progress
+              NVL(e."progress", 0) as progress,
+              (SELECT COUNT(*) FROM EDUX."Lectures" l
+              JOIN EDUX."Topics" t ON l."t_id" = t."t_id"
+               WHERE t."c_id" = c."c_id") as lecture_count
        FROM EDUX."Enrolls" e
        JOIN EDUX."Courses" c ON e."c_id" = c."c_id"
        WHERE e."s_id" = :userId`,
@@ -33,30 +36,76 @@ export default async function handler(req, res) {
     );
     
     const enrolledCourses = coursesResult.rows?.map(row => ({
-      id: row[0],
-      title: row[1],
-      category: row[2],
-      progress: row[3],
-      totalLectures: 10, // Default, could query actual count
+      id: row.c_id,
+      title: row.title,
+      category: row.field,
+      progress: row.PROGRESS,
+      totalLectures: row.LECTURE_COUNT,
     })) || [];
+
+    console.log('Enrolled courses:', enrolledCourses);
 
     // Get user's quiz results
     const quizResult = await connection.execute(
-      `SELECT "marks" FROM EDUX."Takes" WHERE "s_id" = :userId`,
+      `SELECT "marks"
+       FROM EDUX."Takes"
+       WHERE "s_id" = :userId`,
       { userId: user.id }
     );
-    
     const quizResults = quizResult.rows?.map(row => ({
-      score: row[0] || 0,
+      score: row.marks,
     })) || [];
+
+    // Get completed lectures
+    const completedLecturesResult = await connection.execute(
+      `SELECT l."title", l."description", l."duration"
+       FROM EDUX."Watches" w
+       JOIN EDUX."Lectures" l ON l."l_id" = w."l_id"
+       WHERE "s_id" = :userId`,
+      { userId: user.id }
+    );
+
+    const completedLectures = completedLecturesResult.rows?.map(row => ({
+      title: row.title,
+      description: row.description,
+      duration: row.duration,
+    })) || [];
+
+    const studyTimeResult = await connection.execute(
+      `SELECT l."duration", w."w_date" as study_date
+       FROM EDUX."Watches" w
+       JOIN EDUX."Lectures" l ON l."l_id" = w."l_id"
+       WHERE w."s_id" = :userId`,
+      { userId: user.id }
+    );
+
+    const studyTime = studyTimeResult.rows.map(row => ({
+      duration: row.duration,
+      startTime: row.STUDY_DATE,
+    })) || [];
+
+    console.log('Study time data:', studyTime);
+
+    const loginHistoryResult = await connection.execute(
+      `SELECT "w_date" as login_time
+       FROM EDUX."Watches"
+       WHERE "s_id" = :userId
+       ORDER BY login_time DESC
+       FETCH FIRST 100 ROWS ONLY`,
+      { userId: user.id }
+    );
+
+    const loginHistory = loginHistoryResult.rows?.map(row => {
+      return { date: row.LOGIN_TIME };
+    }) || [];
 
     // Build user data object
     const userData = {
       enrolledCourses,
-      completedLectures: [], // Could track this in a separate table
+      completedLectures,
       quizResults,
-      studyTime: [], // Could track this
-      loginHistory: [], // Could track this
+      studyTime,
+      loginHistory
     };
 
     let result;

@@ -5,7 +5,6 @@
  */
 
 import { useRouter } from "next/router";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
 import secureLocalStorage from "react-secure-storage";
@@ -24,8 +23,6 @@ import {
   HiStar,
   HiUserGroup,
   HiArrowLeft,
-  HiLockClosed,
-  HiLockOpen,
   HiSparkles,
   HiChartBar,
   HiDocumentText,
@@ -73,13 +70,42 @@ const ProgressRing = ({ progress, size = 120, strokeWidth = 8 }) => {
 };
 
 // Topic Card Component
-const TopicCard = ({ topic, lectures, exam, index, isExpanded, onToggle, c_id, totalTopics }) => {
+const TopicCard = ({ topic, lectures, exam, index, isExpanded, onToggle, c_id, u_id }) => {
   const completedLectures = lectures.filter(l => l.STATUS === 1).length;
   const totalLectures = lectures.length;
   const topicProgress = totalLectures > 0 ? (completedLectures / totalLectures) * 100 : 0;
   const isCompleted = completedLectures === totalLectures && totalLectures > 0;
   const hasExam = exam && exam.e_id;
-  const examCompleted = exam?.STATUS === 1;
+
+  const [hasTakenExam, setHasTakenExam] = useState(false);
+  const [examPassed, setExamPassed] = useState(false);
+
+  useEffect(() => {
+    apiPost('/api/exam/check/take_status', {
+      s_id: u_id,
+      e_id: exam.e_id
+    }).then(res => res.json())
+    .then(data => {
+      if (data && data.take_status === 'taken') {
+        setHasTakenExam(true);
+        apiPost('/api/exam/check/pass_status', {
+          s_id: u_id,
+          e_id: exam.e_id
+        }).then(res => res.json())
+        .then(passData => {
+          if (passData && passData.pass_status === 'pass') {
+            setExamPassed(true);
+          }
+        }).catch(err => {
+          console.error('Error checking exam pass status:', err);
+        });
+      } else {
+        setHasTakenExam(false);
+      }
+    }).catch(err => {
+      console.error('Error checking exam take status:', err);
+    });
+  }, [u_id, exam.e_id]);
 
   return (
     <Card className="overflow-hidden mb-4" padding="none">
@@ -185,11 +211,11 @@ const TopicCard = ({ topic, lectures, exam, index, isExpanded, onToggle, c_id, t
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-4">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    examCompleted
+                    hasTakenExam
                       ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
                       : 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
                   }`}>
-                    {examCompleted ? (
+                    {hasTakenExam ? (
                       <HiCheckCircle className="w-5 h-5" />
                     ) : (
                       <HiClipboardList className="w-5 h-5" />
@@ -216,22 +242,34 @@ const TopicCard = ({ topic, lectures, exam, index, isExpanded, onToggle, c_id, t
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {examCompleted && exam.exam_marks !== null && (
+                  {hasTakenExam && examPassed && exam.exam_marks !== null && (
                     <Badge variant="success" size="md">
                       Score: {exam.exam_marks}/{exam.marks}
                     </Badge>
                   )}
+                  {hasTakenExam && !examPassed && exam.exam_marks !== null && (
+                    <Badge variant="danger" size="md">
+                      Score: {exam.exam_marks}/{exam.marks}
+                    </Badge>
+                  )}
                   <Link href={`/student/courses/topic/exam/${exam.e_id}`}>
-                    <Button variant={examCompleted ? "outline" : "primary"} size="sm">
-                      {examCompleted ? 'Retake Quiz' : 'Start Quiz'}
+                    <Button variant={hasTakenExam ? "outline" : "primary"} size="sm">
+                      {hasTakenExam ? 'Retake Quiz' : 'Start Quiz'}
                     </Button>
                   </Link>
-                  {examCompleted && (
-                    <Link href={`/student/courses/topic/exam/result/${exam.e_id}`}>
-                      <Button variant="ghost" size="sm">
-                        View Results
-                      </Button>
-                    </Link>
+                  {hasTakenExam && examPassed && (
+                    <div className="flex items-center gap-2">
+                      <Link href={`/student/courses/topic/exam/result/${exam.e_id}`}>
+                        <Button variant="outline" size="sm">
+                          Result
+                        </Button>
+                      </Link>
+                      <Link href={`/student/courses/topic/exam/answer/${exam.e_id}`}>
+                        <Button variant="outline" size="sm">
+                          Answer
+                        </Button>
+                      </Link>
+                    </div>
                   )}
                 </div>
               </div>
@@ -346,12 +384,17 @@ export default function StudentCoursePage({ c_id }) {
   const overallProgress = useMemo(() => {
     if (content.length === 0) return 0;
     let totalLectures = 0;
-    let completedLectures = 0;
+    let totalProgress = 0;
     content.forEach(item => {
       totalLectures += item.lectures.length;
-      completedLectures += item.lectures.filter(l => l.STATUS === 1).length;
+      item.lectures.forEach(lecture => {
+        if (lecture.STATUS === 1) {
+          totalProgress += lecture.weight;
+        }
+      });
+      item.exam && item.exam.STATUS === 'p' && (totalProgress += item.exam.weight || 0);
     });
-    return totalLectures > 0 ? (completedLectures / totalLectures) * 100 : 0;
+    return totalLectures > 0 ? totalProgress: 0;
   }, [content]);
 
   // Stats
@@ -366,7 +409,7 @@ export default function StudentCoursePage({ c_id }) {
       completedLectures += item.lectures.filter(l => l.STATUS === 1).length;
       if (item.exam?.e_id) {
         totalExams++;
-        if (item.exam.STATUS === 1) completedExams++;
+        if (item.exam.STATUS === 'p') completedExams++;
       }
     });
 
@@ -566,7 +609,7 @@ export default function StudentCoursePage({ c_id }) {
                     isExpanded={expandedTopics[index]}
                     onToggle={() => toggleTopic(index)}
                     c_id={c_id}
-                    totalTopics={content.length}
+                    u_id={u_id}
                   />
                 ))}
               </div>

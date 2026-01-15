@@ -9,7 +9,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import Head from 'next/head';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ProfilePic from '../../public/profile_pic.jpg';
 import secureLocalStorage from 'react-secure-storage';
 import CourseWall_1 from '../../public/course_wall-1.jpg';
@@ -39,9 +39,7 @@ import {
   HiUserCircle,
   HiUsers,
   HiChat,
-  HiX,
   HiBadgeCheck,
-  HiLightningBolt,
   HiCollection,
 } from 'react-icons/hi';
 
@@ -49,16 +47,15 @@ import {
 const ProgressBar = ({ value = 0, showLabel = true, size = 'md' }) => {
   const safeValue = Math.min(100, Math.max(0, Number(value) || 0));
   const heights = { sm: 'h-1.5', md: 'h-2.5', lg: 'h-4' };
-  
+
   return (
     <div className="w-full">
       <div className={`w-full bg-neutral-200 dark:bg-neutral-700 rounded-full ${heights[size]} overflow-hidden`}>
-        <div 
-          className={`${heights[size]} rounded-full transition-all duration-500 ease-out ${
-            safeValue === 100 
-              ? 'bg-gradient-to-r from-emerald-500 to-teal-500' 
-              : 'bg-gradient-to-r from-primary-500 to-indigo-500'
-          }`}
+        <div
+          className={`${heights[size]} rounded-full transition-all duration-500 ease-out ${safeValue === 100
+            ? 'bg-gradient-to-r from-emerald-500 to-teal-500'
+            : 'bg-gradient-to-r from-primary-500 to-indigo-500'
+            }`}
           style={{ width: `${safeValue}%` }}
         />
       </div>
@@ -115,18 +112,18 @@ const ProfileRow = ({ icon: Icon, label, value }) => (
 const CourseCard = ({ course, type = 'inProgress', onRate }) => {
   const images = [CourseWall_1, CourseWall_2, CourseWall_3];
   const image = images[Math.floor(Math.random() * 3)];
-  
+
   return (
     <Card hover padding="none" className="group overflow-hidden h-full flex flex-col">
       <div className="relative h-40 overflow-hidden">
-        <Image 
+        <Image
           src={type === 'completed' ? CourseWall_2 : CourseWall_1}
           alt={course.title || 'Course'}
           fill
           className="object-cover group-hover:scale-110 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-        
+
         {/* Status Badge */}
         <div className="absolute top-3 right-3">
           {type === 'completed' ? (
@@ -141,7 +138,7 @@ const CourseCard = ({ course, type = 'inProgress', onRate }) => {
             </Badge>
           )}
         </div>
-        
+
         {/* Course Title Overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <h3 className="text-lg font-bold text-white line-clamp-2 drop-shadow-lg">
@@ -149,7 +146,7 @@ const CourseCard = ({ course, type = 'inProgress', onRate }) => {
           </h3>
         </div>
       </div>
-      
+
       <div className="p-5 flex-1 flex flex-col">
         {type === 'inProgress' ? (
           <>
@@ -177,20 +174,16 @@ const CourseCard = ({ course, type = 'inProgress', onRate }) => {
             )}
           </div>
         )}
-        
-        <div className="mt-auto pt-5 flex gap-3">
+
+        <div className="mt-auto py-5 flex gap-3">
           <Link href={`/student/courses/${course.c_id}`} className="flex-1">
             <Button variant="primary" className="w-full group/btn">
-              <span>{type === 'completed' ? 'Review Course' : 'Continue'}</span>
+              <span>{type === 'completed' ? 'Review' : 'Continue'}</span>
               <HiArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
             </Button>
           </Link>
-          {type === 'inProgress' && (
-            <div className="flex-shrink-0">
-              <RateCourse c_id={course.c_id} />
-            </div>
-          )}
         </div>
+        <RateCourse c_id={course.c_id} />
       </div>
     </Card>
   );
@@ -200,18 +193,16 @@ const CourseCard = ({ course, type = 'inProgress', onRate }) => {
 const TabButton = ({ active, onClick, icon: Icon, label, count }) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all duration-200 ${
-      active
-        ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/25'
-        : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 border border-neutral-200 dark:border-neutral-700'
-    }`}
+    className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all duration-200 ${active
+      ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/25'
+      : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 border border-neutral-200 dark:border-neutral-700'
+      }`}
   >
     <Icon className="w-5 h-5" />
     <span>{label}</span>
     {count !== undefined && (
-      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-        active ? 'bg-white/20 text-white' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400'
-      }`}>
+      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${active ? 'bg-white/20 text-white' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400'
+        }`}>
         {count}
       </span>
     )}
@@ -282,7 +273,7 @@ const StudentDashboard = () => {
       router.push('/auth/student/login');
       return;
     }
-    
+
     if (!loading && user && user.role !== 'student' && !user.isStudent) {
       if (user.role === 'instructor' || user.isInstructor) {
         router.push('/instructor');
@@ -300,7 +291,7 @@ const StudentDashboard = () => {
 
   useEffect(() => {
     if (!u_id) return;
-    
+
     apiGet(`/api/student/get_personal_info?u_id=${user.u_id}`)
       .then((res) => res.json())
       .then((json_res) => {
@@ -315,7 +306,7 @@ const StudentDashboard = () => {
         }
       })
       .catch(err => console.error('Error fetching user info:', err));
-      
+
     apiPost('/api/user_courses', { u_id })
       .then(async (res) => {
         const contentType = res.headers.get('content-type');
@@ -364,9 +355,9 @@ const StudentDashboard = () => {
               {/* Profile Image */}
               <div className="relative">
                 <div className="w-32 h-32 rounded-2xl overflow-hidden border-4 border-white/20 shadow-2xl">
-                  <Image 
-                    src={ProfilePic} 
-                    alt="Profile" 
+                  <Image
+                    src={ProfilePic}
+                    alt="Profile"
                     fill
                     className="object-cover"
                   />
@@ -407,28 +398,28 @@ const StudentDashboard = () => {
         {/* Stats Cards */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            <StatCard 
-              icon={HiBookOpen} 
-              value={inProgressCourses.length} 
-              label="In Progress" 
+            <StatCard
+              icon={HiBookOpen}
+              value={inProgressCourses.length}
+              label="In Progress"
               gradient="bg-gradient-to-br from-primary-500 to-indigo-600"
             />
-            <StatCard 
-              icon={HiCheckCircle} 
-              value={completedCourses.length} 
-              label="Completed" 
+            <StatCard
+              icon={HiCheckCircle}
+              value={completedCourses.length}
+              label="Completed"
               gradient="bg-gradient-to-br from-emerald-500 to-teal-600"
             />
-            <StatCard 
-              icon={HiTrendingUp} 
-              value={`${totalProgress}%`} 
-              label="Avg Progress" 
+            <StatCard
+              icon={HiTrendingUp}
+              value={`${totalProgress}%`}
+              label="Avg Progress"
               gradient="bg-gradient-to-br from-amber-500 to-orange-600"
             />
-            <StatCard 
-              icon={HiCollection} 
-              value={course_countValue || 0} 
-              label="Total Courses" 
+            <StatCard
+              icon={HiCollection}
+              value={course_countValue || 0}
+              label="Total Courses"
               gradient="bg-gradient-to-br from-violet-500 to-purple-600"
             />
           </div>
@@ -446,7 +437,7 @@ const StudentDashboard = () => {
                   </div>
                   <h2 className="text-lg font-bold text-neutral-800 dark:text-white">Profile Details</h2>
                 </div>
-                
+
                 <div className="space-y-1">
                   <ProfileRow icon={HiUser} label="Name" value={nameValue} />
                   <ProfileRow icon={HiMail} label="Email" value={emailValue} />
@@ -556,7 +547,7 @@ const StudentDashboard = () => {
 
         {/* AI Chat Widget */}
         {showChat && <AIChat onClose={() => setShowChat(false)} />}
-        
+
         {/* Chat Toggle Button */}
         {!showChat && (
           <button

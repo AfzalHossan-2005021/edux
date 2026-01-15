@@ -25,18 +25,21 @@ export default async function handler(req, res) {
     
     // Get exam total marks to determine pass/fail status
     const examResult = await connection.execute(
-      `SELECT "marks" FROM EDUX."Exams" WHERE "e_id" = :e_id`,
+      `SELECT "marks", "pass_pct"
+       FROM EDUX."Exams" WHERE "e_id" = :e_id`,
       { e_id },
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
     
     const totalMarks = examResult.rows[0]?.marks || 10;
-    const passPercentage = 0.4; // 40% to pass
-    const status = score >= (totalMarks * passPercentage) ? 'p' : 'f';
+    const passPercentage = examResult.rows[0]?.pass_pct || 0.5;
+    const status = score >= (parseFloat(totalMarks) * parseFloat(passPercentage) / 100) ? 'p' : 'f';
     
     // Check if record exists in Takes table
     const checkResult = await connection.execute(
-      `SELECT COUNT(*) as cnt FROM EDUX."Takes" WHERE "s_id" = :s_id AND "e_id" = :e_id`,
+      `SELECT COUNT(*) as cnt
+       FROM EDUX."Takes"
+       WHERE "s_id" = :s_id AND "e_id" = :e_id`,
       { s_id, e_id },
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
@@ -53,7 +56,8 @@ export default async function handler(req, res) {
     } else {
       // Insert new record
       await connection.execute(
-        `INSERT INTO EDUX."Takes" ("s_id", "e_id", "marks", "status") 
+        `INSERT INTO
+         EDUX."Takes" ("s_id", "e_id", "marks", "status") 
          VALUES (:s_id, :e_id, :score, :status)`,
         { s_id, e_id, score, status },
         { autoCommit: true }

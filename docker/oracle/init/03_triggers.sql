@@ -118,22 +118,33 @@ END CHECK_FEEDBACK;
 
 -- Trigger: EXAM_PROGRESS - Updates progress after exam completion
 CREATE OR REPLACE TRIGGER EDUX.EXAM_PROGRESS
-AFTER UPDATE ON EDUX."Takes"
+AFTER INSERT OR UPDATE OF "status" ON EDUX."Takes"
 FOR EACH ROW
 DECLARE
-  L_COURSE_ID NUMBER;
-  L_TOPIC_WEIGHT NUMBER;
+  L_COURSE_ID   NUMBER;
   L_EXAM_WEIGHT NUMBER;
 BEGIN
-  IF :NEW."status" = 'completed' AND (:OLD."status" IS NULL OR :OLD."status" != 'completed') THEN
-    SELECT t."c_id", t."weight", e."weight" INTO L_COURSE_ID, L_TOPIC_WEIGHT, L_EXAM_WEIGHT
-    FROM EDUX."Topics" t
-    JOIN EDUX."Exams" e ON t."t_id" = e."t_id"
-    WHERE e."e_id" = :NEW."e_id";
-    
-    UPDATE EDUX."Enrolls" 
-    SET "progress" = "progress" + NVL(L_EXAM_WEIGHT, 0)
-    WHERE "s_id" = :NEW."s_id" AND "c_id" = L_COURSE_ID;
+  -- Only when status changes to 'p'
+  IF :NEW."status" = 'p'
+     AND NVL(:OLD."status", 'x') <> 'p' THEN
+
+    BEGIN
+      SELECT t."c_id", e."weight"
+      INTO   L_COURSE_ID, L_EXAM_WEIGHT
+      FROM   EDUX."Topics" t
+      JOIN   EDUX."Exams"  e ON e."t_id" = t."t_id"
+      WHERE  e."e_id" = :NEW."e_id";
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        -- silently ignore inconsistent data
+        RETURN;
+    END;
+
+    UPDATE EDUX."Enrolls"
+    SET "progress" =
+        LEAST(100, NVL("progress", 0) + NVL(L_EXAM_WEIGHT, 0))
+    WHERE "s_id" = :NEW."s_id"
+      AND "c_id" = L_COURSE_ID;
   END IF;
 END;
 /

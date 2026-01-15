@@ -145,6 +145,16 @@ export default function CoursePage({ c_id }) {
           const enrollRes = await apiPost("/api/is_enrolled", { u_id: userId, c_id });
           const enrollData = await enrollRes.json();
           setIsEnrolled(enrollData?.is_enrolled == 1);
+
+          // Fetch wishlist and set initial wishlist state for this course
+          try {
+            const wishlistRes = await apiPost('/api/wishlist/get_items', { u_id: userId });
+            const wishlistData = await wishlistRes.json();
+            const inWishlist = Array.isArray(wishlistData) && wishlistData.some((item) => String(item.c_id || item.C_ID) === String(c_id));
+            setIsWishlisted(!!inWishlist);
+          } catch (err) {
+            console.error('Error fetching wishlist status:', err);
+          }
         }
       } catch (err) {
         console.error('Error fetching course data:', err);
@@ -194,17 +204,25 @@ export default function CoursePage({ c_id }) {
     setWishlistLoading(true);
     try {
       const userId = user?.u_id || secureLocalStorage.getItem("u_id");
-      const response = await apiPost("/api/wishlist/get_items/add_item", { u_id: userId, c_id });
-      const data = await response.json();
-      if (data.code === 1) {
-        setIsWishlisted(true);
+
+      if (isWishlisted) {
+        // Remove from wishlist
+        await apiPost('/api/wishlist/remove_item', { u_id: userId, c_id });
+        setIsWishlisted(false);
+      } else {
+        // Add to wishlist
+        const response = await apiPost('/api/wishlist/add_item', { u_id: userId, c_id });
+        const data = await response.json();
+        if (data.code === 1 || data.success) {
+          setIsWishlisted(true);
+        }
       }
     } catch (err) {
-      console.error('Error adding to wishlist:', err);
+      console.error('Error toggling wishlist:', err);
     } finally {
       setWishlistLoading(false);
     }
-  };
+  }; 
 
   const goToCourse = () => {
     router.push(`/student/courses/${c_id}`);
@@ -335,7 +353,7 @@ export default function CoursePage({ c_id }) {
                         ) : (
                           <HiOutlineHeart className="w-5 h-5 mr-2" />
                         )}
-                        {isWishlisted ? 'Wishlisted' : 'Add to Wishlist'}
+                        {isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
                       </Button>
                     </>
                   )}
@@ -420,7 +438,7 @@ export default function CoursePage({ c_id }) {
                           ) : (
                             <HiOutlineHeart className="w-5 h-5 mr-2" />
                           )}
-                          {isWishlisted ? 'Wishlisted' : 'Add to Wishlist'}
+                          {isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
                         </Button>
                       </>
                     )}

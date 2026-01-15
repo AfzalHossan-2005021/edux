@@ -6,10 +6,10 @@
 - **`/auth`** - Main auth landing page with role selection
 
 ### User/Student Auth
-- **`/auth/user/login`** - Student login page
-- **`/auth/user/signup`** - Student registration page
-- **`POST /api/auth/user/login`** - Student login API
-- **`POST /api/auth/user/signup`** - Student signup API
+- **`/auth/student/login`** - Student login page
+- **`/auth/student/signup`** - Student registration page
+- **`POST /api/auth/student/login`** - Student login API
+- **`POST /api/auth/student/signup`** - Student signup API
 
 ### Instructor Auth
 - **`/auth/instructor/login`** - Instructor login page
@@ -24,10 +24,10 @@
 - **`POST /api/auth/admin/signup`** - Admin signup API
 
 ### Legacy (Redirect)
-- **`/login`** → `/auth/user/login` (redirects)
-- **`/signup`** → `/auth/user/signup` (redirects)
-- **`/api/login`** → `/api/auth/user/login` (proxies)
-- **`/api/signup`** → `/api/auth/user/signup` (proxies)
+- **`/login`** → `/auth/student/login` (redirects)
+- **`/signup`** → `/auth/student/signup` (redirects)
+- **`/api/auth/student/login`** → `/api/auth/student/login` (proxies)
+- **`/api/auth/student/signup`** → `/api/auth/student/signup` (proxies)
 
 ---
 

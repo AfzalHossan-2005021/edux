@@ -1,11 +1,11 @@
 /**
  * Logout API Endpoint
- * POST /api/logout
+ * POST /api/auth/logout
  * 
  * Handles user logout by clearing authentication tokens and cookies
  */
 
-import { clearAuthCookies } from '../../lib/auth/cookies';
+import { clearAuthCookies } from '@/lib/auth/cookies';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

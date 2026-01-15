@@ -90,12 +90,12 @@ Updated `AuthContext.js` with:
 
 ### User Authentication
 ```
-POST /api/auth/user/login
+POST /api/auth/student/login
   ├─ Input: { email, password }
   ├─ Validation: Student role required
   └─ Response: { success, user, accessToken }
 
-POST /api/auth/user/signup
+POST /api/auth/student/signup
   ├─ Input: { name, email, password, dob?, gender? }
   ├─ Validation: Unique email, password 8+ chars
   └─ Response: { success, user, accessToken }
@@ -160,7 +160,7 @@ Role selection with links to:
 - Instructor: Login/Apply
 - Admin: Login only
 
-### /auth/user/login & /auth/user/signup
+### /auth/student/login & /auth/student/signup
 Standard student authentication with optional DOB/gender fields
 
 ### /auth/instructor/login & /auth/instructor/signup
@@ -252,10 +252,10 @@ ADMIN_CODES=ADMIN_SECRET_CODE_001,ADMIN_SECRET_CODE_002
 - [ ] Pending instructors cannot login
 
 ### Backward Compatibility
-- [ ] /login redirects to /auth/user/login
-- [ ] /signup redirects to /auth/user/signup
-- [ ] /api/login proxy works
-- [ ] /api/signup proxy works
+- [ ] /login redirects to /auth/student/login
+- [ ] /signup redirects to /auth/student/signup
+- [ ] /api/auth/student/login proxy works
+- [ ] /api/auth/student/signup proxy works
 
 ## Files Summary
 

@@ -28,7 +28,7 @@ describe('API Route Tests', () => {
 
   describe('Login API', () => {
     it('should return 405 for non-POST requests', async () => {
-      const loginHandler = require('../../pages/api/login').default;
+      const loginHandler = require('../../pages/api/auth/student/login').default;
       
       const { req, res } = createMocks({
         method: 'GET',
@@ -39,7 +39,7 @@ describe('API Route Tests', () => {
     });
 
     it('should return 400 for missing credentials', async () => {
-      const loginHandler = require('../../pages/api/login').default;
+      const loginHandler = require('../../pages/api/auth/student/login').default;
       
       const { req, res } = createMocks({
         method: 'POST',
@@ -53,7 +53,7 @@ describe('API Route Tests', () => {
 
   describe('Signup API', () => {
     it('should return 405 for non-POST requests', async () => {
-      const signupHandler = require('../../pages/api/signup').default;
+      const signupHandler = require('../../pages/api/auth/student/signup').default;
       
       const { req, res } = createMocks({
         method: 'GET',

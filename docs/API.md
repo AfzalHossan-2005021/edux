@@ -12,7 +12,7 @@ Most endpoints require authentication via JWT tokens stored in HTTP-only cookies
 
 ### Login
 ```http
-POST /api/login
+POST /api/auth/student/login
 Content-Type: application/json
 
 {
@@ -38,7 +38,7 @@ Content-Type: application/json
 
 ### Sign Up (Student)
 ```http
-POST /api/signup
+POST /api/auth/student/signup
 Content-Type: application/json
 
 {

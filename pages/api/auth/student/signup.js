@@ -1,6 +1,6 @@
 /**
  * User/Student Signup API Endpoint
- * POST /api/auth/user/signup
+ * POST /api/auth/student/signup
  * 
  * Creates a new student account with secure password hashing
  */

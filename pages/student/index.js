@@ -279,7 +279,7 @@ const StudentDashboard = () => {
   // Check authentication and role
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.push('/auth/user/login');
+      router.push('/auth/student/login');
       return;
     }
     

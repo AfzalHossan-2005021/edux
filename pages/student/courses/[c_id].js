@@ -280,7 +280,7 @@ export default function StudentCoursePage({ c_id }) {
   // Check authentication
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push('/auth/user/login');
+      router.push('/auth/student/login');
     }
   }, [authLoading, isAuthenticated, router]);
 

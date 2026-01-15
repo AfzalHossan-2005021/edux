@@ -23,7 +23,7 @@ const useUserStore = create(
       login: async (email, password) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await fetch('/api/login', {
+          const response = await fetch('/api/auth/student/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password }),
@@ -55,7 +55,7 @@ const useUserStore = create(
           error: null,
         });
         // Clear any cookies via API
-        fetch('/api/logout', { method: 'POST' }).catch(() => {});
+        fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
       },
 
       updateProfile: (updates) => set((state) => ({

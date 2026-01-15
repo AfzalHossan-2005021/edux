@@ -25,13 +25,13 @@ export default function AuthIndex() {
             </p>
             <div className="flex flex-col gap-2">
               <Link
-                href="/auth/user/login"
+                href="/auth/student/login"
                 className="block text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded transition-colors"
               >
                 Log In
               </Link>
               <Link
-                href="/auth/user/signup"
+                href="/auth/student/signup"
                 className="block text-center border border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white font-semibold py-2 px-4 rounded transition-colors"
               >
                 Sign Up

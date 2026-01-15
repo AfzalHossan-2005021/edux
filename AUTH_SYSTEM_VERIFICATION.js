@@ -12,16 +12,16 @@
 /*
 ✓ Pages Structure:
   - /pages/auth/index.js - Landing page with role selection
-  - /pages/auth/user/login.js - User/Student login
-  - /pages/auth/user/signup.js - User/Student signup
+  - /pages/auth/student/login.js - User/Student login
+  - /pages/auth/student/signup.js - User/Student signup
   - /pages/auth/instructor/login.js - Instructor login
   - /pages/auth/instructor/signup.js - Instructor signup
   - /pages/auth/admin/login.js - Admin login
   - /pages/auth/admin/signup.js - Admin signup
 
 ✓ API Endpoints:
-  - /pages/api/auth/user/login.js - User login endpoint
-  - /pages/api/auth/user/signup.js - User signup endpoint
+  - /pages/api/auth/student/login.js - User login endpoint
+  - /pages/api/auth/student/signup.js - User signup endpoint
   - /pages/api/auth/instructor/login.js - Instructor login endpoint
   - /pages/api/auth/instructor/signup.js - Instructor signup endpoint
   - /pages/api/auth/admin/login.js - Admin login endpoint
@@ -36,10 +36,10 @@
   - /components/auth/SignupForm.js - Reusable signup form
 
 ✓ Legacy Redirect:
-  - /pages/login.js - Redirects to /auth/user/login
-  - /pages/signup.js - Redirects to /auth/user/signup
-  - /pages/api/login.js - Redirects to /api/auth/user/login
-  - /pages/api/signup.js - Redirects to /api/auth/user/signup
+  - /pages/login.js - Redirects to /auth/student/login
+  - /pages/signup.js - Redirects to /auth/student/signup
+  - /pages/api/auth/student/login.js - Redirects to /api/auth/student/login
+  - /pages/api/auth/student/signup.js - Redirects to /api/auth/student/signup
 */
 
 // ============================================================================
@@ -48,9 +48,9 @@
 
 /*
 USER/STUDENT FLOW:
-  1. User visits /auth or /auth/user/login
+  1. User visits /auth or /auth/student/login
   2. Enters email and password
-  3. API calls /api/auth/user/login
+  3. API calls /api/auth/student/login
   4. Validates user role (must have s_id in database)
   5. Returns JWT token and stores in localStorage
   6. Sets secure storage flags: isStudent=true, isInstructor=false, isAdmin=false
@@ -248,12 +248,12 @@ Note: ADMIN_CODES should be:
 // ============================================================================
 
 /*
-POST /api/auth/user/login
+POST /api/auth/student/login
   Request: { email, password }
   Response: { success, user, accessToken, message, errors }
   Validation: Email and student role required
 
-POST /api/auth/user/signup
+POST /api/auth/student/signup
   Request: { name, email, password, dob?, gender? }
   Response: { success, user, accessToken, message, errors }
   Validation: Unique email, password min 8 chars, name min 2 chars
@@ -314,10 +314,10 @@ POST /api/auth/admin/signup
 
 /*
 ✓ Legacy Endpoints Maintained:
-  - /pages/login.js redirects to /auth/user/login
-  - /pages/signup.js redirects to /auth/user/signup
-  - /pages/api/login.js redirects to /api/auth/user/login
-  - /pages/api/signup.js redirects to /api/auth/user/signup
+  - /pages/login.js redirects to /auth/student/login
+  - /pages/signup.js redirects to /auth/student/signup
+  - /pages/api/auth/student/login.js redirects to /api/auth/student/login
+  - /pages/api/auth/student/signup.js redirects to /api/auth/student/signup
 
 ✓ Legacy Context Methods:
   - login() - Delegates to userLogin()
@@ -335,7 +335,7 @@ POST /api/auth/admin/signup
 
 /*
 Test Case 1: User Registration and Login
-  1. Visit /auth/user/signup
+  1. Visit /auth/student/signup
   2. Fill form: name, email, password, dob, gender
   3. Click Sign Up
   4. Verify user created in database
@@ -391,11 +391,11 @@ Test Case 5: Error Handling
   10. Verify admin code validation error
 
 Test Case 6: Backward Compatibility
-  1. Call /api/login endpoint
-  2. Verify redirects to /api/auth/user/login
+  1. Call /api/auth/student/login endpoint
+  2. Verify redirects to /api/auth/student/login
   3. Verify response format matches legacy
   4. Try legacy /login page
-  5. Verify redirects to /auth/user/login
+  5. Verify redirects to /auth/student/login
 */
 
 // ============================================================================
@@ -444,7 +444,7 @@ OLD IMPLEMENTATION → NEW IMPLEMENTATION
 Old: Single /login.js, /signup.js pages
 New: Role-specific pages at /auth/{role}/
 
-Old: Single /api/login.js endpoint
+Old: Single /api/auth/student/login.js endpoint
 New: /api/auth/{role}/login.js endpoints
 
 Old: Generic login/signup in AuthContext
@@ -460,7 +460,7 @@ Old: No admin management
 New: Secure admin code verification
 
 MIGRATION STEPS:
-  1. Existing users redirected from /login to /auth/user/login ✓
+  1. Existing users redirected from /login to /auth/student/login ✓
   2. Old API endpoints maintain backward compatibility ✓
   3. AuthContext provides both old and new methods ✓
   4. secureLocalStorage keys remain unchanged ✓

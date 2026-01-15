@@ -11,7 +11,7 @@
 │                    LANDING & ROLE SELECTION                 │
 ├──────────────────────────────────────────────────────────────┤
 │  /auth (index.js)                                            │
-│  ├─ Student Card → /auth/user/login or /auth/user/signup    │
+│  ├─ Student Card → /auth/student/login or /auth/student/signup    │
 │  ├─ Instructor Card → /auth/instructor/login or signup      │
 │  └─ Admin Card → /auth/admin/login                          │
 └──────────────────────────────────────────────────────────────┘
@@ -21,20 +21,20 @@
 └─────────────────────┘  └──────────────────────┘  └──────────────────┘
 
    Frontend Pages:          Frontend Pages:         Frontend Pages:
-   ├─ /auth/user/login      ├─ /auth/instructor/    ├─ /auth/admin/
+   ├─ /auth/student/login      ├─ /auth/instructor/    ├─ /auth/admin/
    │   (LoginForm.js)       │   login               │   login
    │                        │   (LoginForm.js)      │   (LoginForm.js)
-   └─ /auth/user/signup     │                       │
+   └─ /auth/student/signup     │                       │
        (SignupForm.js)      └─ /auth/instructor/    └─ /auth/admin/
                                signup                  signup
                                (SignupForm.js)        (SignupForm.js)
 
    API Endpoints:           API Endpoints:         API Endpoints:
    ├─ POST /api/auth/       ├─ POST /api/auth/     ├─ POST /api/auth/
-   │  user/login            │  instructor/login    │  admin/login
+   │  student/login            │  instructor/login    │  admin/login
    │                        │                      │
    └─ POST /api/auth/       └─ POST /api/auth/     └─ POST /api/auth/
-      user/signup              instructor/signup      admin/signup
+      student/signup              instructor/signup      admin/signup
 
    Database Checks:         Database Checks:       Database Checks:
    ├─ User exists           ├─ User exists         ├─ User exists
@@ -73,9 +73,9 @@
 
 ```
 User Signup (New User)
-├─ User visits /auth/user/signup
+├─ User visits /auth/student/signup
 ├─ Fills form: name, email, password, dob, gender
-├─ Submits to POST /api/auth/user/signup
+├─ Submits to POST /api/auth/student/signup
 ├─ Server:
 │  ├─ Validates input
 │  ├─ Checks email uniqueness
@@ -91,9 +91,9 @@ User Signup (New User)
 └─ ✅ User account created
 
 User Login (Existing User)
-├─ User visits /auth/user/login
+├─ User visits /auth/student/login
 ├─ Enters email and password
-├─ Submits to POST /api/auth/user/login
+├─ Submits to POST /api/auth/student/login
 ├─ Server:
 │  ├─ Validates input
 │  ├─ Calls CHECK_USER() with email
@@ -209,7 +209,7 @@ withProtectedRoute(Component, requiredRoles)
 │  │  └─ Authorized = true
 │  └─ NO:
 │     ├─ No u_id → Not authenticated
-│     ├─ Redirect to /auth/user/login
+│     ├─ Redirect to /auth/student/login
 │     └─ Authorized = false
 ├─ Loading state during check
 └─ Component only renders if authorized
@@ -256,24 +256,24 @@ ERROR RESPONSES
 ## Component Dependencies
 
 ```
-pages/auth/user/login.js
+pages/auth/student/login.js
 ├─ Imports:
 │  ├─ LoginForm (component)
 │  ├─ apiPost (API helper)
 │  ├─ useRouter
 │  └─ secureLocalStorage
 └─ Uses:
-   ├─ /api/auth/user/login endpoint
+   ├─ /api/auth/student/login endpoint
    └─ useAuth context (optional)
 
-pages/auth/user/signup.js
+pages/auth/student/signup.js
 ├─ Imports:
 │  ├─ SignupForm (component)
 │  ├─ apiPost (API helper)
 │  ├─ useRouter
 │  └─ secureLocalStorage
 └─ Uses:
-   ├─ /api/auth/user/signup endpoint
+   ├─ /api/auth/student/signup endpoint
    └─ useAuth context (optional)
 
 components/auth/LoginForm.js
@@ -408,7 +408,7 @@ USER SIGNUP DATA FLOW:
 │ - dob           │
 │ - gender        │
 └────────┬────────┘
-         │ POST /api/auth/user/signup (HTTPS)
+         │ POST /api/auth/student/signup (HTTPS)
          ▼
 ┌─────────────────────────────┐
 │ Backend Validation          │
@@ -463,12 +463,12 @@ OLD CODE → NEW SYSTEM
 Old Page /login.js
 ├─ Imported LoginForm? NO
 ├─ Used custom form? YES
-└─ → REDIRECTS to /auth/user/login ✅
+└─ → REDIRECTS to /auth/student/login ✅
 
-Old API /api/login
+Old API /api/auth/student/login
 ├─ Called directly? YES
 ├─ Proxy enabled? YES
-└─ → ROUTES to /api/auth/user/login ✅
+└─ → ROUTES to /api/auth/student/login ✅
 
 Old Context Method login()
 ├─ Called directly? YES

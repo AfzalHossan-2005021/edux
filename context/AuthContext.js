@@ -128,7 +128,7 @@ export const AuthProvider = ({ children }) => {
   // Generic login handler (backward compatibility)
   const login = useCallback(async (email, password) => {
     try {
-      const response = await apiPost('/api/login', { email, password });
+      const response = await apiPost('/api/auth/student/login', { email, password });
       const data = await response.json();
 
       if (data.success) {
@@ -150,7 +150,7 @@ export const AuthProvider = ({ children }) => {
   // User/Student Login
   const userLogin = useCallback(async (email, password) => {
     try {
-      const response = await apiPost('/api/auth/user/login', { email, password });
+      const response = await apiPost('/api/auth/student/login', { email, password });
       const data = await response.json();
 
       if (data.success) {
@@ -216,7 +216,7 @@ export const AuthProvider = ({ children }) => {
   // Generic signup (backward compatibility)
   const signup = useCallback(async (userData) => {
     try {
-      const response = await apiPost('/api/signup', userData);
+      const response = await apiPost('/api/auth/student/signup', userData);
       const data = await response.json();
 
       if (data.success) {
@@ -238,7 +238,7 @@ export const AuthProvider = ({ children }) => {
   // User/Student Signup
   const userSignup = useCallback(async (userData) => {
     try {
-      const response = await apiPost('/api/auth/user/signup', userData);
+      const response = await apiPost('/api/auth/student/signup', userData);
       const data = await response.json();
 
       if (data.success) {
@@ -303,7 +303,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = useCallback(async () => {
     try {
-      await apiPost('/api/logout');
+      await apiPost('/api/auth/logout');
       setUser(null);
       setIsAuthenticated(false);
       if (typeof window !== 'undefined') {

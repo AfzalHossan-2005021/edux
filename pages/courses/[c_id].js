@@ -157,7 +157,7 @@ export default function CoursePage({ c_id }) {
 
   const handleEnroll = async () => {
     if (!isAuthenticated) {
-      router.push(`/auth/user/login?redirect=/courses/${c_id}`);
+      router.push(`/auth/student/login?redirect=/courses/${c_id}`);
       return;
     }
 
@@ -186,7 +186,7 @@ export default function CoursePage({ c_id }) {
 
   const handleWishlist = async () => {
     if (!isAuthenticated) {
-      router.push(`/auth/user/login?redirect=/courses/${c_id}`);
+      router.push(`/auth/student/login?redirect=/courses/${c_id}`);
       return;
     }
 

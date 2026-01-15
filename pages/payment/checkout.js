@@ -40,7 +40,7 @@ export default function PaymentCheckout() {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push(`/auth/user/login?redirect=/payment/checkout?c_id=${c_id}`);
+      router.push(`/auth/student/login?redirect=/payment/checkout?c_id=${c_id}`);
       return;
     }
 

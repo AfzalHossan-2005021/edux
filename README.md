@@ -410,12 +410,12 @@ edux/
 ### Authentication
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/auth/user/signup` | POST | Register new student |
-| `/api/auth/user/login` | POST | Student login |
+| `/api/auth/student/signup` | POST | Register new student |
+| `/api/auth/student/login` | POST | Student login |
 | `/api/auth/instructor/signup` | POST | Register new instructor |
 | `/api/auth/instructor/login` | POST | Instructor login |
 | `/api/auth/admin/login` | POST | Admin login |
-| `/api/logout` | POST | User logout |
+| `/api/auth/logout` | POST | User logout |
 | `/api/refresh-token` | POST | Refresh JWT token (with rotation) |
 | `/api/me` | GET | Get current user |
 | `/api/auth/csrf` | GET | Get CSRF token |

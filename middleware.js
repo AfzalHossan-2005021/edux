@@ -15,8 +15,8 @@ import { NextResponse } from 'next/server';
 const publicRoutes = [
   '/',
   '/auth',
-  '/auth/user/login',
-  '/auth/user/signup',
+  '/auth/student/login',
+  '/auth/student/signup',
   '/auth/instructor/login',
   '/auth/instructor/signup',
   '/auth/admin/login',

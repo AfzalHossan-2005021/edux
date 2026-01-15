@@ -8,8 +8,8 @@ import { NextRequest, NextResponse } from 'next/server';
 const publicRoutes = [
   '/',
   '/auth',
-  '/auth/user/login',
-  '/auth/user/signup',
+  '/auth/student/login',
+  '/auth/student/signup',
   '/auth/instructor/login',
   '/auth/instructor/signup',
   '/auth/admin/login',
@@ -84,7 +84,7 @@ describe('Middleware Route Protection', () => {
 
     test('should allow access to auth routes', () => {
       expect(publicRoutes.includes('/auth')).toBe(true);
-      expect(publicRoutes.includes('/auth/user/login')).toBe(true);
+      expect(publicRoutes.includes('/auth/student/login')).toBe(true);
       expect(publicRoutes.includes('/auth/instructor/login')).toBe(true);
     });
 
@@ -189,7 +189,7 @@ describe('Middleware Route Protection', () => {
     });
 
     test('should match path prefixes', () => {
-      expect(matchesPath('/auth/user/login', ['/auth'])).toBe(true);
+      expect(matchesPath('/auth/student/login', ['/auth'])).toBe(true);
       expect(matchesPath('/_next/static/chunks', ['/_next'])).toBe(true);
     });
 

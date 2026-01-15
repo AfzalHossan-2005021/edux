@@ -283,7 +283,7 @@ export default function StudentExamPage({ e_id }) {
   // Check authentication and role
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push('/auth/user/login');
+      router.push('/auth/student/login');
       return;
     }
 

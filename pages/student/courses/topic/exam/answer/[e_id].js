@@ -195,7 +195,7 @@ const Answer = ({ e_id }) => {
   // Check authentication
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push('/auth/user/login');
+      router.push('/auth/student/login');
       return;
     }
     

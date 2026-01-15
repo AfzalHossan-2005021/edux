@@ -1,6 +1,6 @@
 /**
  * User/Student Login API Endpoint
- * POST /api/auth/user/login
+ * POST /api/auth/student/login
  * 
  * Authenticates student users with password verification
  * Includes rate limiting, audit logging, and session management
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
   
   if (rateLimit.limited) {
     res.setHeader('Retry-After', rateLimit.retryAfter);
-    await audit.rateLimitExceeded(rateLimitKey, '/api/auth/user/login', req);
+    await audit.rateLimitExceeded(rateLimitKey, '/api/auth/student/login', req);
     return res.status(429).json({
       success: false,
       message: `Too many login attempts. Please try again in ${Math.ceil(rateLimit.retryAfter / 60)} minutes.`,

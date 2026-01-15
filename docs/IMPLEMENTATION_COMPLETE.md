@@ -36,16 +36,16 @@ Successfully separated user, admin, and instructor signup and login flows into d
 
 ### 2. ✅ Frontend Pages (7 total)
 - `/auth/index.js` - Role selection landing page
-- `/auth/user/login.js` - Student login
-- `/auth/user/signup.js` - Student registration
+- `/auth/student/login.js` - Student login
+- `/auth/student/signup.js` - Student registration
 - `/auth/instructor/login.js` - Instructor login
 - `/auth/instructor/signup.js` - Instructor application
 - `/auth/admin/login.js` - Admin login
 - `/auth/admin/signup.js` - Admin registration (code-protected)
 
 ### 3. ✅ API Endpoints (6 total)
-- `POST /api/auth/user/login` - Student authentication
-- `POST /api/auth/user/signup` - Student registration
+- `POST /api/auth/student/login` - Student authentication
+- `POST /api/auth/student/signup` - Student registration
 - `POST /api/auth/instructor/login` - Instructor authentication
 - `POST /api/auth/instructor/signup` - Instructor registration
 - `POST /api/auth/admin/login` - Admin authentication
@@ -250,14 +250,14 @@ Successfully separated user, admin, and instructor signup and login flows into d
 ### New Files (20)
 ```
 pages/auth/index.js
-pages/auth/user/login.js
-pages/auth/user/signup.js
+pages/auth/student/login.js
+pages/auth/student/signup.js
 pages/auth/instructor/login.js
 pages/auth/instructor/signup.js
 pages/auth/admin/login.js
 pages/auth/admin/signup.js
-pages/api/auth/user/login.js
-pages/api/auth/user/signup.js
+pages/api/auth/student/login.js
+pages/api/auth/student/signup.js
 pages/api/auth/instructor/login.js
 pages/api/auth/instructor/signup.js
 pages/api/auth/admin/login.js
@@ -279,8 +279,8 @@ IMPLEMENTATION_COMPLETE.md
 context/AuthContext.js (enhanced)
 pages/login.js (legacy redirect)
 pages/signup.js (legacy redirect)
-pages/api/login.js (legacy proxy)
-pages/api/signup.js (legacy proxy)
+pages/api/auth/student/login.js (legacy proxy)
+pages/api/auth/student/signup.js (legacy proxy)
 ```
 
 ---

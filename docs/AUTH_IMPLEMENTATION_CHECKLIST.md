@@ -4,16 +4,16 @@
 
 ### Pages Created
 - [x] `/pages/auth/index.js` - Role selection landing page
-- [x] `/pages/auth/user/login.js` - User login page
-- [x] `/pages/auth/user/signup.js` - User signup page
+- [x] `/pages/auth/student/login.js` - User login page
+- [x] `/pages/auth/student/signup.js` - User signup page
 - [x] `/pages/auth/instructor/login.js` - Instructor login page
 - [x] `/pages/auth/instructor/signup.js` - Instructor signup page
 - [x] `/pages/auth/admin/login.js` - Admin login page
 - [x] `/pages/auth/admin/signup.js` - Admin signup page
 
 ### API Endpoints Created
-- [x] `/pages/api/auth/user/login.js` - User login endpoint
-- [x] `/pages/api/auth/user/signup.js` - User signup endpoint
+- [x] `/pages/api/auth/student/login.js` - User login endpoint
+- [x] `/pages/api/auth/student/signup.js` - User signup endpoint
 - [x] `/pages/api/auth/instructor/login.js` - Instructor login endpoint
 - [x] `/pages/api/auth/instructor/signup.js` - Instructor signup endpoint
 - [x] `/pages/api/auth/admin/login.js` - Admin login endpoint
@@ -28,10 +28,10 @@
 - [x] `/components/auth/SignupForm.js` - Reusable signup form
 
 ### Legacy Redirects Updated
-- [x] `/pages/login.js` - Redirects to /auth/user/login
-- [x] `/pages/signup.js` - Redirects to /auth/user/signup
-- [x] `/pages/api/login.js` - Redirects to /api/auth/user/login
-- [x] `/pages/api/signup.js` - Redirects to /api/auth/user/signup
+- [x] `/pages/login.js` - Redirects to /auth/student/login
+- [x] `/pages/signup.js` - Redirects to /auth/student/signup
+- [x] `/pages/api/auth/student/login.js` - Redirects to /api/auth/student/login
+- [x] `/pages/api/auth/student/signup.js` - Redirects to /api/auth/student/signup
 
 ### Context Updated
 - [x] `/context/AuthContext.js` - Added role-specific methods
@@ -98,7 +98,7 @@
 ### Manual Testing Steps
 
 #### Test User Registration
-1. Go to `/auth/user/signup`
+1. Go to `/auth/student/signup`
 2. Fill in: name, email, password, DOB, gender
 3. Click "Sign Up"
 4. Verify tokens in localStorage
@@ -106,7 +106,7 @@
 6. Verify user in database with isStudent=true
 
 #### Test User Login
-1. Go to `/auth/user/login`
+1. Go to `/auth/student/login`
 2. Enter registered email and password
 3. Click "Log In"
 4. Verify tokens stored
@@ -157,10 +157,10 @@
 6. Verify error messages display correctly
 
 #### Test Backward Compatibility
-1. Call `/api/login` endpoint → should work
-2. Call `/api/signup` endpoint → should work
-3. Visit `/login` page → should redirect to `/auth/user/login`
-4. Visit `/signup` page → should redirect to `/auth/user/signup`
+1. Call `/api/auth/student/login` endpoint → should work
+2. Call `/api/auth/student/signup` endpoint → should work
+3. Visit `/login` page → should redirect to `/auth/student/login`
+4. Visit `/signup` page → should redirect to `/auth/student/signup`
 
 ## Database Checks
 

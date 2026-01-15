@@ -79,7 +79,7 @@ describe('API Route Tests', () => {
 
   describe('Exam Questions API', () => {
     it('should return 405 for non-GET requests', async () => {
-      const examQuestionsHandler = require('../../pages/api/exam_questions').default;
+      const examQuestionsHandler = require('../../pages/api/exam/questions').default;
       
       const { req, res } = createMocks({
         method: 'POST',
@@ -90,7 +90,7 @@ describe('API Route Tests', () => {
     });
 
     it('should return 400 for missing exam ID', async () => {
-      const examQuestionsHandler = require('../../pages/api/exam_questions').default;
+      const examQuestionsHandler = require('../../pages/api/exam/questions').default;
       
       const { req, res } = createMocks({
         method: 'GET',

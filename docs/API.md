@@ -165,7 +165,7 @@ Content-Type: application/json
 
 ### Get Exam Questions
 ```http
-POST /api/exam_questions
+POST /api/exam/questions
 Content-Type: application/json
 
 {
@@ -176,7 +176,7 @@ Content-Type: application/json
 
 ### Submit Exam Result
 ```http
-POST /api/exam_result
+POST /api/exam/result
 Content-Type: application/json
 
 {

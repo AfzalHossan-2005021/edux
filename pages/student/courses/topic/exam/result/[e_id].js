@@ -145,7 +145,7 @@ const ViewResult = ({ e_id }) => {
     const s_id = user?.u_id || secureLocalStorage.getItem("u_id");
     if (!s_id) return;
     
-    apiPost("/api/exam_result", { s_id, e_id })
+    apiPost("/api/exam/result", { s_id, e_id })
       .then((res) => res.json())
       .then((json_res) => {
         setData(json_res[0] || {});

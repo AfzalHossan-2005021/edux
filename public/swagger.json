@@ -469,7 +469,7 @@
         }
       }
     },
-    "/exam_questions": {
+    "/exam/questions": {
       "post": {
         "tags": ["Exams"],
         "summary": "Get exam questions",
@@ -509,7 +509,7 @@
         }
       }
     },
-    "/exam_result": {
+    "/exam/result": {
       "post": {
         "tags": ["Exams"],
         "summary": "Get exam result",
@@ -548,7 +548,7 @@
         }
       }
     },
-    "/update_mark": {
+    "/exam/update_mark": {
       "post": {
         "tags": ["Exams"],
         "summary": "Submit exam answers",

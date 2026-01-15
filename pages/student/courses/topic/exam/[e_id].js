@@ -8,7 +8,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import secureLocalStorage from "react-secure-storage";
-import { apiPost } from "../../../../../lib/api";
+import { apiGet, apiPost } from "@/lib/api";
 import { useAuth } from "../../../../../context/AuthContext";
 import { Card, Button, Badge } from "../../../../../components/ui";
 import {
@@ -56,13 +56,12 @@ const ExamTimer = ({ duration, onTimeUp }) => {
   const isCritical = timeLeft < 30;
 
   return (
-    <div className={`flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-lg ${
-      isCritical 
+    <div className={`flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-lg ${isCritical
         ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 animate-pulse'
         : isLowTime
-        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-        : 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300'
-    }`}>
+          ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+          : 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300'
+      }`}>
       <HiClock className="w-5 h-5" />
       <span>{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}</span>
     </div>
@@ -161,29 +160,26 @@ const QuestionCard = ({ question, index, totalQuestions, selectedOption, onOptio
       <div className="p-6 space-y-3">
         {options.map((option, optionIndex) => {
           const isSelected = selectedOption === optionIndex + 1;
-          
+
           return (
             <button
               key={option.key}
               onClick={() => onOptionSelect(index, optionIndex + 1)}
-              className={`w-full p-4 rounded-xl text-left transition-all duration-200 flex items-center gap-4 group ${
-                isSelected
+              className={`w-full p-4 rounded-xl text-left transition-all duration-200 flex items-center gap-4 group ${isSelected
                   ? 'bg-primary-50 border-2 border-primary-500 dark:bg-primary-900/20 dark:border-primary-400'
                   : 'bg-neutral-50 border-2 border-transparent hover:bg-neutral-100 hover:border-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-750 dark:hover:border-neutral-600'
-              }`}
+                }`}
             >
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm transition-colors ${
-                isSelected
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm transition-colors ${isSelected
                   ? 'bg-primary-500 text-white'
                   : 'bg-neutral-200 text-neutral-600 group-hover:bg-neutral-300 dark:bg-neutral-700 dark:text-neutral-400 dark:group-hover:bg-neutral-600'
-              }`}>
+                }`}>
                 {option.letter}
               </div>
-              <span className={`flex-1 text-base ${
-                isSelected
+              <span className={`flex-1 text-base ${isSelected
                   ? 'text-primary-700 dark:text-primary-300 font-medium'
                   : 'text-neutral-700 dark:text-neutral-300'
-              }`}>
+                }`}>
                 {option.value}
               </span>
               {isSelected && (
@@ -228,13 +224,13 @@ const ConfirmSubmitModal = ({ isOpen, onClose, onConfirm, answeredCount, totalCo
               <HiCheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
             </div>
           )}
-          
+
           <h3 className="text-xl font-bold text-neutral-800 dark:text-white mb-2">
             {unanswered > 0 ? 'Submit with Unanswered Questions?' : 'Ready to Submit?'}
           </h3>
-          
+
           <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-            {unanswered > 0 
+            {unanswered > 0
               ? `You have ${unanswered} unanswered question${unanswered > 1 ? 's' : ''}. Are you sure you want to submit?`
               : 'You have answered all questions. Submit your exam now?'
             }
@@ -274,7 +270,7 @@ export default function StudentExamPage({ e_id }) {
   const router = useRouter();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const s_id = user?.u_id || secureLocalStorage.getItem("u_id");
-  
+
   const [questions, setQuestions] = useState([]);
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -290,7 +286,7 @@ export default function StudentExamPage({ e_id }) {
       router.push('/auth/user/login');
       return;
     }
-    
+
     if (!authLoading && user && user.role !== 'student' && !user.isStudent) {
       if (user.role === 'instructor' || user.isInstructor) {
         router.push('/instructor');
@@ -302,13 +298,17 @@ export default function StudentExamPage({ e_id }) {
 
   useEffect(() => {
     if (!e_id) return;
-    
-    apiPost("/api/exam_questions", { e_id })
+
+    apiGet(`/api/exam/questions?e_id=${e_id}`)
       .then((res) => res.json())
       .then((json_res) => {
-        if (Array.isArray(json_res)) {
-          setQuestions(json_res);
-          setSelectedOptions(new Array(json_res.length).fill(null));
+        if (json_res.success) {
+          if (Array.isArray(json_res.questions)) {
+            setQuestions(json_res.questions);
+            setSelectedOptions(new Array(json_res.questions.length).fill(null));
+          }
+        } else {
+          throw new Error(json_res.error || 'Failed to load exam');
         }
       })
       .catch((error) => {
@@ -328,9 +328,9 @@ export default function StudentExamPage({ e_id }) {
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
     let newScore = 0;
-    
+
     const indexToLetter = { 1: 'A', 2: 'B', 3: 'C', 4: 'D' };
-    
+
     for (let i = 0; i < questions.length; i++) {
       // Normalize selected and correct answers to indices (1-4) so both 'A'/'B' and '1'/'2' formats work
       const rawSelected = selectedOptions[i];
@@ -359,9 +359,9 @@ export default function StudentExamPage({ e_id }) {
       }
     }
     console.log('Total Score:', newScore);
-    
+
     try {
-      await apiPost("/api/update_mark", { s_id, e_id, score: newScore });
+      await apiPost("/api/exam/update_mark", { s_id, e_id, score: newScore });
       router.replace(`/student/courses/topic/exam/result/${e_id}`);
     } catch (error) {
       console.error('Error submitting exam:', error);

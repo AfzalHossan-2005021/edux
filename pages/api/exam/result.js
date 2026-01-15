@@ -1,5 +1,5 @@
 const oracledb = require('oracledb');
-import pool from "../../middleware/connectdb"
+import pool from "@/middleware/connectdb"
 import get_exam_result_query from "@/db/get_exam_result_query";
 
 export default async function handler(req, res) {

@@ -215,7 +215,7 @@ const Answer = ({ e_id }) => {
     const s_id = user?.u_id || secureLocalStorage.getItem("u_id");
     if (!s_id) return;
     
-    apiPost("/api/exam_answers", { s_id, e_id })
+    apiPost("/api/exam/answers", { s_id, e_id })
       .then((res) => res.json())
       .then((json_res) => {
         if (json_res.hasTaken === false) {

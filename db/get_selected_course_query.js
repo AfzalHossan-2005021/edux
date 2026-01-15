@@ -1,6 +1,6 @@
 export default function get_selected_course_query(c_id){
     return(
-        `SELECT c."c_id", c."title", c."student_count", c."rating", c."description", u."name", ins."expertise" AS "subject", ins."qualification", c."wall", c."field", c."seat", c."price",
+        `SELECT c."c_id", c."i_id", c."title", c."student_count", c."rating", c."description", u."name", ins."expertise" AS "subject", ins."qualification", c."wall", c."field", c."seat", c."price",
         p.prerequisites_list AS PREREQUISITES_LIST,
         o.outcomes_list AS OUTCOMES_LIST
         FROM "Courses" c

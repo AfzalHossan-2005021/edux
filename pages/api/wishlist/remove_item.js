@@ -1,5 +1,5 @@
 const oracledb = require("oracledb");
-import pool from "../../middleware/connectdb";
+import pool from "@/middleware/connectdb";
 
 export default async function handler(req, res) {
   if (req.method === "POST") {

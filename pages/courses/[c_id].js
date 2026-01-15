@@ -193,7 +193,7 @@ export default function CoursePage({ c_id }) {
     setWishlistLoading(true);
     try {
       const userId = user?.u_id || secureLocalStorage.getItem("u_id");
-      const response = await apiPost("/api/add_to_wishlist", { u_id: userId, c_id });
+      const response = await apiPost("/api/wishlist/get_items/add_item", { u_id: userId, c_id });
       const data = await response.json();
       if (data.code === 1) {
         setIsWishlisted(true);
@@ -348,6 +348,7 @@ export default function CoursePage({ c_id }) {
                     src={course.wall || '/images/course-placeholder.jpg'}
                     alt={course.title}
                     fill
+                    sizes="50%"
                     className="object-cover"
                     priority
                   />
@@ -610,7 +611,7 @@ export default function CoursePage({ c_id }) {
               <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
                 Expert in {course.subject}
               </p>
-              <Link href={`/instructors/${course.i_id}`}>
+              <Link href={`/instructor/${course.i_id}`}>
                 <Button variant="outline" size="sm" className="w-full">
                   View Profile
                   <HiArrowRight className="w-4 h-4 ml-2" />

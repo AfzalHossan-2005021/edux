@@ -153,7 +153,7 @@ const Navbar = () => {
 
   const removeFromWishlist = (courseId) => {
     const u_id = user?.u_id || secureLocalStorage.getItem("u_id");
-    apiPost('/api/remove_from_wishlist', {
+    apiPost('/api/wishlist/get_items/remove_item', {
       u_id: u_id,
       c_id: courseId,
     });
@@ -165,7 +165,7 @@ const Navbar = () => {
     // Fetch wishlist if user is authenticated
     const userId = user?.u_id || secureLocalStorage.getItem("u_id");
     if (isAuthenticated && userId) {
-      apiPost('/api/wishlist', {
+      apiPost('/api/wishlist/get_items', {
         u_id: userId,
       })
         .then(async (Response) => {

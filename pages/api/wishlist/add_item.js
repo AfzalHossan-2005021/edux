@@ -1,6 +1,6 @@
 const oracledb = require("oracledb");
-import pool from "../../middleware/connectdb";
-import { wishlistSchema, validateRequest } from '../../lib/validation/schemas';
+import pool from "@/middleware/connectdb";
+import { wishlistSchema, validateRequest } from '@/lib/validation/schemas';
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {

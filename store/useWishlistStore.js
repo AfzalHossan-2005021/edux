@@ -16,7 +16,7 @@ const useWishlistStore = create(
         if (!userId) return;
         set({ isLoading: true });
         try {
-          const response = await fetch('/api/wishlist', {
+          const response = await fetch('/api/wishlist/get_items', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ u_id: userId }),
@@ -33,7 +33,7 @@ const useWishlistStore = create(
 
       addToWishlist: async (userId, courseId) => {
         try {
-          const response = await fetch('/api/add_to_wishlist', {
+          const response = await fetch('/api/wishlist/get_items/add_item', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ u_id: userId, c_id: courseId }),
@@ -56,7 +56,7 @@ const useWishlistStore = create(
 
       removeFromWishlist: async (userId, courseId) => {
         try {
-          const response = await fetch('/api/remove_from_wishlist', {
+          const response = await fetch('/api/wishlist/get_items/remove_item', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ u_id: userId, c_id: courseId }),

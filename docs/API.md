@@ -219,7 +219,7 @@ Content-Type: application/json
 
 ### Get Wishlist
 ```http
-POST /api/wishlist
+POST /api/wishlist/get_items
 Content-Type: application/json
 
 {
@@ -229,7 +229,7 @@ Content-Type: application/json
 
 ### Add to Wishlist
 ```http
-POST /api/add_to_wishlist
+POST /api/wishlist/get_items/add_item
 Content-Type: application/json
 
 {
@@ -240,7 +240,7 @@ Content-Type: application/json
 
 ### Remove from Wishlist
 ```http
-POST /api/remove_from_wishlist
+POST /api/wishlist/get_items/remove_item
 Content-Type: application/json
 
 {

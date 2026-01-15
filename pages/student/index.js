@@ -388,6 +388,13 @@ const StudentDashboard = () => {
                     Browse Courses
                   </Button>
                 </Link>
+
+                <Link href="/student/certificates">
+                  <Button size="lg" variant="outline" className="min-w-[200px] border-amber-400 text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20">
+                    <HiBadgeCheck className="w-5 h-5 mr-2" />
+                    My Certificates
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

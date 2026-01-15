@@ -168,14 +168,6 @@ export default function LearningAnalytics() {
                 </div>
               </div>
             </div>
-
-            {/* Progress Chart Placeholder */}
-            <div>
-              <h3 className="font-semibold text-gray-800 mb-3">Weekly Progress</h3>
-              <div className="h-32 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center">
-                <span className="text-gray-500">Progress visualization coming soon</span>
-              </div>
-            </div>
           </div>
         )}
 

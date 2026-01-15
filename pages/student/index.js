@@ -109,9 +109,7 @@ const ProfileRow = ({ icon: Icon, label, value }) => (
 );
 
 // Course Card Component
-const CourseCard = ({ course, type = 'inProgress', onRate }) => {
-  const images = [CourseWall_1, CourseWall_2, CourseWall_3];
-  const image = images[Math.floor(Math.random() * 3)];
+const CourseCard = ({ u_id, course, type = 'inProgress', onRate }) => { 
 
   return (
     <Card hover padding="none" className="group overflow-hidden h-full flex flex-col">
@@ -183,7 +181,7 @@ const CourseCard = ({ course, type = 'inProgress', onRate }) => {
             </Button>
           </Link>
         </div>
-        <RateCourse c_id={course.c_id} />
+        <RateCourse u_id={u_id} c_id={course.c_id} />
       </div>
     </Card>
   );
@@ -494,7 +492,7 @@ const StudentDashboard = () => {
                   ) : inProgressCourses.length > 0 ? (
                     <div className="grid md:grid-cols-2 gap-6">
                       {inProgressCourses.map((course) => (
-                        <CourseCard key={course.c_id} course={course} type="inProgress" />
+                        <CourseCard key={course.c_id} u_id={u_id} course={course} type="inProgress" />
                       ))}
                     </div>
                   ) : (
@@ -516,7 +514,7 @@ const StudentDashboard = () => {
                   ) : completedCourses.length > 0 ? (
                     <div className="grid md:grid-cols-2 gap-6">
                       {completedCourses.map((course) => (
-                        <CourseCard key={course.c_id} course={course} type="completed" />
+                        <CourseCard key={course.c_id} u_id={u_id} course={course} type="completed" />
                       ))}
                     </div>
                   ) : (

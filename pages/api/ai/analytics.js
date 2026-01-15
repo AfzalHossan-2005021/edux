@@ -43,8 +43,6 @@ export default async function handler(req, res) {
       totalLectures: row.LECTURE_COUNT,
     })) || [];
 
-    console.log('Enrolled courses:', enrolledCourses);
-
     // Get user's quiz results
     const quizResult = await connection.execute(
       `SELECT "marks"
@@ -83,8 +81,6 @@ export default async function handler(req, res) {
       duration: row.duration,
       startTime: row.STUDY_DATE,
     })) || [];
-
-    console.log('Study time data:', studyTime);
 
     const loginHistoryResult = await connection.execute(
       `SELECT "w_date" as login_time

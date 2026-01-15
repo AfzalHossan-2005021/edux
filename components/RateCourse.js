@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import secureLocalStorage from 'react-secure-storage';
 import { apiPost } from '../lib/api';
 import { Button } from './ui';
 
@@ -16,7 +15,7 @@ const Star = ({ filled, onMouseEnter, onMouseLeave, onClick, label }) => (
   </button>
 );
 
-const RateCourse = ({ c_id, onSubmitted }) => {
+const RateCourse = ({ u_id, c_id, onSubmitted }) => {
   const [isDivVisible, setIsDivVisible] = useState(false);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -44,7 +43,6 @@ const RateCourse = ({ c_id, onSubmitted }) => {
     setIsSubmitting(true);
     setError(null);
     try {
-      const u_id = secureLocalStorage.getItem('u_id');
       const data = { u_id, c_id, rating, review };
       const res = await apiPost('/api/rate_course', data);
       if (res && res.ok === false) {

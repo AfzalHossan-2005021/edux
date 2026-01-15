@@ -23,15 +23,14 @@ export default async function handler(req, res) {
     try {
         connection = await pool.acquire();
         await connection.execute(
-            `BEGIN
-                RATING_CHANGE(:u_id, :c_id, :rating, :review);
-            END;`,
+            `INSERT INTO EDUX."Feedbacks"("s_id", "c_id", "rating", "review", "date") VALUES (:u_id, :c_id, :rating, :review, SYSDATE)`,
             {
                 u_id: u_id,
                 c_id: c_id,
                 rating: rating,
                 review: review || null
-            }
+            },
+            { autoCommit: true }
         );
         res.status(200).json({ success: true, message: 'Rating submitted successfully.'});
     } catch (error) {

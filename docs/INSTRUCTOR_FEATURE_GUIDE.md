@@ -128,13 +128,13 @@ Manage your instructor account:
 
 The dashboard is powered by **7 API endpoints**:
 
-1. **`/api/instructor_info`** - Your profile details
-2. **`/api/instructor_courses`** - All your courses
-3. **`/api/instructor-analytics?action=overview`** - Dashboard statistics
-4. **`/api/instructor-analytics?action=students`** - Student data
-5. **`/api/instructor-analytics?action=course`** - Individual course analytics
-6. **`/api/instructor-analytics?action=revenue`** - Revenue metrics
-7. **`/api/instructor-analytics?action=engagement`** - Engagement statistics
+1. **`/api/instructor/info`** - Your profile details
+2. **`/api/instructor/courses`** - All your courses
+3. **`/api/instructor/analytics?action=overview`** - Dashboard statistics
+4. **`/api/instructor/analytics?action=students`** - Student data
+5. **`/api/instructor/analytics?action=course`** - Individual course analytics
+6. **`/api/instructor/analytics?action=revenue`** - Revenue metrics
+7. **`/api/instructor/analytics?action=engagement`** - Engagement statistics
 
 **Data Fetching:**
 - Parallel requests for faster loading

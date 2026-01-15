@@ -23,6 +23,7 @@ import {
   HiSparkles,
   HiClipboardList,
 } from 'react-icons/hi';
+import { apiPost } from '@/lib/api';
 
 // Stat Card Component
 function StatCard({ title, value, subtitle, icon: Icon, gradient, trend, trendUp }) {
@@ -51,32 +52,6 @@ function StatCard({ title, value, subtitle, icon: Icon, gradient, trend, trendUp
   );
 }
 
-// Chart Component (Simple Bar)
-function SimpleBarChart({ data, label, valueKey }) {
-  if (!data || data.length === 0) {
-    return <p className="text-neutral-500 dark:text-neutral-400">No data available</p>;
-  }
-  
-  const maxValue = Math.max(...data.map((d) => d[valueKey]));
-
-  return (
-    <div className="space-y-3">
-      {data.map((item, index) => (
-        <div key={index} className="flex items-center gap-3">
-          <div className="w-32 text-sm text-neutral-600 dark:text-neutral-400 truncate">{item[label]}</div>
-          <div className="flex-1 bg-neutral-100 dark:bg-neutral-800 rounded-full h-6 overflow-hidden">
-            <div
-              className="bg-gradient-to-r from-primary-500 to-indigo-600 h-full rounded-full transition-all duration-500"
-              style={{ width: `${(item[valueKey] / maxValue) * 100}%` }}
-            />
-          </div>
-          <div className="w-16 text-sm text-right font-medium text-neutral-800 dark:text-white">{item[valueKey]}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 // Rating Distribution Component
 function RatingDistribution({ distribution }) {
   const total = Object.values(distribution).reduce((a, b) => a + b, 0);
@@ -100,64 +75,6 @@ function RatingDistribution({ distribution }) {
   );
 }
 
-// Student Progress Table
-function StudentTable({ students }) {
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead>
-          <tr className="text-left text-sm text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-700">
-            <th className="pb-4 font-semibold">Student</th>
-            <th className="pb-4 font-semibold">Course</th>
-            <th className="pb-4 font-semibold">Enrolled</th>
-            <th className="pb-4 font-semibold">Progress</th>
-            <th className="pb-4 font-semibold">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {students.map((student) => (
-            <tr key={`${student.userId}-${student.courseId}`} className="border-b border-neutral-100 dark:border-neutral-800 last:border-0 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-              <td className="py-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold">
-                    {student.name?.charAt(0) || 'S'}
-                  </div>
-                  <div>
-                    <p className="font-medium text-neutral-800 dark:text-white">{student.name}</p>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">{student.email}</p>
-                  </div>
-                </div>
-              </td>
-              <td className="py-4 text-neutral-600 dark:text-neutral-300">{student.courseName}</td>
-              <td className="py-4 text-neutral-600 dark:text-neutral-300">
-                {new Date(student.enrollDate).toLocaleDateString()}
-              </td>
-              <td className="py-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-24 bg-neutral-200 dark:bg-neutral-700 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-primary-500 to-indigo-600 h-full rounded-full"
-                      style={{ width: `${student.progress}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-medium text-neutral-600 dark:text-neutral-300">{student.progress}%</span>
-                </div>
-              </td>
-              <td className="py-4">
-                <Badge
-                  variant={student.completed ? 'success' : student.progress > 0 ? 'primary' : 'secondary'}
-                >
-                  {student.completed ? 'Completed' : student.progress > 0 ? 'In Progress' : 'Not Started'}
-                </Badge>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 export default function InstructorAnalytics() {
   const router = useRouter();
   const [instructor, setInstructor] = useState(null);
@@ -165,7 +82,6 @@ export default function InstructorAnalytics() {
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [courseAnalytics, setCourseAnalytics] = useState(null);
-  const [students, setStudents] = useState([]);
   const [period, setPeriod] = useState('30d');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -182,7 +98,6 @@ export default function InstructorAnalytics() {
     if (instructor?.I_ID) {
       fetchOverview();
       fetchCourses();
-      fetchStudents();
     }
   }, [instructor, period]);
 
@@ -194,7 +109,7 @@ export default function InstructorAnalytics() {
 
   const fetchOverview = async () => {
     try {
-      const response = await fetch(`/api/instructor-analytics?instructorId=${instructor.I_ID}&action=overview`);
+      const response = await fetch(`/api/instructor/analytics?instructorId=${instructor.I_ID}&action=overview`);
       if (response.ok) {
         const data = await response.json();
         setOverview(data.overview);
@@ -208,14 +123,15 @@ export default function InstructorAnalytics() {
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch(`/api/instructor_courses?i_id=${instructor.I_ID}`);
-      if (response.ok) {
-        const data = await response.json();
-        setCourses(data);
-        if (data.length > 0 && !selectedCourse) {
-          setSelectedCourse(data[0].C_ID);
-        }
-      }
+      apiPost('/api/instructor/courses', { u_id: instructor.I_ID })
+        .then((res) => res.json())
+        .then((data) => {
+          setCourses(data || []);
+          if (data.length > 0 && !selectedCourse) {
+            setSelectedCourse(data[0].c_id);
+          }
+        })
+        .catch((error) => console.error('Error fetching courses:', error));
     } catch (error) {
       console.error('Failed to fetch courses:', error);
     }
@@ -224,7 +140,7 @@ export default function InstructorAnalytics() {
   const fetchCourseAnalytics = async (courseId) => {
     try {
       const response = await fetch(
-        `/api/instructor-analytics?instructorId=${instructor.I_ID}&action=course&courseId=${courseId}`
+        `/api/instructor/analytics?instructorId=${instructor.I_ID}&action=course&courseId=${courseId}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -232,20 +148,6 @@ export default function InstructorAnalytics() {
       }
     } catch (error) {
       console.error('Failed to fetch course analytics:', error);
-    }
-  };
-
-  const fetchStudents = async () => {
-    try {
-      const response = await fetch(
-        `/api/instructor-analytics?instructorId=${instructor.I_ID}&action=students`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setStudents(data.students || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch students:', error);
     }
   };
 
@@ -348,15 +250,14 @@ export default function InstructorAnalytics() {
               <div className="flex gap-2 flex-wrap">
                 {courses.map((course) => (
                   <button
-                    key={course.C_ID}
-                    onClick={() => setSelectedCourse(course.C_ID)}
-                    className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                      selectedCourse === course.C_ID
+                    key={course.c_id}
+                    onClick={() => setSelectedCourse(course.c_id)}
+                    className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${selectedCourse === course.c_id
                         ? 'bg-gradient-to-r from-primary-500 to-indigo-600 text-white shadow-lg shadow-primary-500/25'
                         : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
-                    }`}
+                      }`}
                   >
-                    {course.NAME}
+                    {course.title}
                   </button>
                 ))}
               </div>
@@ -456,27 +357,6 @@ export default function InstructorAnalytics() {
                 </Card>
               )}
             </div>
-          )}
-
-          {/* Students Table */}
-          {students.length > 0 && (
-            <Card>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white">
-                    <HiUsers className="w-5 h-5" />
-                  </div>
-                  <h3 className="text-lg font-bold text-neutral-800 dark:text-white">Recent Students</h3>
-                </div>
-                <Badge variant="secondary">{students.length} total</Badge>
-              </div>
-              <StudentTable students={students.slice(0, 10)} />
-              {students.length > 10 && (
-                <p className="text-center text-neutral-500 dark:text-neutral-400 mt-4 text-sm">
-                  Showing 10 of {students.length} students
-                </p>
-              )}
-            </Card>
           )}
         </div>
       </div>

@@ -106,13 +106,13 @@ Instructor account management.
 The dashboard integrates with multiple APIs:
 
 ### API Endpoints Used:
-1. **`/api/instructor_info`** - Fetch instructor details
-2. **`/api/instructor_courses`** - Get instructor's courses
-3. **`/api/instructor-analytics?action=overview`** - Overall stats
-4. **`/api/instructor-analytics?action=students`** - Student data
-5. **`/api/instructor-analytics?action=course`** - Individual course analytics
-6. **`/api/instructor-analytics?action=revenue`** - Revenue data
-7. **`/api/instructor-analytics?action=engagement`** - Engagement metrics
+1. **`/api/instructor/info`** - Fetch instructor details
+2. **`/api/instructor/courses`** - Get instructor's courses
+3. **`/api/instructor/analytics?action=overview`** - Overall stats
+4. **`/api/instructor/analytics?action=students`** - Student data
+5. **`/api/instructor/analytics?action=course`** - Individual course analytics
+6. **`/api/instructor/analytics?action=revenue`** - Revenue data
+7. **`/api/instructor/analytics?action=engagement`** - Engagement metrics
 
 ---
 

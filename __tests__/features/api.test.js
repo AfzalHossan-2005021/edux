@@ -336,7 +336,7 @@ describe('Instructor Analytics API', () => {
       execute: jest.fn().mockResolvedValue({ rows: [[0]], metaData: [] }),
       close: jest.fn(),
     });
-    handler = require('../../pages/api/instructor-analytics').default;
+    handler = require('../../pages/api/instructor/analytics').default;
   });
 
   it('should return 400 if instructorId is missing', async () => {

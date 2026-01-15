@@ -34,7 +34,7 @@ A comprehensive instructor dashboard has been created at `http://localhost:3000/
 - Quick statistics cards (4 metrics)
 - Recent courses grid (up to 6 courses)
 - Quick action buttons for common tasks
-- Real-time data from `/api/instructor-analytics`
+- Real-time data from `/api/instructor/analytics`
 
 #### 2. 📚 **My Courses** - Course Management
 - List all courses with responsive grid
@@ -76,13 +76,13 @@ A comprehensive instructor dashboard has been created at `http://localhost:3000/
 ## 🔗 API Integration
 
 ### Connected Endpoints:
-1. `/api/instructor_info` - Fetch instructor profile
-2. `/api/instructor_courses` - Get instructor's courses
-3. `/api/instructor-analytics?action=overview` - Dashboard stats
-4. `/api/instructor-analytics?action=students` - Student data
-5. `/api/instructor-analytics?action=course` - Individual course analytics
-6. `/api/instructor-analytics?action=revenue` - Revenue metrics
-7. `/api/instructor-analytics?action=engagement` - Engagement data
+1. `/api/instructor/info` - Fetch instructor profile
+2. `/api/instructor/courses` - Get instructor's courses
+3. `/api/instructor/analytics?action=overview` - Dashboard stats
+4. `/api/instructor/analytics?action=students` - Student data
+5. `/api/instructor/analytics?action=course` - Individual course analytics
+6. `/api/instructor/analytics?action=revenue` - Revenue metrics
+7. `/api/instructor/analytics?action=engagement` - Engagement data
 
 ---
 

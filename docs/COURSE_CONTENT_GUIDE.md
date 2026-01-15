@@ -264,7 +264,7 @@ All API inputs are validated using Zod schemas:
 
 ```javascript
 // Step 1: Create course (existing functionality)
-const courseResponse = await fetch('/api/instructor_courses', {
+const courseResponse = await fetch('/api/instructor/courses', {
   method: 'POST',
   body: JSON.stringify({
     title: "Python Programming",

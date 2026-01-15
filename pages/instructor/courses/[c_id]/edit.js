@@ -68,7 +68,7 @@ function EditCourse({ serverUser }) {
       }
 
       // Get instructor's courses
-      const response = await apiPost('/api/instructor_courses', { u_id });
+      const response = await apiPost('/api/instructor/courses', { u_id });
       const data = await response.json();
 
       // Handle both response formats

@@ -72,7 +72,7 @@ function CourseAnalytics({ serverUser }) {
       }
 
       // Get course info
-      const response = await apiPost('/api/instructor_courses', { u_id });
+      const response = await apiPost('/api/instructor/courses', { u_id });
       const data = await response.json();
       const courses = Array.isArray(data) ? data : (data.courses || []);
       const foundCourse = courses.find(c => (c.c_id || c.C_ID) === Number(c_id));

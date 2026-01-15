@@ -1,5 +1,5 @@
 const oracledb = require('oracledb');
-import pool from '../../middleware/connectdb';
+import pool from '@/middleware/connectdb';
 import get_instructor_courses_query from '@/db/get_instructor_courses_query';
 
 

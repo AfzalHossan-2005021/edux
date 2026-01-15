@@ -86,7 +86,7 @@ function ManageExamQuestions({ serverUser }) {
       setLoading(true);
       
       // Get course info to verify instructor ownership
-      const coursesRes = await apiPost('/api/instructor_courses', { u_id });
+      const coursesRes = await apiPost('/api/instructor/courses', { u_id });
       const coursesData = await coursesRes.json();
       const courses = Array.isArray(coursesData) ? coursesData : (coursesData.courses || []);
       const foundCourse = courses.find(c => (c.c_id || c.C_ID) === Number(c_id));

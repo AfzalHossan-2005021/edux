@@ -32,13 +32,13 @@
 - ✅ Responsive design (mobile, tablet, desktop)
 
 ### API Integration
-- ✅ `/api/instructor_info` - Instructor profile
-- ✅ `/api/instructor_courses` - Course list
-- ✅ `/api/instructor-analytics?action=overview` - Dashboard stats
-- ✅ `/api/instructor-analytics?action=students` - Student data
-- ✅ `/api/instructor-analytics?action=course` - Course analytics
-- ✅ `/api/instructor-analytics?action=revenue` - Revenue data
-- ✅ `/api/instructor-analytics?action=engagement` - Engagement metrics
+- ✅ `/api/instructor/info` - Instructor profile
+- ✅ `/api/instructor/courses` - Course list
+- ✅ `/api/instructor/analytics?action=overview` - Dashboard stats
+- ✅ `/api/instructor/analytics?action=students` - Student data
+- ✅ `/api/instructor/analytics?action=course` - Course analytics
+- ✅ `/api/instructor/analytics?action=revenue` - Revenue data
+- ✅ `/api/instructor/analytics?action=engagement` - Engagement metrics
 - ✅ Parallel data fetching
 - ✅ Error handling for API calls
 

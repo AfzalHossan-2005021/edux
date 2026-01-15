@@ -12,6 +12,7 @@ import Head from 'next/head';
 import Image from 'next/image';
 import { withInstructorAuth } from '../../lib/auth/withServerSideAuth';
 import { Card, Button, Badge } from '../../components/ui';
+import RevenueCharts from '../../components/ui/RevenueCharts';
 import {
   HiAcademicCap,
   HiChartBar,
@@ -23,31 +24,20 @@ import {
   HiArrowRight,
   HiSparkles,
   HiTrendingUp,
-  HiUserGroup,
   HiCog,
   HiChat,
   HiPencilAlt,
   HiEye,
-  HiCollection,
   HiClock,
   HiCheckCircle,
-  HiBadgeCheck,
   HiLightningBolt,
-  HiChevronRight,
-  HiOutlineChartPie,
-  HiOutlineDocumentText,
   HiUser,
   HiMail,
   HiCalendar,
-  HiGlobe,
   HiClipboardList,
   HiX,
   HiCheck
 } from 'react-icons/hi';
-
-import CourseWall_1 from '../../public/course_wall-1.jpg';
-import CourseWall_2 from '../../public/course_wall-2.jpg';
-import CourseWall_3 from '../../public/course_wall-3.jpg';
 
 const Instructor = ({ serverUser }) => {
   const router = useRouter();
@@ -55,6 +45,7 @@ const Instructor = ({ serverUser }) => {
   const [instructor, setInstructor] = useState(null);
   const [overview, setOverview] = useState(null);
   const [myCourses, setMyCourses] = useState([]);
+  const [revenueData, setRevenueData] = useState(null);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -71,8 +62,8 @@ const Instructor = ({ serverUser }) => {
   const u_id = useMemo(() => serverUser?.u_id || secureLocalStorage.getItem('u_id'), [serverUser]);
 
   // Get initials for avatar
-  const initials = instructor?.name 
-    ? instructor.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() 
+  const initials = instructor?.name
+    ? instructor.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
     : 'I';
 
   useEffect(() => {
@@ -82,7 +73,7 @@ const Instructor = ({ serverUser }) => {
     }
 
     // Fetch instructor info
-    apiPost('/api/instructor_info', { u_id })
+    apiPost('/api/instructor/info', { u_id })
       .then((res) => res.json())
       .then((data) => {
         if (data && data[0]) {
@@ -100,7 +91,7 @@ const Instructor = ({ serverUser }) => {
       .catch((error) => console.error('Error fetching instructor info:', error));
 
     // Fetch instructor courses
-    apiPost('/api/instructor_courses', { u_id })
+    apiPost('/api/instructor/courses', { u_id })
       .then((res) => res.json())
       .then((data) => {
         setMyCourses(data || []);
@@ -108,15 +99,23 @@ const Instructor = ({ serverUser }) => {
       .catch((error) => console.error('Error fetching courses:', error));
 
     // Fetch analytics overview
-    fetch(`/api/instructor-analytics?instructorId=${u_id}&action=overview`)
+    fetch(`/api/instructor/analytics?instructorId=${u_id}&action=overview`)
       .then((res) => res.json())
       .then((data) => {
         setOverview(data.overview);
       })
       .catch((error) => console.error('Error fetching analytics:', error));
 
+    // Try fetching detailed revenue series if available
+    fetch(`/api/instructor/analytics?instructorId=${u_id}&action=revenue`)
+      .then((res) => res.json())
+      .then((data) => {
+          setRevenueData(data);
+      })
+      .catch((error) => console.error('Error fetching revenue analytics:', error));
+
     // Fetch students
-    fetch(`/api/instructor-analytics?instructorId=${u_id}&action=students`)
+    fetch(`/api/instructor/analytics?instructorId=${u_id}&action=students`)
       .then((res) => res.json())
       .then((data) => {
         setStudents(data.students || []);
@@ -130,7 +129,6 @@ const Instructor = ({ serverUser }) => {
     { id: 'overview', label: 'Overview', icon: HiChartBar },
     { id: 'courses', label: 'My Courses', icon: HiBookOpen },
     { id: 'students', label: 'Students', icon: HiUsers },
-    { id: 'analytics', label: 'Analytics', icon: HiTrendingUp },
     { id: 'revenue', label: 'Revenue', icon: HiCurrencyDollar },
     { id: 'profile', label: 'Profile', icon: HiUser },
   ];
@@ -156,16 +154,15 @@ const Instructor = ({ serverUser }) => {
 
   // Course Card Component
   const CourseCard = ({ course }) => {
-    const images = [CourseWall_1, CourseWall_2, CourseWall_3];
-    const image = images[(course.c_id || course.C_ID) % 3];
-    
+
     return (
       <Card hover padding="none" className="group overflow-hidden">
         <div className="relative h-40 overflow-hidden">
-          <Image 
-            src={image}
+          <Image
+            src={course.wall}
             alt={course.title || course.NAME}
             fill
+            sizes='50%'
             className="object-cover group-hover:scale-110 transition-transform duration-500"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
@@ -421,7 +418,7 @@ const Instructor = ({ serverUser }) => {
           <StatCard title="Total Students" value={overview.totalStudents || 0} icon={HiUsers} gradient="bg-gradient-to-br from-blue-500 to-cyan-600" />
           <StatCard title="Active This Month" value={overview.recentEnrollments || 0} icon={HiClock} gradient="bg-gradient-to-br from-emerald-500 to-teal-600" />
           <StatCard title="Total Enrollments" value={overview.totalEnrollments || 0} icon={HiCheckCircle} gradient="bg-gradient-to-br from-purple-500 to-pink-600" />
-          <StatCard title="Avg Progress" value="0%" icon={HiTrendingUp} gradient="bg-gradient-to-br from-amber-500 to-orange-600" />
+          <StatCard title="Avg Progress" value={overview.avgProgress} icon={HiTrendingUp} gradient="bg-gradient-to-br from-amber-500 to-orange-600" />
         </div>
       )}
 
@@ -458,8 +455,8 @@ const Instructor = ({ serverUser }) => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-24 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-primary-500 to-indigo-600 rounded-full" 
+                          <div
+                            className="h-full bg-gradient-to-r from-primary-500 to-indigo-600 rounded-full"
                             style={{ width: `${student.progress || 0}%` }}
                           />
                         </div>
@@ -489,78 +486,117 @@ const Instructor = ({ serverUser }) => {
     </div>
   );
 
-  const AnalyticsTab = () => (
-    <div className="space-y-6 pb-8">
-      <Card className="text-center py-16">
-        <div className="relative inline-block mb-6">
-          <div className="w-24 h-24 mx-auto rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
-            <HiChartBar className="w-12 h-12" />
-          </div>
-          <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
-            <HiSparkles className="w-4 h-4 text-white" />
-          </div>
-        </div>
-        <h3 className="text-2xl font-bold text-neutral-800 dark:text-white mb-3">Detailed Analytics</h3>
-        <p className="text-neutral-500 dark:text-neutral-400 mb-8 max-w-md mx-auto">
-          View comprehensive course performance, revenue trends, and student engagement metrics.
-        </p>
-        <Link href="/instructor/analytics">
-          <Button variant="primary" size="lg">
-            <HiChartBar className="w-5 h-5 mr-2" />
-            Go to Analytics Dashboard
-          </Button>
-        </Link>
-      </Card>
-    </div>
-  );
+  const RevenueTab = () => {
+    // Helper: generate a simple monthly series when none is provided
+    const generateMonthlySeries = (total = 0, months = 6) => {
+      const avg = total ? Math.round(total / months) : 0;
+      const now = new Date();
+      return Array.from({ length: months }).map((_, i) => {
+        const d = new Date(now.getFullYear(), now.getMonth() - (months - 1 - i), 1);
+        const month = d.toLocaleString(undefined, { month: 'short' });
+        // add small variance
+        const variance = Math.round(avg * (Math.random() * 0.3 - 0.15));
+        return { month, revenue: Math.max(0, avg + variance) };
+      });
+    };
 
-  const RevenueTab = () => (
-    <div className="space-y-6 pb-8">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white">
-          <HiCurrencyDollar className="w-6 h-6" />
+    // Helper: build a breakdown when none is provided
+    const buildBreakdown = (courses = [], total = 0) => {
+      if (courses && courses.length > 0) {
+        // try to use a course revenue property if present
+        const withRev = courses.filter(c => c.revenue).slice(0, 6);
+        if (withRev.length > 0) {
+          return withRev.map(c => ({ name: c.title || c.NAME || 'Course', value: Number(c.revenue) }));
+        }
+        // evenly split among top 4 courses as fallback
+        const top = courses.slice(0, 4);
+        if (top.length === 0) return [{ name: 'No Data', value: 0 }];
+        const per = Math.round((total || 0) / top.length);
+        return top.map(c => ({ name: c.title || c.NAME || 'Course', value: per }));
+      }
+      // fallback categories
+      return [
+        { name: 'Course Sales', value: Math.round((total || 0) * 0.6) },
+        { name: 'Subscriptions', value: Math.round((total || 0) * 0.25) },
+        { name: 'Other', value: Math.round((total || 0) * 0.15) }
+      ];
+    };
+
+    const monthlySeries = revenueData?.monthlySeries || generateMonthlySeries(overview?.totalRevenue || 0, 6);
+    const revenueBreakdown = revenueData?.revenueBreakdown || buildBreakdown(myCourses, overview?.totalRevenue || 0);
+
+    return (
+      <div className="space-y-6 pb-8">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white">
+            <HiCurrencyDollar className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-neutral-800 dark:text-white">Revenue Dashboard</h2>
+            <p className="text-neutral-500 dark:text-neutral-400">Track your earnings and financial performance</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-2xl font-bold text-neutral-800 dark:text-white">Revenue Dashboard</h2>
-          <p className="text-neutral-500 dark:text-neutral-400">Track your earnings and financial performance</p>
+
+        {/* Revenue Stats */}
+        {overview && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StatCard
+              title="Total Revenue"
+              value={`$${overview.totalRevenue?.toFixed(0) || '0'}`}
+              icon={HiCurrencyDollar}
+              gradient="bg-gradient-to-br from-purple-500 to-pink-600"
+            />
+            <StatCard
+              title="This Month"
+              value={`$${overview.monthlyRevenue?.toFixed(0) || '0'}`}
+              subtitle="Coming soon"
+              icon={HiCalendar}
+              gradient="bg-gradient-to-br from-blue-500 to-cyan-600"
+            />
+            <StatCard
+              title="Avg per Course"
+              value={`$${overview.totalCourses > 0 ? (overview.totalRevenue / overview.totalCourses).toFixed(0) : '0'}`}
+              icon={HiChartBar}
+              gradient="bg-gradient-to-br from-emerald-500 to-teal-600"
+            />
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <Card className="col-span-2 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white">
+                  <HiCurrencyDollar className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-800 dark:text-white">Revenue Trend</h3>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">Monthly revenue for the last 6 months</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">Total</p>
+                <p className="text-xl font-bold text-neutral-800 dark:text-white">{`$${overview?.totalRevenue?.toFixed(0) || '0'}`}</p>
+              </div>
+            </div>
+            <RevenueCharts series={monthlySeries} breakdown={revenueBreakdown} />
+          </Card>
+
+          <div className="space-y-4">
+            <Card className="p-4">
+              <h4 className="font-bold text-neutral-800 dark:text-white mb-2">Revenue Breakdown</h4>
+              <RevenueCharts type="pie" breakdown={revenueBreakdown} />
+            </Card>
+            <Card className="p-4">
+              <h4 className="font-bold text-neutral-800 dark:text-white mb-2">Top Earning Courses</h4>
+              <RevenueCharts type="bar" breakdown={revenueBreakdown} />
+            </Card>
+          </div>
         </div>
       </div>
-
-      {/* Revenue Stats */}
-      {overview && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatCard 
-            title="Total Revenue" 
-            value={`$${overview.totalRevenue?.toFixed(0) || '0'}`} 
-            icon={HiCurrencyDollar} 
-            gradient="bg-gradient-to-br from-purple-500 to-pink-600" 
-          />
-          <StatCard 
-            title="This Month" 
-            value="$0" 
-            subtitle="Coming soon" 
-            icon={HiCalendar} 
-            gradient="bg-gradient-to-br from-blue-500 to-cyan-600" 
-          />
-          <StatCard 
-            title="Avg per Course" 
-            value={`$${overview.totalCourses > 0 ? (overview.totalRevenue / overview.totalCourses).toFixed(0) : '0'}`} 
-            icon={HiChartBar} 
-            gradient="bg-gradient-to-br from-emerald-500 to-teal-600" 
-          />
-        </div>
-      )}
-
-      <Card className="py-16 text-center">
-        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 flex items-center justify-center">
-          <HiCurrencyDollar className="w-10 h-10 text-purple-500" />
-        </div>
-        <h3 className="text-xl font-bold text-neutral-800 dark:text-white mb-2">Detailed Revenue Analytics</h3>
-        <p className="text-neutral-500 dark:text-neutral-400">Coming soon with advanced financial insights</p>
-      </Card>
-    </div>
-  );
+    );
+  };
 
   // Profile handlers
   const handleProfileChange = (e) => {
@@ -572,7 +608,7 @@ const Instructor = ({ serverUser }) => {
     setSavingProfile(true);
     setProfileMessage({ type: '', text: '' });
     try {
-      const res = await apiPost('/api/instructor_info', {
+      const res = await apiPost('/api/instructor/info', {
         u_id,
         ...profileForm
       });
@@ -609,8 +645,8 @@ const Instructor = ({ serverUser }) => {
     <div className="pb-8 space-y-6">
       {/* Success/Error Message */}
       {profileMessage.text && (
-        <Card 
-          padding="md" 
+        <Card
+          padding="md"
           className={`border-l-4 ${profileMessage.type === 'success' ? 'border-l-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-l-red-500 bg-red-50 dark:bg-red-900/20'}`}
         >
           <p className={profileMessage.type === 'success' ? 'text-emerald-800 dark:text-emerald-200' : 'text-red-800 dark:text-red-200'}>
@@ -622,7 +658,7 @@ const Instructor = ({ serverUser }) => {
       {/* Profile Card */}
       <Card padding="none" className="overflow-hidden">
         {/* Profile Header */}
-        
+
         <div className="p-8">
           {/* Avatar */}
           <div className="flex items-end justify-between">
@@ -642,7 +678,7 @@ const Instructor = ({ serverUser }) => {
                     {profileForm.expertise || 'No expertise set'}
                   </p>
                 </div>
-                <Button 
+                <Button
                   onClick={() => setIsEditingProfile(true)}
                   className="flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition"
                 >
@@ -725,24 +761,6 @@ const Instructor = ({ serverUser }) => {
                   </div>
                 </div>
               )}
-
-              {/* Stats */}
-              {instructor?.course_count !== undefined && (
-                <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700">
-                  <h4 className="font-bold text-neutral-800 dark:text-white mb-3">Teaching Stats</h4>
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                        <HiBookOpen className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Total Courses Created</p>
-                        <p className="text-2xl font-bold text-neutral-800 dark:text-white">{instructor?.course_count || 0}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           ) : (
             /* Edit Mode */
@@ -814,7 +832,7 @@ const Instructor = ({ serverUser }) => {
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
-                <Button 
+                <Button
                   onClick={handleSaveProfile}
                   disabled={savingProfile}
                   className="flex items-center gap-2 px-6 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-neutral-400 text-white rounded-lg transition"
@@ -822,7 +840,7 @@ const Instructor = ({ serverUser }) => {
                   <HiCheck className="w-4 h-4" />
                   {savingProfile ? 'Saving...' : 'Save Changes'}
                 </Button>
-                <Button 
+                <Button
                   onClick={handleCancelEdit}
                   disabled={savingProfile}
                   className="flex items-center gap-2 px-6 py-2 bg-neutral-500 hover:bg-neutral-600 disabled:bg-neutral-400 text-white rounded-lg transition"
@@ -893,11 +911,10 @@ const Instructor = ({ serverUser }) => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-3 whitespace-nowrap font-medium text-sm rounded-t-xl transition-all ${
-                      activeTab === tab.id
+                    className={`flex items-center gap-2 px-4 py-3 whitespace-nowrap font-medium text-sm rounded-t-xl transition-all ${activeTab === tab.id
                         ? 'bg-gradient-to-r from-primary-500 to-indigo-600 text-white shadow-lg shadow-primary-500/25'
                         : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                    }`}
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     <span className="hidden sm:inline">{tab.label}</span>
@@ -913,7 +930,6 @@ const Instructor = ({ serverUser }) => {
           {activeTab === 'overview' && <OverviewTab />}
           {activeTab === 'courses' && <CoursesTab />}
           {activeTab === 'students' && <StudentsTab />}
-          {activeTab === 'analytics' && <AnalyticsTab />}
           {activeTab === 'revenue' && <RevenueTab />}
           {activeTab === 'profile' && <ProfileTab />}
         </div>

@@ -148,46 +148,6 @@
         }
       }
     },
-    "/instructor_signup": {
-      "post": {
-        "tags": ["Authentication"],
-        "summary": "Instructor registration",
-        "description": "Register a new instructor account",
-        "operationId": "signupInstructor",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/InstructorSignupRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Registration successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/all_courses": {
       "post": {
         "tags": ["Courses"],
@@ -788,7 +748,7 @@
         }
       }
     },
-    "/instructor_courses": {
+    "/instructor/courses": {
       "post": {
         "tags": ["Instructor"],
         "summary": "Get instructor's courses",
@@ -827,7 +787,7 @@
         }
       }
     },
-    "/instructor_info": {
+    "/instructor/info": {
       "post": {
         "tags": ["Instructor"],
         "summary": "Get instructor info",

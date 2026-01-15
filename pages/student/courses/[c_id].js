@@ -380,21 +380,30 @@ export default function StudentCoursePage({ c_id }) {
     }));
   };
 
-  // Calculate overall progress
+  // Calculate overall progress as percentage and determine completion
   const overallProgress = useMemo(() => {
     if (content.length === 0) return 0;
-    let totalLectures = 0;
-    let totalProgress = 0;
+    let achieved = 0;
+    let possible = 0;
+
     content.forEach(item => {
-      totalLectures += item.lectures.length;
+      // Lectures
       item.lectures.forEach(lecture => {
-        if (lecture.STATUS === 1) {
-          totalProgress += lecture.weight;
-        }
+        const w = typeof lecture.weight === 'number' ? lecture.weight : 1;
+        possible += w;
+        if (lecture.STATUS === 1) achieved += w;
       });
-      item.exam && item.exam.STATUS === 'p' && (totalProgress += item.exam.weight || 0);
+
+      // Exam (if present)
+      if (item.exam && item.exam.e_id) {
+        const ew = typeof item.exam.weight === 'number' ? item.exam.weight : 0;
+        possible += ew;
+        if (item.exam.STATUS === 'p') achieved += ew;
+      }
     });
-    return totalLectures > 0 ? totalProgress: 0;
+
+    const percent = possible > 0 ? (achieved / possible) * 100 : 0;
+    return Math.min(100, Math.max(0, percent));
   }, [content]);
 
   // Stats
@@ -421,6 +430,15 @@ export default function StudentCoursePage({ c_id }) {
       totalTopics: content.length,
     };
   }, [content]);
+
+  // Determine if the course is fully completed (all lectures done and quizzes passed)
+  const isCourseCompleted = useMemo(() => {
+    return (
+      stats.totalLectures > 0 &&
+      stats.completedLectures === stats.totalLectures &&
+      stats.totalExams === stats.completedExams
+    );
+  }, [stats]);
 
   if (authLoading || loading) {
     return (
@@ -471,7 +489,7 @@ export default function StudentCoursePage({ c_id }) {
                 <Badge variant="primary" size="md" className="bg-white/20 text-white border-0">
                   {courseData.field || 'Technology'}
                 </Badge>
-                {overallProgress === 100 && (
+                {isCourseCompleted && (
                   <Badge variant="success" size="md" className="bg-emerald-500/20 text-emerald-300 border-0">
                     ✓ Completed
                   </Badge>
@@ -546,7 +564,7 @@ export default function StudentCoursePage({ c_id }) {
                   </div>
                 </div>
 
-                {overallProgress === 100 && (
+                {isCourseCompleted && (
                   <div className="mt-6 space-y-3">
                     <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-xl p-3 border border-emerald-400/30">
                       <div className="flex items-center gap-2 text-emerald-300 text-sm font-medium">
@@ -707,6 +725,19 @@ export default function StudentCoursePage({ c_id }) {
                         );
                       }
                     }
+
+                    // If course is completed, show certificate CTA (if we have the user id)
+                    if (isCourseCompleted && u_id) {
+                      return (
+                        <Link href={`/certificate/${c_id}/${u_id}`}>
+                          <Button variant="primary" size="md" className="w-full">
+                            <HiSparkles className="w-5 h-5 mr-2" />
+                            View Certificate
+                          </Button>
+                        </Link>
+                      );
+                    }
+
                     return (
                       <Button variant="primary" size="md" className="w-full" disabled>
                         <HiCheckCircle className="w-5 h-5 mr-2" />

@@ -80,10 +80,24 @@ function CourseAnalytics({ serverUser }) {
       if (foundCourse) {
         setCourse(foundCourse);
         
-        // Generate mock analytics data (replace with real API call)
-        // TODO: Create actual analytics API endpoint
-        const mockAnalytics = generateMockAnalytics(foundCourse);
-        setAnalytics(mockAnalytics);
+        // Fetch real analytics data from API
+        try {
+          const analyticsResponse = await apiPost('/api/course/analytics', {
+            c_id: Number(c_id),
+            i_id: Number(u_id),
+          });
+          
+          if (analyticsResponse.ok) {
+            const analyticsData = await analyticsResponse.json();
+            setAnalytics(analyticsData);
+          } else {
+            console.error('Failed to fetch analytics:', await analyticsResponse.text());
+            // Keep default analytics state on error
+          }
+        } catch (analyticsError) {
+          console.error('Error fetching analytics:', analyticsError);
+          // Keep default analytics state on error
+        }
       } else {
         router.push('/instructor');
       }
@@ -94,58 +108,6 @@ function CourseAnalytics({ serverUser }) {
       router.push('/instructor');
       setLoading(false);
     }
-  };
-
-  // Mock data generator - Replace with actual API call
-  const generateMockAnalytics = (course) => {
-    const enrollments = course.student_count || 0;
-    const completionRate = Math.floor(Math.random() * 40) + 45; // 45-85%
-    const averageProgress = Math.floor(Math.random() * 30) + 55; // 55-85%
-    
-    return {
-      totalEnrollments: enrollments,
-      activeStudents: Math.floor(enrollments * 0.7),
-      completionRate,
-      averageProgress,
-      totalRevenue: enrollments * (course.price || 0),
-      averageRating: course.rating || 4.5,
-      totalReviews: Math.floor(enrollments * 0.3),
-      viewCount: enrollments * 5,
-      recentEnrollments: generateRecentEnrollments(5),
-      topPerformers: generateTopPerformers(5),
-      progressDistribution: {
-        notStarted: Math.floor(enrollments * 0.15),
-        inProgress: Math.floor(enrollments * 0.60),
-        completed: Math.floor(enrollments * 0.25),
-      },
-      engagementMetrics: {
-        lecturesViewed: Math.floor(enrollments * 12),
-        examsCompleted: Math.floor(enrollments * 3),
-        averageTimeSpent: Math.floor(Math.random() * 120) + 60, // 60-180 minutes
-      },
-    };
-  };
-
-  const generateRecentEnrollments = (count) => {
-    const names = ['John Doe', 'Jane Smith', 'Mike Johnson', 'Sarah Williams', 'Tom Brown', 'Emily Davis', 'Chris Wilson', 'Lisa Anderson'];
-    return Array.from({ length: count }, (_, i) => ({
-      id: i + 1,
-      name: names[Math.floor(Math.random() * names.length)],
-      email: `student${i + 1}@example.com`,
-      enrolledDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-      progress: Math.floor(Math.random() * 100),
-    }));
-  };
-
-  const generateTopPerformers = (count) => {
-    const names = ['Alex Thompson', 'Maria Garcia', 'David Lee', 'Sophie Chen', 'James Miller'];
-    return Array.from({ length: count }, (_, i) => ({
-      id: i + 1,
-      name: names[i % names.length],
-      progress: 100 - (i * 5),
-      score: 95 - (i * 3),
-      completedExams: 5 - i,
-    }));
   };
 
   if (loading) {
@@ -275,7 +237,6 @@ function CourseAnalytics({ serverUser }) {
                 subtitle={`${analytics.activeStudents} active`}
                 icon={HiUsers}
                 gradient="bg-gradient-to-br from-blue-500 to-cyan-600"
-                trend={12}
               />
               <StatCard
                 title="Completion Rate"
@@ -283,7 +244,6 @@ function CourseAnalytics({ serverUser }) {
                 subtitle={`${analytics.progressDistribution.completed} completed`}
                 icon={HiCheckCircle}
                 gradient="bg-gradient-to-br from-emerald-500 to-teal-600"
-                trend={8}
               />
               <StatCard
                 title="Average Progress"
@@ -291,7 +251,6 @@ function CourseAnalytics({ serverUser }) {
                 subtitle="Student progress"
                 icon={HiTrendingUp}
                 gradient="bg-gradient-to-br from-purple-500 to-pink-600"
-                trend={5}
               />
               <StatCard
                 title="Course Rating"

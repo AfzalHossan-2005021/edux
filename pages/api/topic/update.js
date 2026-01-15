@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { t_id, name, description, serial, weight } = req.body;
+  const { t_id, name, description, serial } = req.body;
 
   if (!t_id || !name) {
     return res.status(400).json({ 
@@ -25,15 +25,16 @@ export default async function handler(req, res) {
 
     const result = await connection.execute(
       `UPDATE EDUX."Topics" 
-       SET "name" = :name,
-           "serial" = NVL(:serial, "serial"),
-           "weight" = NVL(:weight, "weight")
+       SET
+        "name" = :name,
+        "description" = :description,
+        "serial" = NVL(:serial, "serial")
        WHERE "t_id" = :t_id`,
       {
         t_id,
         name,
-        serial: serial || null,
-        weight: weight || null
+        description,
+        serial: serial || null
       },
       { autoCommit: true }
     );

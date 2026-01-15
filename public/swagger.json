@@ -1082,10 +1082,14 @@
           "name": {
             "type": "string"
           },
-          "serial": {
-            "type": "integer"
+          "description": {
+            "type": "string"
           },
-          "weight": {
+          "weights": {
+            "type": "number",
+            "description": "Weightage of the topic in the course"
+          },
+          "serial": {
             "type": "integer"
           }
         }

@@ -10,12 +10,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { c_id, name, description, serial, weight } = req.body;
+  const { c_id, name, description } = req.body;
 
   if (!c_id || !name) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       success: false,
-      message: 'Course ID and topic name are required' 
+      message: 'Course ID and topic name are required'
     });
   }
 
@@ -24,27 +24,26 @@ export default async function handler(req, res) {
     connection = await pool.acquire();
 
     // Get next serial number if not provided
-    let topicSerial = serial;
-    if (!topicSerial) {
-      const serialResult = await connection.execute(
-        `SELECT NVL(MAX("serial"), 0) + 1 as next_serial 
-         FROM EDUX."Topics" 
-         WHERE "c_id" = :c_id`,
-        { c_id },
-        { outFormat: oracledb.OUT_FORMAT_OBJECT }
-      );
-      topicSerial = serialResult.rows[0]?.next_serial || 1;
-    }
+
+    const serialResult = await connection.execute(
+      `SELECT NVL(MAX("serial"), 0) + 1 as next_serial 
+       FROM EDUX."Topics" 
+       WHERE "c_id" = :c_id`,
+      { c_id },
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+    const topicSerial = serialResult.rows[0]?.next_serial || 1;
+
 
     // Insert new topic
     const result = await connection.execute(
-      `INSERT INTO EDUX."Topics" ("name", "serial", "weight", "c_id")
-       VALUES (:name, :serial, :weight, :c_id)
+      `INSERT INTO EDUX."Topics" ("name", "description", "serial", "c_id")
+       VALUES (:name, :description, :serial, :c_id)
        RETURNING "t_id" INTO :t_id`,
       {
         name,
+        description,
         serial: topicSerial,
-        weight: weight || 1,
         c_id,
         t_id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
       },
@@ -68,10 +67,10 @@ export default async function handler(req, res) {
         console.error('Rollback error:', e);
       }
     }
-    return res.status(500).json({ 
+    return res.status(500).json({
       success: false,
       message: 'Failed to add topic',
-      error: error.message 
+      error: error.message
     });
   }
 }

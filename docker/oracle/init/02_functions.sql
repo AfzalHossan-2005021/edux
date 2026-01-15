@@ -78,12 +78,12 @@ END;
 
 -- Function: CREATE_INSTRUCTOR
 -- Now accepts pre-hashed password from application
-CREATE OR REPLACE FUNCTION EDUX.CREATE_INSTRUCTOR (IN_NAME IN VARCHAR2, IN_EMAIL IN VARCHAR2, IN_PASSWORD IN VARCHAR2, IN_SUBJECT IN VARCHAR2) 
+CREATE OR REPLACE FUNCTION EDUX.CREATE_INSTRUCTOR (IN_NAME IN VARCHAR2, IN_EMAIL IN VARCHAR2, IN_PASSWORD IN VARCHAR2, IN_EXPERTISE IN VARCHAR2) 
 RETURN NUMBER AS
   L_ID NUMBER;
 BEGIN
-  INSERT INTO EDUX."Users"("name", "email", "password") VALUES (IN_NAME, IN_EMAIL, IN_PASSWORD) RETURNING "u_id" INTO L_ID;
-  INSERT INTO EDUX."Instructors"("i_id", "subject") VALUES (L_ID, IN_SUBJECT);
+  INSERT INTO EDUX."Users"("name", "email", "password", "role") VALUES (IN_NAME, IN_EMAIL, IN_PASSWORD, 'instructor') RETURNING "u_id" INTO L_ID;
+  INSERT INTO EDUX."Instructors"("i_id", "expertise") VALUES (L_ID, IN_EXPERTISE);
   COMMIT;
   RETURN L_ID;
 END;
@@ -95,7 +95,7 @@ CREATE OR REPLACE FUNCTION EDUX.CREATE_USER (IN_NAME IN VARCHAR2, IN_EMAIL IN VA
 RETURN NUMBER AS
   L_ID NUMBER;
 BEGIN
-  INSERT INTO EDUX."Users"("name", "email", "password") VALUES (IN_NAME, IN_EMAIL, IN_PASSWORD) RETURNING "u_id" INTO L_ID;
+  INSERT INTO EDUX."Users"("name", "email", "password", "role") VALUES (IN_NAME, IN_EMAIL, IN_PASSWORD, 'student') RETURNING "u_id" INTO L_ID;
   INSERT INTO EDUX."Students"("s_id") VALUES (L_ID);
   COMMIT;
   RETURN L_ID;
@@ -461,6 +461,72 @@ BEGIN
 
   EDUX.RECALC_CTRL.g_locked_lectures := FALSE;
 END RECALC_LECTURE_WEIGHTS;
+/
+
+-- Procedure: RECALC_TOPIC_WEIGHT
+-- Recalculates a topic's weight as the sum of its lectures and exams weights.
+CREATE OR REPLACE PROCEDURE EDUX.RECALC_TOPIC_WEIGHT(p_t_id IN NUMBER) IS
+  v_sum_lectures NUMBER := 0;
+  v_sum_exams NUMBER := 0;
+  v_total NUMBER := 0;
+  v_cid NUMBER;
+BEGIN
+  IF p_t_id IS NULL THEN
+    RETURN;
+  END IF;
+
+  BEGIN
+    SELECT "c_id" INTO v_cid FROM EDUX."Topics" WHERE "t_id" = p_t_id;
+  EXCEPTION WHEN NO_DATA_FOUND THEN
+    RETURN;
+  END;
+
+  -- Ensure lecture/exam weights are up-to-date at course level; safe due to recursion guards
+  IF NOT EDUX.RECALC_CTRL.g_locked_lectures THEN
+    RECALC_LECTURE_WEIGHTS(v_cid);
+  END IF;
+
+  IF NOT EDUX.RECALC_CTRL.g_locked_exams THEN
+    RECALC_EXAM_WEIGHTS(v_cid);
+  END IF;
+
+  SELECT NVL(SUM("weight"),0) INTO v_sum_lectures FROM EDUX."Lectures" WHERE "t_id" = p_t_id;
+  SELECT NVL(SUM("weight"),0) INTO v_sum_exams FROM EDUX."Exams" WHERE "t_id" = p_t_id;
+
+  v_total := v_sum_lectures + v_sum_exams;
+
+  UPDATE EDUX."Topics" SET "weight" = v_total WHERE "t_id" = p_t_id;
+END RECALC_TOPIC_WEIGHT;
+/
+
+-- Procedure: RECALC_TOPIC_POST_COMMIT
+-- Runs after commit (via DBMS_JOB) to recalculate course/topic weights safely (avoids mutating table errors)
+CREATE OR REPLACE PROCEDURE EDUX.RECALC_TOPIC_POST_COMMIT(p_t_id IN NUMBER) IS
+  v_cid NUMBER;
+BEGIN
+  -- if topic no longer exists, exit silently
+  BEGIN
+    SELECT "c_id" INTO v_cid FROM EDUX."Topics" WHERE "t_id" = p_t_id;
+  EXCEPTION WHEN NO_DATA_FOUND THEN
+    RETURN;
+  END;
+
+  -- Recalculate course-level and topic-level weights
+  BEGIN
+    RECALC_LECTURE_WEIGHTS(v_cid);
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+
+  BEGIN
+    RECALC_EXAM_WEIGHTS(v_cid);
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+
+  BEGIN
+    RECALC_TOPIC_WEIGHT(p_t_id);
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+END RECALC_TOPIC_POST_COMMIT;
 /
 
 COMMIT;

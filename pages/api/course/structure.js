@@ -32,7 +32,7 @@ async function handleGet(req, res) {
     const structureResult = await connection.execute(
       `SELECT 
         c."c_id", c."title", c."description", c."field", c."seat", c."approve_status",
-        t."t_id", t."name" as topic_name, t."serial" as topic_serial, t."weight" as topic_weight,
+        t."t_id", t."name", t."description", t."weight", t."serial",
         l."l_id", l."description" as lecture_description, l."video", l."serial" as lecture_serial, l."weight" as lecture_weight,
         e."e_id", e."marks", e."duration", e."question_count", e."serial" as exam_serial
        FROM EDUX."Courses" c
@@ -71,7 +71,6 @@ async function handleGet(req, res) {
           t_id: row.t_id,
           name: row.topic_name,
           serial: row.topic_serial,
-          weight: row.topic_weight,
           lectures: [],
           exams: []
         });

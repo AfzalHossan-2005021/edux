@@ -11,7 +11,7 @@ ALTER SESSION SET CONTAINER = EDUX;
 --------------------------------------------------
 -- Grant privileges to EDUX user
 --------------------------------------------------
-GRANT CONNECT, RESOURCE TO EDUX;
+GRANT CONNECT TO EDUX;
 GRANT CREATE TABLE, CREATE SEQUENCE, CREATE VIEW TO EDUX;
 GRANT CREATE PROCEDURE, CREATE TRIGGER TO EDUX;
 GRANT UNLIMITED TABLESPACE TO EDUX;
@@ -132,7 +132,8 @@ CREATE TABLE EDUX."Outcomes" (
 -- Create Topics table
 CREATE TABLE EDUX."Topics" (
   "t_id" NUMBER DEFAULT EDUX.SEQUENCE.nextval NOT NULL,
-  "name" VARCHAR2(100 CHAR) NOT NULL,
+  "name" VARCHAR2(256 CHAR) NOT NULL,
+  "description" VARCHAR2(1024 CHAR),
   "c_id" NUMBER NOT NULL,
   "serial" NUMBER NOT NULL,
   "weight" NUMBER DEFAULT 0 NOT NULL,

@@ -523,15 +523,20 @@ function ManageCourseContent({ serverUser }) {
                       <div className="p-6 flex items-center justify-between">
                         <button
                           onClick={() => toggleTopic(topicId)}
-                          className="flex items-center gap-4 flex-1 text-left"
+                          className="flex items-center gap-4 flex-1 min-w-0 overflow-hidden text-left"
                         >
                           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold flex-shrink-0 shadow-lg">
                             {index + 1}
                           </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white truncate">
-                              {topic.name || topic.NAME}
+                              {topic.name}
                             </h3>
+                            {(topic.description || topic.DESCRIPTION) ? (
+                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
+                                {topic.description || topic.DESCRIPTION}
+                              </p>
+                            ) : null}
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                               {topic.lectures?.length || 0} Lectures • {topic.exams?.length || 0} Exams
                             </p>
@@ -675,15 +680,17 @@ function ManageCourseContent({ serverUser }) {
                               </div>
                               Exams
                             </h4>
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => handleAddExam(topicId)}
-                              className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
-                            >
-                              <HiPlus className="w-4 h-4 mr-1" />
-                              Add Exam
-                            </Button>
+                            {(topic.exams?.length || 0) === 0 && (
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => handleAddExam(topicId)}
+                                className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
+                              >
+                                <HiPlus className="w-4 h-4 mr-1" />
+                                Add Exam
+                              </Button>
+                            )}
                           </div>
 
                           {topic.exams?.length > 0 ? (

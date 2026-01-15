@@ -42,14 +42,14 @@ export default async function handler(req, res) {
 
     // Get topics with lecture count
     const topicsResult = await connection.execute(
-      `SELECT t."t_id", t."name", t."serial", t."weight",
+      `SELECT t."t_id", t."name", t."description", t."weight", t."serial",
               COUNT(l."l_id") as lecture_count,
               COUNT(e."e_id") as exam_count
        FROM EDUX."Topics" t
        LEFT JOIN EDUX."Lectures" l ON t."t_id" = l."t_id"
        LEFT JOIN EDUX."Exams" e ON t."t_id" = e."t_id"
        WHERE t."c_id" = :c_id
-       GROUP BY t."t_id", t."name", t."serial", t."weight"
+       GROUP BY t."t_id", t."name", t."description", t."weight", t."serial"
        ORDER BY t."serial"`,
       { c_id },
       { outFormat: oracledb.OUT_FORMAT_OBJECT }

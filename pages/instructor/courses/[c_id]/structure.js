@@ -135,7 +135,7 @@ function CourseStructure({ serverUser }) {
           sum + (t.exams?.reduce((qSum, e) => qSum + (e.questions?.length || 0), 0) || 0), 0
         );
         const totalDuration = topicsWithContent.reduce((sum, t) => 
-          sum + (t.lectures?.reduce((dSum, l) => dSum + (parseInt(l.duration) || 0), 0) || 0), 0
+          sum + (t.lectures?.reduce((dSum, l) => dSum + (parseInt(l.duration) || 0), 0) || 0) + (t.exams?.reduce((dSum, e) => dSum + (parseInt(e.duration) || 0), 0) || 0), 0
         );
         
         setStats({

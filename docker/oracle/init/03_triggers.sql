@@ -277,61 +277,107 @@ COMPOUND TRIGGER
     END IF;
   END add_cid;
 
-  BEFORE EACH ROW IS
-    v_old_cid NUMBER;
-    v_new_cid NUMBER;
+  -- helper to get course id from topic (called in row-level section)
+  FUNCTION get_cid_from_topic(p_tid NUMBER) RETURN NUMBER IS
+    v_cid NUMBER;
+  BEGIN
+    IF p_tid IS NULL THEN
+      RETURN NULL;
+    END IF;
+    SELECT "c_id" INTO v_cid FROM EDUX."Topics" WHERE "t_id" = p_tid;
+    RETURN v_cid;
+  EXCEPTION WHEN NO_DATA_FOUND THEN
+    RETURN NULL;
+  WHEN OTHERS THEN
+    -- Handle mutating table error - topic is being deleted
+    IF SQLCODE = -4091 THEN
+      RETURN NULL;
+    END IF;
+    RAISE;
+  END get_cid_from_topic;
+
+  AFTER EACH ROW IS
+    v_cid NUMBER;
   BEGIN
     IF INSERTING THEN
-      BEGIN
-        SELECT "c_id" INTO v_new_cid FROM EDUX."Topics" WHERE "t_id" = :NEW."t_id";
-        add_cid(v_new_cid);
-      EXCEPTION WHEN NO_DATA_FOUND THEN NULL;
-      END;
+      v_cid := get_cid_from_topic(:NEW."t_id");
+      add_cid(v_cid);
     ELSIF DELETING THEN
-      BEGIN
-        SELECT "c_id" INTO v_old_cid FROM EDUX."Topics" WHERE "t_id" = :OLD."t_id";
-        add_cid(v_old_cid);
-      EXCEPTION WHEN NO_DATA_FOUND THEN NULL;
-      END;
+      v_cid := get_cid_from_topic(:OLD."t_id");
+      add_cid(v_cid);
     ELSIF UPDATING THEN
-      BEGIN
-        SELECT "c_id" INTO v_old_cid FROM EDUX."Topics" WHERE "t_id" = :OLD."t_id";
-        add_cid(v_old_cid);
-      EXCEPTION WHEN NO_DATA_FOUND THEN NULL;
-      END;
-      BEGIN
-        SELECT "c_id" INTO v_new_cid FROM EDUX."Topics" WHERE "t_id" = :NEW."t_id";
-        add_cid(v_new_cid);
-      EXCEPTION WHEN NO_DATA_FOUND THEN NULL;
-      END;
+      v_cid := get_cid_from_topic(:NEW."t_id");
+      add_cid(v_cid);
+      IF :OLD."t_id" IS NOT NULL AND :OLD."t_id" != :NEW."t_id" THEN
+        v_cid := get_cid_from_topic(:OLD."t_id");
+        add_cid(v_cid);
+      END IF;
     END IF;
-  END BEFORE EACH ROW;
+  END AFTER EACH ROW;
 
   AFTER STATEMENT IS
   BEGIN
+    -- Directly call recalc for each affected course
     FOR i IN 1..affected_cids.COUNT LOOP
-      -- call the shared procedure if not already in progress
-      IF NOT EDUX.RECALC_CTRL.g_locked_exams THEN
-        RECALC_EXAM_WEIGHTS(affected_cids(i));
-      END IF;
+      BEGIN
+        IF NOT EDUX.RECALC_CTRL.g_locked_exams THEN
+          EDUX.RECALC_EXAM_WEIGHTS(affected_cids(i));
+        END IF;
+      EXCEPTION WHEN OTHERS THEN
+        NULL;
+      END;
     END LOOP;
-    -- clear for next statement
+
     affected_cids := num_tab();
   END AFTER STATEMENT;
 END TRG_RECALC_EXAM_WEIGHTS;
 /
 
--- Trigger on Courses to recalculate exam weights when lecture_weight changes
+-- Trigger on Courses to recalculate exam/lecture weights when lecture_weight changes
+-- Uses compound trigger to avoid mutating table error
 CREATE OR REPLACE TRIGGER EDUX.TRG_RECALC_ON_COURSE_LECTURE_WEIGHT
-AFTER UPDATE OF "lecture_weight" ON EDUX."Courses"
-FOR EACH ROW
-BEGIN
-  IF NOT EDUX.RECALC_CTRL.g_locked_exams THEN
-    RECALC_EXAM_WEIGHTS(:NEW."c_id");
-  END IF;
-  IF NOT EDUX.RECALC_CTRL.g_locked_lectures THEN
-    RECALC_LECTURE_WEIGHTS(:NEW."c_id");
-  END IF;
+FOR UPDATE OF "lecture_weight" ON EDUX."Courses"
+COMPOUND TRIGGER
+  TYPE num_tab IS TABLE OF NUMBER;
+  affected_cids num_tab := num_tab();
+
+  PROCEDURE add_cid(p_cid NUMBER) IS
+    v_found BOOLEAN := FALSE;
+  BEGIN
+    IF p_cid IS NULL THEN
+      RETURN;
+    END IF;
+    FOR i IN 1..affected_cids.COUNT LOOP
+      IF affected_cids(i) = p_cid THEN
+        v_found := TRUE; EXIT;
+      END IF;
+    END LOOP;
+    IF NOT v_found THEN
+      affected_cids.EXTEND; affected_cids(affected_cids.COUNT) := p_cid;
+    END IF;
+  END add_cid;
+
+  AFTER EACH ROW IS
+  BEGIN
+    add_cid(:NEW."c_id");
+  END AFTER EACH ROW;
+
+  AFTER STATEMENT IS
+  BEGIN
+    FOR i IN 1..affected_cids.COUNT LOOP
+      BEGIN
+        IF NOT EDUX.RECALC_CTRL.g_locked_exams THEN
+          EDUX.RECALC_EXAM_WEIGHTS(affected_cids(i));
+        END IF;
+        IF NOT EDUX.RECALC_CTRL.g_locked_lectures THEN
+          EDUX.RECALC_LECTURE_WEIGHTS(affected_cids(i));
+        END IF;
+      EXCEPTION WHEN OTHERS THEN
+        NULL;
+      END;
+    END LOOP;
+    affected_cids := num_tab();
+  END AFTER STATEMENT;
 END TRG_RECALC_ON_COURSE_LECTURE_WEIGHT;
 /
 
@@ -361,48 +407,249 @@ COMPOUND TRIGGER
     END IF;
   END add_cid;
 
-  BEFORE EACH ROW IS
-    v_old_cid NUMBER;
-    v_new_cid NUMBER;
+  -- helper to get course id from topic (called in row-level section)
+  FUNCTION get_cid_from_topic(p_tid NUMBER) RETURN NUMBER IS
+    v_cid NUMBER;
+  BEGIN
+    IF p_tid IS NULL THEN
+      RETURN NULL;
+    END IF;
+    SELECT "c_id" INTO v_cid FROM EDUX."Topics" WHERE "t_id" = p_tid;
+    RETURN v_cid;
+  EXCEPTION WHEN NO_DATA_FOUND THEN
+    RETURN NULL;
+  WHEN OTHERS THEN
+    -- Handle mutating table error - topic is being deleted
+    IF SQLCODE = -4091 THEN
+      RETURN NULL;
+    END IF;
+    RAISE;
+  END get_cid_from_topic;
+
+  AFTER EACH ROW IS
+    v_cid NUMBER;
   BEGIN
     IF INSERTING THEN
-      BEGIN
-        SELECT "c_id" INTO v_new_cid FROM EDUX."Topics" WHERE "t_id" = :NEW."t_id";
-        add_cid(v_new_cid);
-      EXCEPTION WHEN NO_DATA_FOUND THEN NULL;
-      END;
+      v_cid := get_cid_from_topic(:NEW."t_id");
+      add_cid(v_cid);
     ELSIF DELETING THEN
-      BEGIN
-        SELECT "c_id" INTO v_old_cid FROM EDUX."Topics" WHERE "t_id" = :OLD."t_id";
-        add_cid(v_old_cid);
-      EXCEPTION WHEN NO_DATA_FOUND THEN NULL;
-      END;
+      v_cid := get_cid_from_topic(:OLD."t_id");
+      add_cid(v_cid);
     ELSIF UPDATING THEN
-      BEGIN
-        SELECT "c_id" INTO v_old_cid FROM EDUX."Topics" WHERE "t_id" = :OLD."t_id";
-        add_cid(v_old_cid);
-      EXCEPTION WHEN NO_DATA_FOUND THEN NULL;
-      END;
-      BEGIN
-        SELECT "c_id" INTO v_new_cid FROM EDUX."Topics" WHERE "t_id" = :NEW."t_id";
-        add_cid(v_new_cid);
-      EXCEPTION WHEN NO_DATA_FOUND THEN NULL;
-      END;
+      v_cid := get_cid_from_topic(:NEW."t_id");
+      add_cid(v_cid);
+      IF :OLD."t_id" IS NOT NULL AND :OLD."t_id" != :NEW."t_id" THEN
+        v_cid := get_cid_from_topic(:OLD."t_id");
+        add_cid(v_cid);
+      END IF;
     END IF;
-  END BEFORE EACH ROW;
+  END AFTER EACH ROW;
 
   AFTER STATEMENT IS
   BEGIN
+    -- Directly call recalc for each affected course
     FOR i IN 1..affected_cids.COUNT LOOP
-      -- call the shared procedure if not already in progress
-      IF NOT EDUX.RECALC_CTRL.g_locked_lectures THEN
-        RECALC_LECTURE_WEIGHTS(affected_cids(i));
-      END IF;
+      BEGIN
+        IF NOT EDUX.RECALC_CTRL.g_locked_lectures THEN
+          EDUX.RECALC_LECTURE_WEIGHTS(affected_cids(i));
+        END IF;
+      EXCEPTION WHEN OTHERS THEN
+        NULL;
+      END;
     END LOOP;
-    -- clear for next statement
+
     affected_cids := num_tab();
   END AFTER STATEMENT;
 END TRG_RECALC_LECTURE_WEIGHTS;
+/
+
+-- Compound trigger to update Topics.weight after Lectures changes
+CREATE OR REPLACE TRIGGER EDUX.TRG_RECALC_TOPIC_WEIGHT_ON_LECTURES
+FOR INSERT OR UPDATE OR DELETE ON EDUX."Lectures"
+COMPOUND TRIGGER
+  TYPE num_tab IS TABLE OF NUMBER;
+  affected_tids num_tab := num_tab();
+
+  PROCEDURE add_tid(p_tid NUMBER) IS
+    v_found BOOLEAN := FALSE;
+  BEGIN
+    IF p_tid IS NULL THEN
+      RETURN;
+    END IF;
+    FOR i IN 1..affected_tids.COUNT LOOP
+      IF affected_tids(i) = p_tid THEN
+        v_found := TRUE; EXIT;
+      END IF;
+    END LOOP;
+    IF NOT v_found THEN
+      affected_tids.EXTEND; affected_tids(affected_tids.COUNT) := p_tid;
+    END IF;
+  END add_tid;
+
+  -- Check if topic exists (not being deleted)
+  FUNCTION topic_exists(p_tid NUMBER) RETURN BOOLEAN IS
+    v_cnt NUMBER;
+  BEGIN
+    SELECT COUNT(*) INTO v_cnt FROM EDUX."Topics" WHERE "t_id" = p_tid;
+    RETURN v_cnt > 0;
+  EXCEPTION WHEN OTHERS THEN
+    RETURN FALSE;
+  END topic_exists;
+
+  AFTER EACH ROW IS
+  BEGIN
+    IF INSERTING THEN
+      add_tid(:NEW."t_id");
+    ELSIF DELETING THEN
+      add_tid(:OLD."t_id");
+    ELSIF UPDATING THEN
+      add_tid(:NEW."t_id");
+      IF :OLD."t_id" IS NOT NULL AND :OLD."t_id" != :NEW."t_id" THEN
+        add_tid(:OLD."t_id");
+      END IF;
+    END IF;
+  END AFTER EACH ROW;
+
+  AFTER STATEMENT IS
+  BEGIN
+    FOR i IN 1..affected_tids.COUNT LOOP
+      BEGIN
+        -- Only recalc if topic still exists (not cascade deleted)
+        IF topic_exists(affected_tids(i)) THEN
+          EDUX.RECALC_TOPIC_WEIGHT(affected_tids(i));
+        END IF;
+      EXCEPTION WHEN OTHERS THEN
+        NULL;
+      END;
+    END LOOP;
+
+    affected_tids := num_tab();
+  END AFTER STATEMENT;
+END TRG_RECALC_TOPIC_WEIGHT_ON_LECTURES;
+/
+
+-- Compound trigger to update Topics.weight after Exams changes
+CREATE OR REPLACE TRIGGER EDUX.TRG_RECALC_TOPIC_WEIGHT_ON_EXAMS
+FOR INSERT OR UPDATE OR DELETE ON EDUX."Exams"
+COMPOUND TRIGGER
+  TYPE num_tab IS TABLE OF NUMBER;
+  affected_tids num_tab := num_tab();
+
+  PROCEDURE add_tid(p_tid NUMBER) IS
+    v_found BOOLEAN := FALSE;
+  BEGIN
+    IF p_tid IS NULL THEN
+      RETURN;
+    END IF;
+    FOR i IN 1..affected_tids.COUNT LOOP
+      IF affected_tids(i) = p_tid THEN
+        v_found := TRUE; EXIT;
+      END IF;
+    END LOOP;
+    IF NOT v_found THEN
+      affected_tids.EXTEND; affected_tids(affected_tids.COUNT) := p_tid;
+    END IF;
+  END add_tid;
+
+  -- Check if topic exists (not being deleted)
+  FUNCTION topic_exists(p_tid NUMBER) RETURN BOOLEAN IS
+    v_cnt NUMBER;
+  BEGIN
+    SELECT COUNT(*) INTO v_cnt FROM EDUX."Topics" WHERE "t_id" = p_tid;
+    RETURN v_cnt > 0;
+  EXCEPTION WHEN OTHERS THEN
+    RETURN FALSE;
+  END topic_exists;
+
+  AFTER EACH ROW IS
+  BEGIN
+    IF INSERTING THEN
+      add_tid(:NEW."t_id");
+    ELSIF DELETING THEN
+      add_tid(:OLD."t_id");
+    ELSIF UPDATING THEN
+      add_tid(:NEW."t_id");
+      IF :OLD."t_id" IS NOT NULL AND :OLD."t_id" != :NEW."t_id" THEN
+        add_tid(:OLD."t_id");
+      END IF;
+    END IF;
+  END AFTER EACH ROW;
+
+  AFTER STATEMENT IS
+  BEGIN
+    FOR i IN 1..affected_tids.COUNT LOOP
+      BEGIN
+        -- Only recalc if topic still exists (not cascade deleted)
+        IF topic_exists(affected_tids(i)) THEN
+          EDUX.RECALC_TOPIC_WEIGHT(affected_tids(i));
+        END IF;
+      EXCEPTION WHEN OTHERS THEN
+        NULL;
+      END;
+    END LOOP;
+
+    affected_tids := num_tab();
+  END AFTER STATEMENT;
+END TRG_RECALC_TOPIC_WEIGHT_ON_EXAMS;
+/
+-- Trigger: when a Topic is deleted, recalculate course weights directly
+-- Uses compound trigger to collect course IDs and recalc after statement completes
+CREATE OR REPLACE TRIGGER EDUX.TRG_TOPICS_AFTER_DELETE
+FOR DELETE ON EDUX."Topics"
+COMPOUND TRIGGER
+  TYPE num_tab IS TABLE OF NUMBER;
+  affected_cids num_tab := num_tab();
+
+  PROCEDURE add_cid(p_cid NUMBER) IS
+    v_found BOOLEAN := FALSE;
+  BEGIN
+    IF p_cid IS NULL THEN
+      RETURN;
+    END IF;
+    FOR i IN 1..affected_cids.COUNT LOOP
+      IF affected_cids(i) = p_cid THEN
+        v_found := TRUE; EXIT;
+      END IF;
+    END LOOP;
+    IF NOT v_found THEN
+      affected_cids.EXTEND; affected_cids(affected_cids.COUNT) := p_cid;
+    END IF;
+  END add_cid;
+
+  AFTER EACH ROW IS
+  BEGIN
+    add_cid(:OLD."c_id");
+  END AFTER EACH ROW;
+
+  AFTER STATEMENT IS
+    CURSOR c_topics(p_cid NUMBER) IS
+      SELECT "t_id" FROM EDUX."Topics" WHERE "c_id" = p_cid;
+  BEGIN
+    FOR i IN 1..affected_cids.COUNT LOOP
+      BEGIN
+        -- Recalculate lecture weights for the course
+        IF NOT EDUX.RECALC_CTRL.g_locked_lectures THEN
+          EDUX.RECALC_LECTURE_WEIGHTS(affected_cids(i));
+        END IF;
+        -- Recalculate exam weights for the course
+        IF NOT EDUX.RECALC_CTRL.g_locked_exams THEN
+          EDUX.RECALC_EXAM_WEIGHTS(affected_cids(i));
+        END IF;
+        -- Recalculate weight for each remaining topic in the course
+        FOR t_rec IN c_topics(affected_cids(i)) LOOP
+          BEGIN
+            EDUX.RECALC_TOPIC_WEIGHT(t_rec."t_id");
+          EXCEPTION WHEN OTHERS THEN
+            NULL;
+          END;
+        END LOOP;
+      EXCEPTION WHEN OTHERS THEN
+        NULL;
+      END;
+    END LOOP;
+    affected_cids := num_tab();
+  END AFTER STATEMENT;
+END TRG_TOPICS_AFTER_DELETE;
 /
 
 COMMIT;

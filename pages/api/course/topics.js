@@ -35,14 +35,14 @@ async function handleGet(req, res) {
     if (t_id && type === 'detail') {
       // Get detailed topic information
       const topicResult = await connection.execute(
-        `SELECT t."t_id", t."name", t."serial", t."weight", t."c_id",
+        `SELECT t."t_id", t."name", t."description", t."serial", t."c_id",
                 COUNT(DISTINCT l."l_id") as lecture_count,
                 COUNT(DISTINCT e."e_id") as exam_count
          FROM EDUX."Topics" t
          LEFT JOIN EDUX."Lectures" l ON t."t_id" = l."t_id"
          LEFT JOIN EDUX."Exams" e ON t."t_id" = e."t_id"
          WHERE t."t_id" = :t_id AND t."c_id" = :c_id
-         GROUP BY t."t_id", t."name", t."serial", t."weight", t."c_id"`,
+         GROUP BY t."t_id", t."name", t."description", t."serial", t."c_id"`,
         { t_id, c_id },
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
@@ -61,18 +61,20 @@ async function handleGet(req, res) {
 
     // Get all topics for a course
     const topicsResult = await connection.execute(
-      `SELECT t."t_id", t."name", t."serial", t."weight", t."c_id",
+      `SELECT t."t_id", t."name", t."description", t."weight", t."serial", t."c_id",
               COUNT(DISTINCT l."l_id") as lecture_count,
               COUNT(DISTINCT e."e_id") as exam_count
        FROM EDUX."Topics" t
        LEFT JOIN EDUX."Lectures" l ON t."t_id" = l."t_id"
        LEFT JOIN EDUX."Exams" e ON t."t_id" = e."t_id"
        WHERE t."c_id" = :c_id
-       GROUP BY t."t_id", t."name", t."serial", t."weight", t."c_id"
+       GROUP BY t."t_id", t."name", t."description", t."weight", t."serial", t."c_id"
        ORDER BY t."serial"`,
       { c_id },
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
+
+    console.log('Fetched topics:', topicsResult.rows);
 
     pool.release(connection);
     res.status(200).json({
@@ -99,7 +101,7 @@ async function handlePost(req, res) {
     connection = await pool.acquire();
 
     if (action === 'create_topic') {
-      const { name, serial, weight } = data;
+      const { name, serial } = data;
 
       if (!name) {
         pool.release(connection);
@@ -118,14 +120,13 @@ async function handlePost(req, res) {
       }
 
       const result = await connection.execute(
-        `INSERT INTO EDUX."Topics" ("name", "c_id", "serial", "weight")
-         VALUES (:name, :c_id, :serial, :weight)
+        `INSERT INTO EDUX."Topics" ("name", "c_id", "serial")
+         VALUES (:name, :c_id, :serial)
          RETURNING "t_id" INTO :t_id`,
         {
           name,
           c_id,
           serial: nextSerial,
-          weight: weight || 1,
           t_id: new oracledb.OutParam(oracledb.NUMBER)
         },
         { autoCommit: true }
@@ -161,7 +162,7 @@ async function handlePut(req, res) {
     connection = await pool.acquire();
 
     if (action === 'update_topic') {
-      const { name, serial, weight } = data;
+      const { name, serial } = data;
 
       const updateFields = [];
       const bindParams = { t_id };
@@ -173,10 +174,6 @@ async function handlePut(req, res) {
       if (serial !== undefined) {
         updateFields.push(`"serial" = :serial`);
         bindParams.serial = serial;
-      }
-      if (weight !== undefined) {
-        updateFields.push(`"weight" = :weight`);
-        bindParams.weight = weight;
       }
 
       if (updateFields.length === 0) {

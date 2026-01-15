@@ -57,8 +57,9 @@ export default async function handler(req, res) {
                 topicsMap.set(topicId, {
                     t_id: topicId,
                     name: row.TOPIC_NAME,        // AS topic_name → TOPIC_NAME
+                    description: row.description, // t."description" → description (lowercase)
+                    weight: row.TOPIC_WEIGHT,    // AS topic_weight → TOPIC_WEIGHT
                     serial: row.TOPIC_SERIAL,    // AS topic_serial → TOPIC_SERIAL
-                    weight: row.TOPIC_WEIGHT     // AS topic_weight → TOPIC_WEIGHT
                 });
                 lecturesMap.set(topicId, []);
                 examsMap.set(topicId, []);

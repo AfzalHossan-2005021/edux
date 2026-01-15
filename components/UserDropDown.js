@@ -2,15 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 import secureLocalStorage from "react-secure-storage";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import { 
-  HiOutlineLogout, 
-  HiUser, 
-  HiViewGrid, 
-  HiCog, 
+import {
+  HiOutlineLogout,
+  HiUser,
+  HiViewGrid,
   HiAcademicCap,
   HiBadgeCheck,
   HiChevronRight,
-  HiSparkles 
 } from "react-icons/hi";
 import { useAuth } from "../context/AuthContext";
 
@@ -31,6 +29,12 @@ const UserDropDown = ({ userDropdownRef, isOpen = false }) => {
     if (user?.role === 'instructor' || user?.isInstructor) return '/instructor';
     if (user?.role === 'admin' || user?.isAdmin) return '/admin';
     return '/student';
+  };
+
+  const getProfileUrl = () => {
+    if (user?.role === 'instructor' || user?.isInstructor) return '/instructor/profile';
+    if (user?.role === 'admin' || user?.isAdmin) return '/admin/profile';
+    return '/student/profile';
   };
 
   const userName = user?.name || secureLocalStorage.getItem("u_name") || 'User';
@@ -126,11 +130,10 @@ const UserDropDown = ({ userDropdownRef, isOpen = false }) => {
             role="menuitem"
             tabIndex={focusedIndex === 0 ? 0 : -1}
             onFocus={() => setFocusedIndex(0)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-              focusedIndex === 0 
-                ? 'bg-primary-50 dark:bg-primary-900/20' 
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${focusedIndex === 0
+                ? 'bg-primary-50 dark:bg-primary-900/20'
                 : 'hover:bg-neutral-50 dark:hover:bg-neutral-800'
-            }`}
+              }`}
           >
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center">
               <HiViewGrid className="w-4 h-4 text-white" />
@@ -144,15 +147,14 @@ const UserDropDown = ({ userDropdownRef, isOpen = false }) => {
 
           <Link
             ref={(el) => (menuItemsRef.current[1] = el)}
-            href="/student/profile"
+            href={getProfileUrl()}
             role="menuitem"
             tabIndex={focusedIndex === 1 ? 0 : -1}
             onFocus={() => setFocusedIndex(1)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-              focusedIndex === 1 
-                ? 'bg-primary-50 dark:bg-primary-900/20' 
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${focusedIndex === 1
+                ? 'bg-primary-50 dark:bg-primary-900/20'
                 : 'hover:bg-neutral-50 dark:hover:bg-neutral-800'
-            }`}
+              }`}
           >
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
               <HiUser className="w-4 h-4 text-white" />
@@ -164,27 +166,28 @@ const UserDropDown = ({ userDropdownRef, isOpen = false }) => {
             <HiChevronRight className="w-4 h-4 text-neutral-300" />
           </Link>
 
-          <Link
-            ref={(el) => (menuItemsRef.current[2] = el)}
-            href="/student/certificates"
-            role="menuitem"
-            tabIndex={focusedIndex === 2 ? 0 : -1}
-            onFocus={() => setFocusedIndex(2)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-              focusedIndex === 2 
-                ? 'bg-primary-50 dark:bg-primary-900/20' 
-                : 'hover:bg-neutral-50 dark:hover:bg-neutral-800'
-            }`}
-          >
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-              <HiAcademicCap className="w-4 h-4 text-white" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-neutral-800 dark:text-white">Certificates</p>
-              <p className="text-xs text-neutral-500">View your achievements</p>
-            </div>
-            <HiChevronRight className="w-4 h-4 text-neutral-300" />
-          </Link>
+          {user?.role === 'student' && (
+            <Link
+              ref={(el) => (menuItemsRef.current[2] = el)}
+              href="/student/certificates"
+              role="menuitem"
+              tabIndex={focusedIndex === 2 ? 0 : -1}
+              onFocus={() => setFocusedIndex(2)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${focusedIndex === 2
+                  ? 'bg-primary-50 dark:bg-primary-900/20'
+                  : 'hover:bg-neutral-50 dark:hover:bg-neutral-800'
+                }`}
+            >
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                <HiAcademicCap className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-neutral-800 dark:text-white">Certificates</p>
+                <p className="text-xs text-neutral-500">View your achievements</p>
+              </div>
+              <HiChevronRight className="w-4 h-4 text-neutral-300" />
+            </Link>
+          )}
         </div>
 
         {/* Logout */}
@@ -195,11 +198,10 @@ const UserDropDown = ({ userDropdownRef, isOpen = false }) => {
             tabIndex={focusedIndex === 3 ? 0 : -1}
             onFocus={() => setFocusedIndex(3)}
             onClick={logout}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-              focusedIndex === 3 
-                ? 'bg-rose-50 dark:bg-rose-900/20' 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${focusedIndex === 3
+                ? 'bg-rose-50 dark:bg-rose-900/20'
                 : 'hover:bg-rose-50 dark:hover:bg-rose-900/20'
-            }`}
+              }`}
           >
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center">
               <HiOutlineLogout className="w-4 h-4 text-white" />

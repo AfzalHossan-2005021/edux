@@ -104,7 +104,8 @@ const CourseSkeleton = () => (
 
 export default function CoursePage({ c_id }) {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, userRole } = useAuth();
+  const isStudent = userRole === 'student';
   const [course, setCourse] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [isEnrolled, setIsEnrolled] = useState(false);
@@ -296,48 +297,50 @@ export default function CoursePage({ c_id }) {
               </div>
 
               {/* Action Buttons - Mobile */}
-              <div className="flex flex-col sm:flex-row gap-3 lg:hidden">
-                {isEnrolled ? (
-                  <Button 
-                    variant="primary" 
-                    size="lg" 
-                    className="w-full sm:w-auto bg-white text-primary-700 hover:bg-neutral-100"
-                    onClick={goToCourse}
-                  >
-                    <HiPlay className="w-5 h-5 mr-2" />
-                    Go to Course
-                  </Button>
-                ) : (
-                  <>
+              {isStudent && (
+                <div className="flex flex-col sm:flex-row gap-3 lg:hidden">
+                  {isEnrolled ? (
                     <Button 
                       variant="primary" 
                       size="lg" 
                       className="w-full sm:w-auto bg-white text-primary-700 hover:bg-neutral-100"
-                      onClick={handleEnroll}
-                      loading={enrolling}
+                      onClick={goToCourse}
                     >
-                      <HiAcademicCap className="w-5 h-5 mr-2" />
-                      {course?.price && course.price > 0 
-                        ? `Enroll — $${course.price.toFixed(2)}` 
-                        : 'Enroll Now — Free'}
+                      <HiPlay className="w-5 h-5 mr-2" />
+                      Go to Course
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="lg"
-                      className="w-full sm:w-auto border-white/30 text-white hover:bg-white/10"
-                      onClick={handleWishlist}
-                      loading={wishlistLoading}
-                    >
-                      {isWishlisted ? (
-                        <HiHeart className="w-5 h-5 mr-2 text-red-400" />
-                      ) : (
-                        <HiOutlineHeart className="w-5 h-5 mr-2" />
-                      )}
-                      {isWishlisted ? 'Wishlisted' : 'Add to Wishlist'}
-                    </Button>
-                  </>
-                )}
-              </div>
+                  ) : (
+                    <>
+                      <Button 
+                        variant="primary" 
+                        size="lg" 
+                        className="w-full sm:w-auto bg-white text-primary-700 hover:bg-neutral-100"
+                        onClick={handleEnroll}
+                        loading={enrolling}
+                      >
+                        <HiAcademicCap className="w-5 h-5 mr-2" />
+                        {course?.price && course.price > 0 
+                          ? `Enroll — $${course.price.toFixed(2)}` 
+                          : 'Enroll Now — Free'}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="lg"
+                        className="w-full sm:w-auto border-white/30 text-white hover:bg-white/10"
+                        onClick={handleWishlist}
+                        loading={wishlistLoading}
+                      >
+                        {isWishlisted ? (
+                          <HiHeart className="w-5 h-5 mr-2 text-red-400" />
+                        ) : (
+                          <HiOutlineHeart className="w-5 h-5 mr-2" />
+                        )}
+                        {isWishlisted ? 'Wishlisted' : 'Add to Wishlist'}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )} 
             </div>
 
             {/* Course Image Card */}
@@ -363,79 +366,81 @@ export default function CoursePage({ c_id }) {
                   </div>
                 </div>
                 
-                {/* Price & Enrollment Card - Desktop */}
-                <div className="hidden lg:block p-6 bg-white dark:bg-neutral-800">
-                  <div className="mb-4">
-                    {(course.price && course.price > 0) ? (
-                      <>
+                {/* Price & Enrollment Card */}
+                {isStudent && (
+                  <div className="hidden lg:block p-6 bg-white dark:bg-neutral-800">
+                    <div className="mb-4">
+                      {(course.price && course.price > 0) ? (
+                        <>
+                          <span className="text-3xl font-bold text-neutral-800 dark:text-white">
+                            ${course.price.toFixed(2)}
+                          </span>
+                          <span className="text-sm text-neutral-500 line-through ml-2">
+                            ${(course.price * 1.2).toFixed(2)}
+                          </span>
+                        </>
+                      ) : (
                         <span className="text-3xl font-bold text-neutral-800 dark:text-white">
-                          ${course.price.toFixed(2)}
+                          Free
                         </span>
-                        <span className="text-sm text-neutral-500 line-through ml-2">
-                          ${(course.price * 1.2).toFixed(2)}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-3xl font-bold text-neutral-800 dark:text-white">
-                        Free
-                      </span>
-                    )}
-                  </div>
+                      )}
+                    </div>
 
-                  {isEnrolled ? (
-                    <Button 
-                      variant="primary" 
-                      size="lg" 
-                      className="w-full mb-3"
-                      onClick={goToCourse}
-                    >
-                      <HiPlay className="w-5 h-5 mr-2" />
-                      Go to Course
-                    </Button>
-                  ) : (
-                    <>
+                    {isEnrolled ? (
                       <Button 
                         variant="primary" 
                         size="lg" 
                         className="w-full mb-3"
-                        onClick={handleEnroll}
-                        loading={enrolling}
+                        onClick={goToCourse}
                       >
-                        <HiAcademicCap className="w-5 h-5 mr-2" />
-                        {course?.price && course.price > 0 ? 'Buy Now' : 'Enroll — Free'}
+                        <HiPlay className="w-5 h-5 mr-2" />
+                        Go to Course
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        size="lg"
-                        className="w-full"
-                        onClick={handleWishlist}
-                        loading={wishlistLoading}
-                      >
-                        {isWishlisted ? (
-                          <HiHeart className="w-5 h-5 mr-2 text-red-500" />
-                        ) : (
-                          <HiOutlineHeart className="w-5 h-5 mr-2" />
-                        )}
-                        {isWishlisted ? 'Wishlisted' : 'Add to Wishlist'}
-                      </Button>
-                    </>
-                  )}
+                    ) : (
+                      <>
+                        <Button 
+                          variant="primary" 
+                          size="lg" 
+                          className="w-full mb-3"
+                          onClick={handleEnroll}
+                          loading={enrolling}
+                        >
+                          <HiAcademicCap className="w-5 h-5 mr-2" />
+                          {course?.price && course.price > 0 ? 'Buy Now' : 'Enroll — Free'}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="lg"
+                          className="w-full"
+                          onClick={handleWishlist}
+                          loading={wishlistLoading}
+                        >
+                          {isWishlisted ? (
+                            <HiHeart className="w-5 h-5 mr-2 text-red-500" />
+                          ) : (
+                            <HiOutlineHeart className="w-5 h-5 mr-2" />
+                          )}
+                          {isWishlisted ? 'Wishlisted' : 'Add to Wishlist'}
+                        </Button>
+                      </>
+                    )}
 
-                  <div className="mt-6 space-y-3 text-sm">
-                    <div className="flex items-center gap-3 text-neutral-600 dark:text-neutral-400">
-                      <HiUserGroup className="w-5 h-5 text-primary-500" />
-                      <span>{availableSeats} seats available</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-neutral-600 dark:text-neutral-400">
-                      <HiClock className="w-5 h-5 text-primary-500" />
-                      <span>Full lifetime access</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-neutral-600 dark:text-neutral-400">
-                      <HiCheckCircle className="w-5 h-5 text-primary-500" />
-                      <span>Certificate of completion</span>
+                    <div className="mt-6 space-y-3 text-sm">
+                      <div className="flex items-center gap-3 text-neutral-600 dark:text-neutral-400">
+                        <HiUserGroup className="w-5 h-5 text-primary-500" />
+                        <span>{availableSeats} seats available</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-neutral-600 dark:text-neutral-400">
+                        <HiClock className="w-5 h-5 text-primary-500" />
+                        <span>Full lifetime access</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-neutral-600 dark:text-neutral-400">
+                        <HiCheckCircle className="w-5 h-5 text-primary-500" />
+                        <span>Certificate of completion</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </Card>
             </div>
           </div>

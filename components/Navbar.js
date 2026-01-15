@@ -46,8 +46,9 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
 
   // Use AuthContext for auth state
-  const { isAuthenticated, user, loading } = useAuth();
+  const { isAuthenticated, user, userRole } = useAuth();
   const isLoggedIn = isAuthenticated;
+  const isStudent = userRole === 'student';
 
   // Derive user info for avatar/initials from AuthContext or fallback to localStorage
   const userName = user?.name || (typeof window !== 'undefined' ? secureLocalStorage.getItem('u_name') || '' : '');
@@ -251,34 +252,36 @@ const Navbar = () => {
               {isLoggedIn ? (
                 <>
                   {/* Wishlist Button */}
-                  <div className="relative" ref={WishListRef}>
-                    <button
-                      onClick={toggleWishList}
-                      className={`relative w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 group ${
-                        isWishlistOpen 
-                          ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400' 
-                          : scrolled
-                            ? 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
-                            : 'hover:bg-white/20 dark:hover:bg-white/10 text-neutral-700 dark:text-white'
-                      }`}
-                      aria-label="Open wishlist"
-                    >
-                      <HiHeart className={`w-5 h-5 transition-transform group-hover:scale-110 ${isWishlistOpen ? 'fill-current' : ''}`} />
-                      {wishlistCourses.length > 0 && (
-                        <span className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full shadow-lg shadow-rose-500/30">
-                          {wishlistCourses.length}
-                        </span>
-                      )}
-                    </button>
-                    
-                    {/* Wishlist Dropdown */}
-                    <Wishlist
-                      wishlistCourses={wishlistCourses}
-                      onRemoveCourse={removeFromWishlist}
-                      WishListRef={WishListRef}
-                      isOpen={isWishlistOpen}
-                    />
-                  </div>
+                  {isStudent && (
+                    <div className="relative" ref={WishListRef}>
+                      <button
+                        onClick={toggleWishList}
+                        className={`relative w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 group ${
+                          isWishlistOpen 
+                            ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400' 
+                            : scrolled
+                              ? 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
+                              : 'hover:bg-white/20 dark:hover:bg-white/10 text-neutral-700 dark:text-white'
+                        }`}
+                        aria-label="Open wishlist"
+                      >
+                        <HiHeart className={`w-5 h-5 transition-transform group-hover:scale-110 ${isWishlistOpen ? 'fill-current' : ''}`} />
+                        {wishlistCourses.length > 0 && (
+                          <span className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full shadow-lg shadow-rose-500/30">
+                            {wishlistCourses.length}
+                          </span>
+                        )}
+                      </button>
+                      
+                      {/* Wishlist Dropdown */}
+                      <Wishlist
+                        wishlistCourses={wishlistCourses}
+                        onRemoveCourse={removeFromWishlist}
+                        WishListRef={WishListRef}
+                        isOpen={isWishlistOpen}
+                      />
+                    </div>
+                  )} 
 
                   {/* User Avatar */}
                   <div className="relative" ref={userDropdownRef}>
@@ -419,22 +422,24 @@ const Navbar = () => {
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-3 mb-3">Your Account</p>
                   
-                  <button
-                    onClick={() => {
-                      toggleWishList();
-                    }}
-                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center">
-                        <HiHeart className="w-5 h-5 text-white" />
+                  {isStudent && (
+                    <button
+                      onClick={() => {
+                        toggleWishList();
+                      }}
+                      className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center">
+                          <HiHeart className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="font-semibold text-neutral-800 dark:text-white">Wishlist</span>
                       </div>
-                      <span className="font-semibold text-neutral-800 dark:text-white">Wishlist</span>
-                    </div>
-                    {wishlistCourses.length > 0 && (
-                      <Badge variant="primary" size="sm">{wishlistCourses.length}</Badge>
-                    )}
-                  </button>
+                      {wishlistCourses.length > 0 && (
+                        <Badge variant="primary" size="sm">{wishlistCourses.length}</Badge>
+                      )}
+                    </button>
+                  )}
 
                   <Link 
                     href="/student" 

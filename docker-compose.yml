@@ -1,17 +1,25 @@
 version: '3.8'
 
+# All secrets below are read from a .env file next to this compose file
+# (docker compose loads it automatically). Copy .env.example to .env and
+# set real values before running `docker compose up -d` — do not deploy
+# with the example defaults.
+
 services:
   # Oracle Database Service
   oracle-db:
     image: gvenzl/oracle-xe:21-slim
     container_name: edux-oracle-db
     environment:
-      - ORACLE_PASSWORD=oracle123
-      - ORACLE_DATABASE=EDUX
-      - APP_USER=EDUX
-      - APP_USER_PASSWORD=edux123
-    ports:
-      - "1521:1521"
+      - ORACLE_PASSWORD=${ORACLE_PASSWORD}
+      - ORACLE_DATABASE=${ORACLE_DATABASE:-EDUX}
+      - APP_USER=${APP_USER:-EDUX}
+      - APP_USER_PASSWORD=${APP_USER_PASSWORD}
+    # No host port mapping: the app reaches the DB over the internal
+    # edux-network only. Uncomment below if you need external DB access
+    # (e.g. from a SQL client on the host), and lock it down with a firewall.
+    # ports:
+    #   - "127.0.0.1:1521:1521"
     volumes:
       - oracle-data:/opt/oracle/oradata
       - ./docker/oracle/init:/container-entrypoint-initdb.d
@@ -23,6 +31,7 @@ services:
       start_period: 60s
     networks:
       - edux-network
+    restart: unless-stopped
 
   # Next.js Application Service
   app:
@@ -32,9 +41,12 @@ services:
     container_name: edux-app
     environment:
       - NODE_ENV=production
-      - DB_USER=EDUX
-      - DB_PASSWORD=edux123
-      - DB_URL=oracle-db:1521/EDUX
+      - DB_USER=${APP_USER:-EDUX}
+      - DB_PASSWORD=${APP_USER_PASSWORD}
+      - DB_URL=oracle-db:1521/${ORACLE_DATABASE:-EDUX}
+      - JWT_SECRET=${JWT_SECRET}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      - NEXT_TELEMETRY_DISABLED=1
     ports:
       - "3000:3000"
     depends_on:

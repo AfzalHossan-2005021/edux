@@ -1,11 +1,13 @@
-import { useState, useRef, useEffect } from 'react';
-import { Button } from '../ui';
+import {useState, useRef, useEffect} from 'react';
+import {Button} from '../ui';
 
-export default function AIChat({ courseId = null, onClose }) {
+export default function AIChat({courseId = null, onClose}) {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: "Hi! I'm your AI study assistant. I can help you with:\n\n• Explaining concepts\n• Answering questions about your courses\n• Providing study tips\n• Creating study plans\n\nHow can I help you today?",
+      content: courseId ?
+        'Hi! I\'m your AI course tutor. Ask me anything about this course — my answers come from the actual course content, with sources cited so you can jump straight to the right lecture.' :
+        'Hi! I\'m your AI study assistant. I can help you with:\n\n• Explaining concepts\n• Answering questions about your courses\n• Providing study tips\n• Creating study plans\n\nHow can I help you today?',
     },
   ]);
   const [input, setInput] = useState('');
@@ -14,7 +16,7 @@ export default function AIChat({ courseId = null, onClose }) {
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({behavior: 'smooth'});
   };
 
   useEffect(() => {
@@ -26,13 +28,13 @@ export default function AIChat({ courseId = null, onClose }) {
 
     const userMessage = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setMessages((prev) => [...prev, {role: 'user', content: userMessage}]);
     setIsLoading(true);
 
     try {
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type': 'application/json'},
         credentials: 'include',
         body: JSON.stringify({
           action: 'chat',
@@ -45,21 +47,27 @@ export default function AIChat({ courseId = null, onClose }) {
       const data = await response.json();
 
       if (data.success) {
-        setMessages(prev => [
+        setMessages((prev) => [
           ...prev,
-          { role: 'assistant', content: data.message, aiGenerated: data.aiGenerated },
+          {
+            role: 'assistant',
+            content: data.message,
+            aiGenerated: data.aiGenerated,
+            citations: data.citations || [],
+            grounded: data.grounded || false,
+          },
         ]);
       } else {
-        setMessages(prev => [
+        setMessages((prev) => [
           ...prev,
-          { role: 'assistant', content: "I'm sorry, I couldn't process that. Please try again." },
+          {role: 'assistant', content: 'I\'m sorry, I couldn\'t process that. Please try again.'},
         ]);
       }
     } catch (error) {
       console.error('Chat error:', error);
-      setMessages(prev => [
+      setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: 'Connection error. Please check your internet and try again.' },
+        {role: 'assistant', content: 'Connection error. Please check your internet and try again.'},
       ]);
     } finally {
       setIsLoading(false);
@@ -74,9 +82,9 @@ export default function AIChat({ courseId = null, onClose }) {
   };
 
   const quickActions = [
-    { label: '📚 Study Tips', action: 'tips', topic: 'effective learning' },
-    { label: '📋 Study Plan', action: 'plan' },
-    { label: '❓ Ask Question', action: 'question' },
+    {label: '📚 Study Tips', action: 'tips', topic: 'effective learning'},
+    {label: '📋 Study Plan', action: 'plan'},
+    {label: '❓ Ask Question', action: 'question'},
   ];
 
   const handleQuickAction = async (actionType) => {
@@ -86,12 +94,12 @@ export default function AIChat({ courseId = null, onClose }) {
     }
 
     setIsLoading(true);
-    setMessages(prev => [...prev, { role: 'user', content: `Generate ${actionType === 'tips' ? 'study tips' : 'a study plan'} for me` }]);
+    setMessages((prev) => [...prev, {role: 'user', content: `Generate ${actionType === 'tips' ? 'study tips' : 'a study plan'} for me`}]);
 
     try {
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type': 'application/json'},
         credentials: 'include',
         body: JSON.stringify({
           action: actionType === 'tips' ? 'tips' : 'plan',
@@ -108,10 +116,10 @@ export default function AIChat({ courseId = null, onClose }) {
       } else if (actionType === 'plan' && data.plan) {
         content = `Here's your personalized study plan:\n\n${data.plan.daily_routine || ''}\n\n${data.plan.tips?.join('\n• ') || ''}`;
       } else {
-        content = "Here's what I recommend: Focus on consistent daily practice and review material regularly.";
+        content = 'Here\'s what I recommend: Focus on consistent daily practice and review material regularly.';
       }
 
-      setMessages(prev => [...prev, { role: 'assistant', content }]);
+      setMessages((prev) => [...prev, {role: 'assistant', content}]);
     } catch (error) {
       console.error('Quick action error:', error);
     } finally {
@@ -140,8 +148,10 @@ export default function AIChat({ courseId = null, onClose }) {
             <span className="text-lg">🤖</span>
           </div>
           <div>
-            <h3 className="font-semibold">AI Study Assistant</h3>
-            <span className="text-xs text-indigo-200">Powered by AI</span>
+            <h3 className="font-semibold">{courseId ? 'AI Course Tutor' : 'AI Study Assistant'}</h3>
+            <span className="text-xs text-indigo-200">
+              {courseId ? 'Grounded in course content' : 'Powered by AI'}
+            </span>
           </div>
         </div>
         <div className="flex gap-2">
@@ -169,12 +179,38 @@ export default function AIChat({ courseId = null, onClose }) {
           >
             <div
               className={`max-w-[80%] p-3 rounded-lg ${
-                message.role === 'user'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-800'
+                message.role === 'user' ?
+                  'bg-indigo-600 text-white' :
+                  'bg-gray-100 text-gray-800'
               }`}
             >
               <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+              {message.citations && message.citations.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-gray-200">
+                  <span className="text-xs font-semibold text-gray-500 block mb-1">
+                    📚 Sources from this course
+                  </span>
+                  <ul className="space-y-1">
+                    {message.citations.map((citation) => (
+                      <li key={citation.n} className="text-xs text-gray-600" title={citation.snippet}>
+                        <span className="inline-block w-6 font-mono text-indigo-600">[{citation.n}]</span>
+                        {citation.videoLink ? (
+                          <a
+                            href={citation.videoLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-indigo-600 hover:underline"
+                          >
+                            {citation.title}
+                          </a>
+                        ) : (
+                          <span>{citation.title}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {message.aiGenerated === false && message.role === 'assistant' && (
                 <span className="text-xs text-gray-500 mt-1 block">Default response</span>
               )}

@@ -1,0 +1,115 @@
+{
+  "description": "Golden Q&A set for the RAG course tutor, targeting the Docker sample data (docker/oracle/init/04_sample_data.sql + 06_rag_schema.sql transcripts). Course 100 = Complete React Course, course 101 = Node.js Masterclass, both owned by instructor john.smith@edux.com. Metrics: retrieval hit@k / MRR against expectedLectureIds (or expectedSourceTypes), citation precision, answer keyword coverage, and out-of-scope refusal accuracy.",
+  "cases": [
+    {
+      "id": "react-virtual-dom",
+      "courseId": 100,
+      "question": "What is the virtual DOM and why does React use it?",
+      "expectedLectureIds": [2000],
+      "answerKeywords": ["virtual dom", "reconciliation"]
+    },
+    {
+      "id": "react-why-library",
+      "courseId": 100,
+      "question": "Why would I choose React instead of writing plain JavaScript?",
+      "expectedLectureIds": [2000],
+      "answerKeywords": ["component", "declarative"]
+    },
+    {
+      "id": "react-cra-vs-vite",
+      "courseId": 100,
+      "question": "Is Create React App still recommended, and what should I use to start a new project?",
+      "expectedLectureIds": [2001],
+      "answerKeywords": ["vite", "deprecated"]
+    },
+    {
+      "id": "react-jsx-compilation",
+      "courseId": 100,
+      "question": "Can browsers run JSX directly?",
+      "expectedLectureIds": [2001],
+      "answerKeywords": ["compile"]
+    },
+    {
+      "id": "react-list-keys",
+      "courseId": 100,
+      "question": "Why do list items rendered with map need a key prop?",
+      "expectedLectureIds": [2002],
+      "answerKeywords": ["key", "reconcil"]
+    },
+    {
+      "id": "react-props-readonly",
+      "courseId": 100,
+      "question": "Can a child component change the props it receives from its parent?",
+      "expectedLectureIds": [2003],
+      "answerKeywords": ["read-only"]
+    },
+    {
+      "id": "react-composition",
+      "courseId": 100,
+      "question": "Should I use inheritance to specialize components in React?",
+      "expectedLectureIds": [2003],
+      "answerKeywords": ["composition"]
+    },
+    {
+      "id": "react-useeffect-cleanup",
+      "courseId": 100,
+      "question": "When does the cleanup function returned from useEffect run?",
+      "expectedLectureIds": [2004],
+      "answerKeywords": ["cleanup", "unmount"]
+    },
+    {
+      "id": "react-state-updater",
+      "courseId": 100,
+      "question": "How should I update state when the new value depends on the previous one?",
+      "expectedLectureIds": [2004],
+      "answerKeywords": ["updater"]
+    },
+    {
+      "id": "react-syllabus",
+      "courseId": 100,
+      "question": "What topics does this course cover?",
+      "expectedSourceTypes": ["syllabus", "overview"],
+      "answerKeywords": []
+    },
+    {
+      "id": "react-out-of-scope",
+      "courseId": 100,
+      "question": "Who won the FIFA World Cup in 2022?",
+      "expectOutOfScope": true
+    },
+    {
+      "id": "node-event-loop",
+      "courseId": 101,
+      "question": "Why is Node.js good at handling many concurrent connections?",
+      "expectedLectureIds": [2010],
+      "answerKeywords": ["event loop", "non-blocking"]
+    },
+    {
+      "id": "node-cpu-work",
+      "courseId": 101,
+      "question": "What happens if I run heavy CPU work on the main thread in Node?",
+      "expectedLectureIds": [2010],
+      "answerKeywords": ["block"]
+    },
+    {
+      "id": "express-middleware",
+      "courseId": 101,
+      "question": "What is middleware in Express and what does calling next() do?",
+      "expectedLectureIds": [2011],
+      "answerKeywords": ["middleware", "next"]
+    },
+    {
+      "id": "express-error-handling",
+      "courseId": 101,
+      "question": "How does error handling middleware work in Express?",
+      "expectedLectureIds": [2011],
+      "answerKeywords": ["four"]
+    },
+    {
+      "id": "node-out-of-scope",
+      "courseId": 101,
+      "question": "What is the best recipe for sourdough bread?",
+      "expectOutOfScope": true
+    }
+  ]
+}

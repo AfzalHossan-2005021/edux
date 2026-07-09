@@ -6,3 +6,4 @@ export { default as AISearch } from './AISearch';
 export { default as LearningAnalytics } from './LearningAnalytics';
 export { default as CourseSummary } from './CourseSummary';
 export { default as AIQuizGenerator } from './AIQuizGenerator';
+export { default as RagIndexPanel } from './RagIndexPanel';

@@ -162,6 +162,18 @@ EduX is a modern, AI-enhanced Learning Management System (LMS) designed to provi
 
 EduX leverages cutting-edge AI capabilities to enhance the learning experience:
 
+### ⭐ Grounded Course Tutor (RAG) — flagship feature
+```
+Location: /lib/ai/rag/*, /pages/api/ai/rag.js  ·  Deep dive: docs/RAG.md
+```
+- **Answers from actual course content**: lecture transcripts, syllabus, and course overview are chunked, embedded, and stored in Oracle — the tutor answers only from retrieved sources
+- **Hybrid retrieval**: cosine similarity over embeddings + BM25 lexical scoring, fused with Reciprocal Rank Fusion (RRF)
+- **Validated citations**: every answer cites its sources as `[n]`; hallucinated citation markers are stripped server-side, and cited lectures link straight to the video
+- **Honest refusals**: out-of-scope questions are refused deterministically (no LLM call) instead of guessed at
+- **Idempotent indexing**: chunks are diffed by SHA-256 content hash — re-indexing an unchanged course re-embeds nothing (zero API cost)
+- **Evaluation harness**: golden Q&A set with retrieval hit@k, MRR, citation precision, and out-of-scope accuracy (`npm run rag:eval`)
+- **Offline dev mode**: a deterministic hashing embedder makes the full pipeline work with `AI_PROVIDER=local`, no API keys needed
+
 ### 1. 🧠 AI-Powered Course Recommendations
 ```
 Location: /lib/ai/recommendations.js, /pages/api/ai/recommendations.js
@@ -439,7 +451,8 @@ edux/
 | `/api/ai/search` | POST | AI-enhanced search |
 | `/api/ai/summary` | POST | Generate content summary |
 | `/api/ai/quiz` | POST | Generate quiz questions |
-| `/api/ai/chat` | POST | AI chatbot conversation |
+| `/api/ai/chat` | POST | AI chatbot conversation (grounded when `courseId` is set) |
+| `/api/ai/rag` | POST | RAG tutor: `ask` / `status` / `ingest` / `transcript` (see [docs/RAG.md](docs/RAG.md)) |
 | `/api/ai/analytics` | GET | Learning analytics |
 
 ### Gamification

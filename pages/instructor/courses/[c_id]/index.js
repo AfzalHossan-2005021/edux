@@ -11,6 +11,7 @@ import secureLocalStorage from 'react-secure-storage';
 import { apiPost } from '@/lib/api';
 import { withInstructorAuth } from '@/lib/auth/withServerSideAuth';
 import { Card } from '@/components/ui';
+import RagIndexPanel from '@/components/ai/RagIndexPanel';
 import {
   HiPencilAlt,
   HiBookOpen,
@@ -195,6 +196,9 @@ const InstructorCourseDashboard = ({ serverUser }) => {
               </div>
             </div>
           </Card>
+
+          {/* AI Tutor Retrieval Index */}
+          <RagIndexPanel courseId={c_id} />
 
           {/* Management Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
